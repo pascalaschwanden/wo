@@ -1,6 +1,91 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 500px; margin: 40px auto; padding: 0 20px; }
+        form { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
+        input, button { padding: 10px; font-size: 16px; }
+        button { background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .log-item { padding: 10px; border-bottom: 1px solid #ccc; }
+    </style>
+</head>
 <body>
 
-hello world
+    <h2>Log Workout</h2>
+    <form id="workoutForm">
+        <input type="number" id="weight" placeholder="Weight (lbs/kg)" required step="any">
+        <input type="number" id="reps" placeholder="Reps" required>
+        <button type="submit">Save Entry</button>
+    </form>
+
+    <h2>History</h2>
+    <div id="historyLog">Loading entries...</div>
+
+    <!-- Firebase SDK Modules -->
+    <script type="module">
+        import { initializeApp } from "https://gstatic.com";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://gstatic.com";
+
+        // Your Firebase configuration (Replace with your actual config)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase and Firestore
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const workoutCollection = collection(db, "workouts");
+
+        const form = document.getElementById("workoutForm");
+        const historyLog = document.getElementById("historyLog");
+
+        // Submit data to Firestore
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const weight = parseFloat(document.getElementById("weight").value);
+            const reps = parseInt(document.getElementById("reps").value, 10);
+            const epochTimestamp = Math.floor(Date.now() / 1000); // Unix epoch timestamp in seconds
+
+            try {
+                await addDoc(workoutCollection, {
+                    weight: weight,
+                    reps: reps,
+                    timestamp: epochTimestamp
+                });
+                form.reset();
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                alert("Failed to save entry. Check database rules.");
+            }
+        });
+
+        // Real-time listener to fetch and display data
+        const q = query(workoutCollection, orderBy("timestamp", "desc"));
+        onSnapshot(q, (snapshot) => {
+            historyLog.innerHTML = "";
+            if (snapshot.empty) {
+                historyLog.innerHTML = "<p>No entries found.</p>";
+                return;
+            }
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const div = document.createElement("div");
+                div.className = "log-item";
+                div.innerHTML = `<strong>Weight:</strong> ${data.weight} | <strong>Reps:</strong> ${data.reps} | <strong>Epoch:</strong> ${data.timestamp}`;
+                historyLog.appendChild(div);
+            });
+        });
+    </script>
 </body>
 </html>
+
