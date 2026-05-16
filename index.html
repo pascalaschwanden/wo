@@ -7,7 +7,7 @@
     <style>
         body { font-family: Arial, sans-serif; max-width: 500px; margin: 40px auto; padding: 0 20px; }
         form { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
-        input, button { padding: 10px; font-size: 16px; }
+        input, select, button { padding: 10px; font-size: 16px; }
         button { background-color: #007bff; color: white; border: none; cursor: pointer; }
         button:hover { background-color: #0056b3; }
         .log-item { padding: 10px; border-bottom: 1px solid #ccc; }
@@ -17,6 +17,25 @@
 
     <h2>Log Workout</h2>
     <form id="workoutForm">
+        <select id="exercise" required>
+            <option value="" disabled selected>Select exercise</option>
+            <option value="Deadlift">Deadlift</option>
+            <option value="Squat">Squat</option>
+            <option value="Calves">Calves</option>
+            <option value="Leg extension">Leg extension</option>
+            <option value="Leg Curl">Leg Curl</option>
+            <option value="Bicep Curl">Bicep Curl</option>
+            <option value="Overhead tricep extention">Overhead tricep extention</option>
+            <option value="Shoulder Press">Shoulder Press</option>
+            <option value="Shoulder Hammer Press">Shoulder Hammer Press</option>
+            <option value="Side Laterals">Side Laterals</option>
+            <option value="Double dumbbell rows">Double dumbbell rows</option>
+            <option value="Low horizontal Row">Low horizontal Row</option>
+            <option value="Bench Press">Bench Press</option>
+            <option value="Overhead tricep 2 hand">Overhead tricep 2 hand</option>
+            <option value="Dumbbell Upright Row">Dumbbell Upright Row</option>
+            <option value="Dumbbell PUllover">Dumbbell PUllover</option>
+        </select>
         <input type="number" id="weight" placeholder="Weight (lbs/kg)" required step="any">
         <input type="number" id="reps" placeholder="Reps" required>
         <button type="submit">Save Entry</button>
@@ -62,12 +81,14 @@
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
 
+            const exercise = document.getElementById("exercise").value;
             const weight = parseFloat(document.getElementById("weight").value);
             const reps = parseInt(document.getElementById("reps").value, 10);
             const epochTimestamp = Math.floor(Date.now() / 1000); // Unix epoch timestamp in seconds
 
             try {
                 await addDoc(workoutCollection, {
+                    exercise: exercise,
                     weight: weight,
                     reps: reps,
                     timestamp: epochTimestamp
@@ -91,7 +112,7 @@
                 const data = doc.data();
                 const div = document.createElement("div");
                 div.className = "log-item";
-                div.innerHTML = `<strong>Weight:</strong> ${data.weight} | <strong>Reps:</strong> ${data.reps} | <strong>Epoch:</strong> ${data.timestamp}`;
+                div.innerHTML = `<strong>Exercise:</strong> ${data.exercise || "Not set"} | <strong>Weight:</strong> ${data.weight} | <strong>Reps:</strong> ${data.reps} | <strong>Epoch:</strong> ${data.timestamp}`;
                 historyLog.appendChild(div);
             });
         });
