@@ -29,6 +29,7 @@
     <form id="workoutForm">
         <select id="exercise" required>
             <option value="" disabled selected>Select exercise</option>
+            <option value="Bath dips">Bath dips</option>
             <option value="Bench Press">Bench Press</option>
             <option value="Bicep Curl">Bicep Curl</option>
             <option value="Cable Face Pulls">Cable Face Pulls</option>
@@ -111,6 +112,7 @@
         const workoutCollection = collection(db, "workouts");
 
         const exerciseCategories = {
+            "Bath dips": "Arms",
             "Bench Press": "Chest",
             "Dumbbell PUllover": "Chest",
             "Bicep Curl": "Arms",
@@ -133,6 +135,8 @@
             "Leg extension": "Legs",
             "Leg Curl": "Legs"
         };
+
+        const bodyweightExercises = new Set(["Bath dips", "Chin ups", "Pull ups", "Push ups"]);
 
         function getExerciseLabel(exercise) {
             if (exercise === "Squats") return "Squat";
@@ -303,7 +307,8 @@
             e.preventDefault();
 
             const exercise = document.getElementById("exercise").value;
-            const weight = parseFloat(document.getElementById("weight").value);
+            const enteredWeight = parseFloat(document.getElementById("weight").value);
+            const weight = bodyweightExercises.has(exercise) ? 0 : enteredWeight;
             const reps = parseInt(document.getElementById("reps").value, 10);
             const epochTimestamp = Math.floor(Date.now() / 1000); // Unix epoch timestamp in seconds
 
