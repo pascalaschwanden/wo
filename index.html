@@ -27,26 +27,36 @@
 
     <!-- Firebase SDK Modules -->
     <script type="module">
-        import { initializeApp } from "https://gstatic.com";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-        // Your Firebase configuration (Replace with your actual config)
+        // Firebase web app configuration. These values are safe to include in a static GitHub Pages site.
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyApCs8oH1lgpvweICAu3MNr6QwzTC1iVq8",
+            authDomain: "workouts-246c5.firebaseapp.com",
+            databaseURL: "https://workouts-246c5-default-rtdb.firebaseio.com",
+            projectId: "workouts-246c5",
+            storageBucket: "workouts-246c5.firebasestorage.app",
+            messagingSenderId: "238007804712",
+            appId: "1:238007804712:web:d4ee8df8b38103a634661d",
+            measurementId: "G-1F034HFJCX"
         };
+
+        const form = document.getElementById("workoutForm");
+        const historyLog = document.getElementById("historyLog");
+
+        const hasFirebaseConfig = Object.values(firebaseConfig).every((value) => !value.startsWith("YOUR_"));
+
+        if (!hasFirebaseConfig) {
+            historyLog.innerHTML = "<p>Add your Firebase web app config to index.html to enable cloud sync.</p>";
+            form.querySelector("button").disabled = true;
+            throw new Error("Missing Firebase web app config.");
+        }
 
         // Initialize Firebase and Firestore
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const workoutCollection = collection(db, "workouts");
-
-        const form = document.getElementById("workoutForm");
-        const historyLog = document.getElementById("historyLog");
 
         // Submit data to Firestore
         form.addEventListener("submit", async (e) => {
@@ -88,4 +98,3 @@
     </script>
 </body>
 </html>
-
