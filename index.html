@@ -10,6 +10,11 @@
         input, select, button { padding: 10px; font-size: 16px; }
         button { background-color: #007bff; color: white; border: none; cursor: pointer; }
         button:hover { background-color: #0056b3; }
+        .chart-grid { display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; }
+        .chart-panel { border: 1px solid #ccc; padding: 12px; }
+        .chart-panel h3 { font-size: 16px; margin: 0 0 10px; }
+        .chart-canvas-wrap { height: 240px; position: relative; }
+        .chart-canvas-wrap canvas { display: block; }
         .log-item { padding: 10px; border-bottom: 1px solid #ccc; }
     </style>
 </head>
@@ -41,10 +46,14 @@
         <button type="submit">Save Entry</button>
     </form>
 
+    <h2>Charts</h2>
+    <div id="chartGrid" class="chart-grid">Loading charts...</div>
+
     <h2>History</h2>
     <div id="historyLog">Loading entries...</div>
 
     <!-- Firebase SDK Modules -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
@@ -62,7 +71,9 @@
         };
 
         const form = document.getElementById("workoutForm");
+        const chartGrid = document.getElementById("chartGrid");
         const historyLog = document.getElementById("historyLog");
+        const chartsByKey = new Map();
 
         const hasFirebaseConfig = Object.values(firebaseConfig).every((value) => !value.startsWith("YOUR_"));
 
@@ -76,6 +87,134 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const workoutCollection = collection(db, "workouts");
+
+        function getExerciseLabel(exercise) {
+            if (exercise === "Squats") return "Squat";
+            if (exercise === "deadlift") return "Deadlift";
+            return exercise;
+        }
+
+        function getDateLabel(timestamp) {
+            return new Date(timestamp * 1000).toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+                year: "numeric"
+            });
+        }
+
+        function getLineColor(index) {
+            const colors = ["#007bff", "#dc3545", "#28a745", "#fd7e14", "#6f42c1", "#20c997"];
+            return colors[index % colors.length];
+        }
+
+        function renderCharts(entries) {
+            const groupedEntries = entries
+                .filter((entry) => entry.exercise !== "Not set")
+                .reduce((groups, entry) => {
+                    const exercise = getExerciseLabel(entry.exercise);
+                    if (!groups.has(exercise)) {
+                        groups.set(exercise, {
+                            exercise,
+                            weights: new Map()
+                        });
+                    }
+
+                    const weightKey = String(entry.weight);
+                    const group = groups.get(exercise);
+                    if (!group.weights.has(weightKey)) {
+                        group.weights.set(weightKey, []);
+                    }
+                    group.weights.get(weightKey).push(entry);
+                    return groups;
+                }, new Map());
+
+            chartsByKey.forEach((chart) => chart.destroy());
+            chartsByKey.clear();
+            chartGrid.innerHTML = "";
+
+            if (groupedEntries.size === 0) {
+                chartGrid.innerHTML = "<p>No exercise entries found.</p>";
+                return;
+            }
+
+            Array.from(groupedEntries.entries())
+                .sort(([, a], [, b]) => a.exercise.localeCompare(b.exercise))
+                .forEach(([key, group]) => {
+                    const weightEntries = Array.from(group.weights.entries())
+                        .sort(([a], [b]) => Number(a) - Number(b));
+                    const labels = Array.from(new Set(
+                        weightEntries.flatMap(([, points]) =>
+                            points.map((point) => point.timestamp)
+                        )
+                    ))
+                        .sort((a, b) => a - b);
+
+                    const panel = document.createElement("div");
+                    panel.className = "chart-panel";
+
+                    const title = document.createElement("h3");
+                    title.textContent = group.exercise;
+
+                    const canvasWrap = document.createElement("div");
+                    canvasWrap.className = "chart-canvas-wrap";
+
+                    const canvas = document.createElement("canvas");
+                    canvasWrap.appendChild(canvas);
+
+                    panel.appendChild(title);
+                    panel.appendChild(canvasWrap);
+                    chartGrid.appendChild(panel);
+
+                    const chart = new Chart(canvas, {
+                        type: "line",
+                        data: {
+                            labels: labels.map((timestamp) => getDateLabel(timestamp)),
+                            datasets: weightEntries.map(([weight, points], index) => {
+                                const pointByTimestamp = new Map(points.map((point) => [point.timestamp, point.reps]));
+                                const color = getLineColor(index);
+
+                                return {
+                                    label: `${weight} lbs`,
+                                    data: labels.map((timestamp) => pointByTimestamp.get(timestamp) ?? null),
+                                    borderColor: color,
+                                    backgroundColor: color,
+                                    tension: 0.2,
+                                    spanGaps: true
+                                };
+                            })
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: true
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: "Date"
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        precision: 0
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: "Reps"
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    chartsByKey.set(key, chart);
+                });
+        }
 
         // Submit data to Firestore
         form.addEventListener("submit", async (e) => {
@@ -103,18 +242,29 @@
         // Real-time listener to fetch and display data
         const q = query(workoutCollection, orderBy("timestamp", "desc"));
         onSnapshot(q, (snapshot) => {
+            const entries = [];
             historyLog.innerHTML = "";
             if (snapshot.empty) {
+                renderCharts(entries);
                 historyLog.innerHTML = "<p>No entries found.</p>";
                 return;
             }
             snapshot.forEach((doc) => {
                 const data = doc.data();
+                entries.push({
+                    exercise: getExerciseLabel(data.exercise || "Not set"),
+                    weight: Number(data.weight),
+                    reps: Number(data.reps),
+                    timestamp: Number(data.timestamp)
+                });
+
                 const div = document.createElement("div");
                 div.className = "log-item";
                 div.innerHTML = `<strong>Exercise:</strong> ${data.exercise || "Not set"} | <strong>Weight:</strong> ${data.weight} | <strong>Reps:</strong> ${data.reps} | <strong>Epoch:</strong> ${data.timestamp}`;
                 historyLog.appendChild(div);
             });
+
+            renderCharts(entries);
         });
     </script>
 </body>
