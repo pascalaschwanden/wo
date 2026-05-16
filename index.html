@@ -10,11 +10,16 @@
         input, select, button { padding: 10px; font-size: 16px; }
         button { background-color: #007bff; color: white; border: none; cursor: pointer; }
         button:hover { background-color: #0056b3; }
+        .chart-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .chart-tab { background-color: #e9ecef; color: #222; border: 1px solid #ccc; }
+        .chart-tab.active { background-color: #007bff; color: white; border-color: #007bff; }
         .chart-grid { display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; }
         .chart-panel { border: 1px solid #ccc; padding: 12px; }
         .chart-panel h3 { font-size: 16px; margin: 0 0 10px; }
         .chart-canvas-wrap { height: 240px; position: relative; }
         .chart-canvas-wrap canvas { display: block; }
+        details { margin-bottom: 30px; }
+        summary { cursor: pointer; font-size: 1.5em; font-weight: bold; margin: 0.83em 0; }
         .log-item { padding: 10px; border-bottom: 1px solid #ccc; }
     </style>
 </head>
@@ -34,12 +39,13 @@
             <option value="Shoulder Press">Shoulder Press</option>
             <option value="Shoulder Hammer Press">Shoulder Hammer Press</option>
             <option value="Side Laterals">Side Laterals</option>
-            <option value="Double dumbbell rows">Double dumbbell rows</option>
+            <option value="Double Dumbbell Row">Double Dumbbell Row</option>
             <option value="Low horizontal Row">Low horizontal Row</option>
             <option value="Bench Press">Bench Press</option>
             <option value="Overhead tricep 2 hand">Overhead tricep 2 hand</option>
             <option value="Dumbbell Upright Row">Dumbbell Upright Row</option>
             <option value="Dumbbell PUllover">Dumbbell PUllover</option>
+            <option value="Cable Face Pulls">Cable Face Pulls</option>
         </select>
         <input type="number" id="weight" placeholder="Weight (lbs/kg)" required step="any">
         <input type="number" id="reps" placeholder="Reps" required>
@@ -47,10 +53,19 @@
     </form>
 
     <h2>Charts</h2>
+    <div id="chartTabs" class="chart-tabs">
+        <button type="button" class="chart-tab active" data-category="Chest">Chest</button>
+        <button type="button" class="chart-tab" data-category="Arms">Arms</button>
+        <button type="button" class="chart-tab" data-category="Back">Back</button>
+        <button type="button" class="chart-tab" data-category="Shoulder">Shoulder</button>
+        <button type="button" class="chart-tab" data-category="Legs">Legs</button>
+    </div>
     <div id="chartGrid" class="chart-grid">Loading charts...</div>
 
-    <h2>History</h2>
-    <div id="historyLog">Loading entries...</div>
+    <details id="historyDetails">
+        <summary>History</summary>
+        <div id="historyLog"></div>
+    </details>
 
     <!-- Firebase SDK Modules -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
@@ -71,9 +86,13 @@
         };
 
         const form = document.getElementById("workoutForm");
+        const chartTabs = document.getElementById("chartTabs");
         const chartGrid = document.getElementById("chartGrid");
+        const historyDetails = document.getElementById("historyDetails");
         const historyLog = document.getElementById("historyLog");
         const chartsByKey = new Map();
+        let latestEntries = [];
+        let activeChartCategory = "Chest";
 
         const hasFirebaseConfig = Object.values(firebaseConfig).every((value) => !value.startsWith("YOUR_"));
 
@@ -88,9 +107,32 @@
         const db = getFirestore(app);
         const workoutCollection = collection(db, "workouts");
 
+        const exerciseCategories = {
+            "Bench Press": "Chest",
+            "Dumbbell PUllover": "Chest",
+            "Bicep Curl": "Arms",
+            "Overhead tricep extention": "Arms",
+            "Overhead tricep 2 hand": "Arms",
+            "Low horizontal Row": "Back",
+            "Double Dumbbell Row": "Back",
+            "Max pull ups": "Back",
+            "Push ups": "Chest",
+            "Shoulder Press": "Shoulder",
+            "Shoulder Hammer Press": "Shoulder",
+            "Side Laterals": "Shoulder",
+            "Dumbbell Upright Row": "Shoulder",
+            "Cable Face Pulls": "Shoulder",
+            "Squat": "Legs",
+            "Deadlift": "Legs",
+            "Calves": "Legs",
+            "Leg extension": "Legs",
+            "Leg Curl": "Legs"
+        };
+
         function getExerciseLabel(exercise) {
             if (exercise === "Squats") return "Squat";
             if (exercise === "deadlift") return "Deadlift";
+            if (exercise === "Double dumbbell rows") return "Double Dumbbell Row";
             return exercise;
         }
 
@@ -109,7 +151,7 @@
 
         function renderCharts(entries) {
             const groupedEntries = entries
-                .filter((entry) => entry.exercise !== "Not set")
+                .filter((entry) => exerciseCategories[entry.exercise] === activeChartCategory)
                 .reduce((groups, entry) => {
                     const exercise = getExerciseLabel(entry.exercise);
                     if (!groups.has(exercise)) {
@@ -133,7 +175,7 @@
             chartGrid.innerHTML = "";
 
             if (groupedEntries.size === 0) {
-                chartGrid.innerHTML = "<p>No exercise entries found.</p>";
+                chartGrid.innerHTML = `<p>No ${activeChartCategory.toLowerCase()} exercise entries found.</p>`;
                 return;
             }
 
@@ -216,6 +258,41 @@
                 });
         }
 
+        chartTabs.addEventListener("click", (event) => {
+            const tab = event.target.closest(".chart-tab");
+            if (!tab) return;
+
+            activeChartCategory = tab.dataset.category;
+            chartTabs.querySelectorAll(".chart-tab").forEach((button) => {
+                button.classList.toggle("active", button === tab);
+            });
+            renderCharts(latestEntries);
+        });
+
+        function renderHistory(entries) {
+            historyLog.innerHTML = "";
+
+            if (entries.length === 0) {
+                historyLog.innerHTML = "<p>No entries found.</p>";
+                return;
+            }
+
+            entries.forEach((entry) => {
+                const div = document.createElement("div");
+                div.className = "log-item";
+                div.innerHTML = `<strong>Exercise:</strong> ${entry.exercise} | <strong>Weight:</strong> ${entry.weight} | <strong>Reps:</strong> ${entry.reps} | <strong>Epoch:</strong> ${entry.timestamp}`;
+                historyLog.appendChild(div);
+            });
+        }
+
+        historyDetails.addEventListener("toggle", () => {
+            if (historyDetails.open) {
+                renderHistory(latestEntries);
+            } else {
+                historyLog.innerHTML = "";
+            }
+        });
+
         // Submit data to Firestore
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -243,10 +320,12 @@
         const q = query(workoutCollection, orderBy("timestamp", "desc"));
         onSnapshot(q, (snapshot) => {
             const entries = [];
-            historyLog.innerHTML = "";
             if (snapshot.empty) {
+                latestEntries = entries;
                 renderCharts(entries);
-                historyLog.innerHTML = "<p>No entries found.</p>";
+                if (historyDetails.open) {
+                    renderHistory(entries);
+                }
                 return;
             }
             snapshot.forEach((doc) => {
@@ -257,14 +336,13 @@
                     reps: Number(data.reps),
                     timestamp: Number(data.timestamp)
                 });
-
-                const div = document.createElement("div");
-                div.className = "log-item";
-                div.innerHTML = `<strong>Exercise:</strong> ${data.exercise || "Not set"} | <strong>Weight:</strong> ${data.weight} | <strong>Reps:</strong> ${data.reps} | <strong>Epoch:</strong> ${data.timestamp}`;
-                historyLog.appendChild(div);
             });
 
+            latestEntries = entries;
             renderCharts(entries);
+            if (historyDetails.open) {
+                renderHistory(entries);
+            }
         });
     </script>
 </body>
