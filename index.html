@@ -148,9 +148,14 @@
         function getDateLabel(timestamp) {
             return new Date(timestamp * 1000).toLocaleDateString(undefined, {
                 month: "short",
-                day: "numeric",
-                year: "numeric"
+                day: "numeric"
             });
+        }
+
+        function getLastTwoWeeksRange() {
+            const end = Math.floor(Date.now() / 1000);
+            const start = end - (14 * 24 * 60 * 60);
+            return { start, end };
         }
 
         function getLineColor(index) {
@@ -191,14 +196,9 @@
             Array.from(groupedEntries.entries())
                 .sort(([, a], [, b]) => a.exercise.localeCompare(b.exercise))
                 .forEach(([key, group]) => {
+                    const { start, end } = getLastTwoWeeksRange();
                     const weightEntries = Array.from(group.weights.entries())
                         .sort(([a], [b]) => Number(a) - Number(b));
-                    const labels = Array.from(new Set(
-                        weightEntries.flatMap(([, points]) =>
-                            points.map((point) => point.timestamp)
-                        )
-                    ))
-                        .sort((a, b) => a - b);
 
                     const panel = document.createElement("div");
                     panel.className = "chart-panel";
@@ -219,14 +219,18 @@
                     const chart = new Chart(canvas, {
                         type: "line",
                         data: {
-                            labels: labels.map((timestamp) => getDateLabel(timestamp)),
                             datasets: weightEntries.map(([weight, points], index) => {
-                                const pointByTimestamp = new Map(points.map((point) => [point.timestamp, point.reps]));
                                 const color = getLineColor(index);
 
                                 return {
                                     label: `${weight} lbs`,
-                                    data: labels.map((timestamp) => pointByTimestamp.get(timestamp) ?? null),
+                                    data: points
+                                        .slice()
+                                        .sort((a, b) => a.timestamp - b.timestamp)
+                                        .map((point) => ({
+                                            x: point.timestamp,
+                                            y: point.reps
+                                        })),
                                     borderColor: color,
                                     backgroundColor: color,
                                     tension: 0.2,
@@ -240,10 +244,22 @@
                             plugins: {
                                 legend: {
                                     display: true
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        title: (items) => getDateLabel(items[0].parsed.x)
+                                    }
                                 }
                             },
                             scales: {
                                 x: {
+                                    type: "linear",
+                                    min: start,
+                                    max: end,
+                                    ticks: {
+                                        callback: (value) => getDateLabel(value),
+                                        maxTicksLimit: 8
+                                    },
                                     title: {
                                         display: true,
                                         text: "Date"
@@ -357,3 +373,4 @@
     </script>
 </body>
 </html>
+
