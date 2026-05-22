@@ -34,7 +34,8 @@
             <option value="Bench Press">Bench Press</option>
             <option value="Bicep Curl">Bicep Curl</option>
             <option value="Cable Face Pulls">Cable Face Pulls</option>
-            <option value="Calves">Calves</option>
+            <option value="Calf Raises, single">Calf Raises, single</option>
+            <option value="Calf Extension">Calf Extension</option>
 	    <option value="Chest Fly Bench">Chest Fly Bench</option>
             <option value="Chin ups">Chin ups</option>
             <option value="Deadlift">Deadlift</option>
@@ -149,12 +150,13 @@
 	    "Seated Hip Abduction": "Legs",
 	    "Seated Hip Adduction": "Legs",
             "Deadlift": "Legs",
-            "Calves": "Legs",
+            "Calf Raises, single": "Legs",
+            "Calf Extension": "Legs",
             "Leg extension": "Legs",
             "Leg Curl": "Legs"
         };
 
-        const bodyweightExercises = new Set(["Bath dips", "Chin ups", "Pull ups", "Push ups"]);
+        const bodyweightExercises = new Set(["Bath dips", "Chin ups", "Pull ups", "Push ups", "Calf Raises, single"]);
 
         function getExerciseLabel(exercise) {
             if (exercise === "Squats") return "Squat";
