@@ -10,14 +10,26 @@
         input, select, button { padding: 10px; font-size: 16px; }
         button { background-color: #007bff; color: white; border: none; cursor: pointer; }
         button:hover { background-color: #0056b3; }
-        .chart-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-        .chart-tab { background-color: #e9ecef; color: #222; border: 1px solid #ccc; }
-        .chart-tab.active { background-color: #007bff; color: white; border-color: #007bff; }
+        .view-tabs, .chart-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .view-tab, .chart-tab { background-color: #e9ecef; color: #222; border: 1px solid #ccc; }
+        .view-tab.active, .chart-tab.active { background-color: #007bff; color: white; border-color: #007bff; }
+        .chart-view[hidden], .analysis-view[hidden], .next-view[hidden] { display: none; }
         .chart-grid { display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; }
         .chart-panel { border: 1px solid #ccc; padding: 12px; }
         .chart-panel h3 { font-size: 16px; margin: 0 0 10px; }
         .chart-canvas-wrap { height: 240px; position: relative; }
         .chart-canvas-wrap canvas { display: block; }
+        .analysis-table-wrap { overflow-x: auto; margin-bottom: 30px; }
+        .analysis-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .analysis-table th, .analysis-table td { border: 1px solid #ccc; padding: 10px; text-align: right; }
+        .analysis-table th:first-child, .analysis-table td:first-child { text-align: left; }
+        .analysis-table th { background: #f8f9fa; }
+        .analysis-table tfoot td { font-weight: bold; background: #f8f9fa; }
+        .analysis-note { color: #555; font-size: 13px; margin-top: -14px; margin-bottom: 20px; }
+        .next-table-wrap { overflow-x: auto; margin-bottom: 30px; }
+        .next-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .next-table th, .next-table td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        .next-table th { background: #f8f9fa; }
         details { margin-bottom: 30px; }
         summary { cursor: pointer; font-size: 1.5em; font-weight: bold; margin: 0.83em 0; }
         .log-item { padding: 10px; border-bottom: 1px solid #ccc; }
@@ -66,15 +78,34 @@
         <button type="submit">Save Entry</button>
     </form>
 
-    <h2>Charts</h2>
-    <div id="chartTabs" class="chart-tabs">
-        <button type="button" class="chart-tab active" data-category="Chest">Chest</button>
-        <button type="button" class="chart-tab" data-category="Arms">Arms</button>
-        <button type="button" class="chart-tab" data-category="Back">Back</button>
-        <button type="button" class="chart-tab" data-category="Shoulder">Shoulder</button>
-        <button type="button" class="chart-tab" data-category="Legs">Legs</button>
+    <div id="viewTabs" class="view-tabs" aria-label="Workout views">
+        <button type="button" class="view-tab active" data-view="charts">Charts</button>
+        <button type="button" class="view-tab" data-view="analysis">Analysis</button>
+        <button type="button" class="view-tab" data-view="next">Next</button>
     </div>
-    <div id="chartGrid" class="chart-grid">Loading charts...</div>
+
+    <section id="chartsView" class="chart-view">
+        <h2>Charts</h2>
+        <div id="chartTabs" class="chart-tabs">
+            <button type="button" class="chart-tab active" data-category="Chest">Chest</button>
+            <button type="button" class="chart-tab" data-category="Arms">Arms</button>
+            <button type="button" class="chart-tab" data-category="Back">Back</button>
+            <button type="button" class="chart-tab" data-category="Shoulder">Shoulder</button>
+            <button type="button" class="chart-tab" data-category="Legs">Legs</button>
+        </div>
+        <div id="chartGrid" class="chart-grid">Loading charts...</div>
+    </section>
+
+    <section id="analysisView" class="analysis-view" hidden>
+        <h2>Analysis</h2>
+        <div id="analysisTable" class="analysis-table-wrap">Loading analysis...</div>
+        <p class="analysis-note">Weighted exercises use Epley estimated 1-rep max. Bodyweight entries use reps as the strength score.</p>
+    </section>
+
+    <section id="nextView" class="next-view" hidden>
+        <h2>Next</h2>
+        <div id="nextTable" class="next-table-wrap">Loading next exercises...</div>
+    </section>
 
     <details id="historyDetails">
         <summary>History</summary>
@@ -100,12 +131,19 @@
         };
 
         const form = document.getElementById("workoutForm");
+        const viewTabs = document.getElementById("viewTabs");
+        const chartsView = document.getElementById("chartsView");
+        const analysisView = document.getElementById("analysisView");
+        const nextView = document.getElementById("nextView");
         const chartTabs = document.getElementById("chartTabs");
         const chartGrid = document.getElementById("chartGrid");
+        const analysisTable = document.getElementById("analysisTable");
+        const nextTable = document.getElementById("nextTable");
         const historyDetails = document.getElementById("historyDetails");
         const historyLog = document.getElementById("historyLog");
         const chartsByKey = new Map();
         let latestEntries = [];
+        let activeView = "charts";
         let activeChartCategory = "Chest";
 
         const hasFirebaseConfig = Object.values(firebaseConfig).every((value) => !value.startsWith("YOUR_"));
@@ -133,7 +171,6 @@
             "Dumbbell PUllover": "Chest",
             "Bicep Curl": "Arms",
             "Overhead tricep extention": "Arms",
-            "Overhead tricep 2 hand": "Arms",
             "Low horizontal Row": "Back",
             "Double Dumbbell Row": "Back",
             "Pull ups": "Back",
@@ -145,7 +182,6 @@
             "Side Laterals": "Shoulder",
             "Dumbbell Upright Row": "Shoulder",
             "Cable Face Pulls": "Shoulder",
-            "Overhead barbell press": "Shoulder",
             "Squat": "Legs",
 	    "Seated Hip Abduction": "Legs",
 	    "Seated Hip Adduction": "Legs",
@@ -182,6 +218,213 @@
         function getLineColor(index) {
             const colors = ["#007bff", "#dc3545", "#28a745", "#fd7e14", "#6f42c1", "#20c997"];
             return colors[index % colors.length];
+        }
+
+        function getStrengthScore(entry) {
+            if (entry.weight > 0) {
+                return entry.weight * (1 + (entry.reps / 30));
+            }
+            return entry.reps;
+        }
+
+        function getLinearPrediction(points, timestamp) {
+            if (points.length < 2) return null;
+
+            const firstTimestamp = points[0].timestamp;
+            const normalizedPoints = points.map((point) => ({
+                x: (point.timestamp - firstTimestamp) / (24 * 60 * 60),
+                y: getStrengthScore(point)
+            }));
+            const targetX = (timestamp - firstTimestamp) / (24 * 60 * 60);
+            const count = normalizedPoints.length;
+            const sumX = normalizedPoints.reduce((total, point) => total + point.x, 0);
+            const sumY = normalizedPoints.reduce((total, point) => total + point.y, 0);
+            const sumXY = normalizedPoints.reduce((total, point) => total + (point.x * point.y), 0);
+            const sumX2 = normalizedPoints.reduce((total, point) => total + (point.x * point.x), 0);
+            const denominator = (count * sumX2) - (sumX * sumX);
+
+            if (denominator === 0) return null;
+
+            const slope = ((count * sumXY) - (sumX * sumY)) / denominator;
+            const intercept = (sumY - (slope * sumX)) / count;
+            return intercept + (slope * targetX);
+        }
+
+        function getTrendPercent(points, days) {
+            const sortedPoints = points.slice().sort((a, b) => a.timestamp - b.timestamp);
+            const now = Math.floor(Date.now() / 1000);
+            const previous = now - (days * 24 * 60 * 60);
+            const previousScore = getLinearPrediction(sortedPoints, previous);
+            const currentScore = getLinearPrediction(sortedPoints, now);
+
+            if (previousScore === null || currentScore === null || previousScore <= 0) {
+                return null;
+            }
+
+            return ((currentScore - previousScore) / previousScore) * 100;
+        }
+
+        function getAverage(values) {
+            const validValues = values.filter((value) => Number.isFinite(value));
+            if (validValues.length === 0) return null;
+            return validValues.reduce((total, value) => total + value, 0) / validValues.length;
+        }
+
+        function formatPercent(value) {
+            if (!Number.isFinite(value)) return "n/a";
+            const sign = value > 0 ? "+" : "";
+            return `${sign}${value.toFixed(1)}%`;
+        }
+
+        function getAllExerciseLabels() {
+            const selectExercises = Array.from(document.querySelectorAll("#exercise option"))
+                .map((option) => option.value)
+                .filter(Boolean);
+            const categoryExercises = Object.keys(exerciseCategories);
+            return Array.from(new Set([...selectExercises, ...categoryExercises].map(getExerciseLabel)))
+                .sort((a, b) => a.localeCompare(b));
+        }
+
+        function getDaysSince(timestamp) {
+            if (!timestamp) return "none";
+            const secondsElapsed = Math.max(0, Math.floor(Date.now() / 1000) - timestamp);
+            const days = Math.floor(secondsElapsed / (24 * 60 * 60));
+            return String(days);
+        }
+
+        function renderNext(entries) {
+            const latestByExercise = entries.reduce((latest, entry) => {
+                const exercise = getExerciseLabel(entry.exercise);
+                const currentLatest = latest.get(exercise);
+                if (!currentLatest || entry.timestamp > currentLatest) {
+                    latest.set(exercise, entry.timestamp);
+                }
+                return latest;
+            }, new Map());
+            const rows = getAllExerciseLabels()
+                .map((exercise) => ({
+                    exercise,
+                    timestamp: latestByExercise.get(exercise) || null
+                }))
+                .sort((a, b) => {
+                    if (!a.timestamp && !b.timestamp) {
+                        return a.exercise.localeCompare(b.exercise);
+                    }
+                    if (!a.timestamp) return -1;
+                    if (!b.timestamp) return 1;
+                    return a.timestamp - b.timestamp;
+                });
+
+            const bodyRows = rows.map((row) => `
+                <tr>
+                    <td>${row.exercise}</td>
+                    <td>${getDaysSince(row.timestamp)}</td>
+                </tr>
+            `).join("");
+
+            nextTable.innerHTML = `
+                <table class="next-table">
+                    <thead>
+                        <tr>
+                            <th>Exercise</th>
+                            <th>Days since last done</th>
+                        </tr>
+                    </thead>
+                    <tbody>${bodyRows}</tbody>
+                </table>
+            `;
+        }
+
+        function renderAnalysis(entries) {
+            const periods = [
+                { key: "twoWeeks", label: "2 weeks", days: 14 },
+                { key: "fourWeeks", label: "4 weeks", days: 28 },
+                { key: "twoMonths", label: "2 months", days: 61 }
+            ];
+            const groupedEntries = entries.reduce((groups, entry) => {
+                const exercise = getExerciseLabel(entry.exercise);
+                const weightKey = String(entry.weight);
+
+                if (!groups.has(exercise)) {
+                    groups.set(exercise, new Map());
+                }
+                if (!groups.get(exercise).has(weightKey)) {
+                    groups.get(exercise).set(weightKey, []);
+                }
+                groups.get(exercise).get(weightKey).push(entry);
+                return groups;
+            }, new Map());
+
+            if (groupedEntries.size === 0) {
+                analysisTable.innerHTML = "<p>No entries found.</p>";
+                return;
+            }
+
+            const rows = Array.from(groupedEntries.entries())
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([exercise, weightGroups]) => {
+                    const trends = {};
+                    periods.forEach((period) => {
+                        const weightTrends = Array.from(weightGroups.values())
+                            .map((points) => getTrendPercent(points, period.days));
+                        trends[period.key] = getAverage(weightTrends);
+                    });
+                    return { exercise, trends };
+                });
+
+            const totals = {};
+            periods.forEach((period) => {
+                totals[period.key] = getAverage(rows.map((row) => row.trends[period.key]));
+            });
+
+            const headerCells = periods.map((period) => `<th>${period.label}</th>`).join("");
+            const bodyRows = rows.map((row) => `
+                <tr>
+                    <td>${row.exercise}</td>
+                    ${periods.map((period) => `<td>${formatPercent(row.trends[period.key])}</td>`).join("")}
+                </tr>
+            `).join("");
+            const footerCells = periods.map((period) => `<td>${formatPercent(totals[period.key])}</td>`).join("");
+
+            analysisTable.innerHTML = `
+                <table class="analysis-table">
+                    <thead>
+                        <tr>
+                            <th>Exercise</th>
+                            ${headerCells}
+                        </tr>
+                    </thead>
+                    <tbody>${bodyRows}</tbody>
+                    <tfoot>
+                        <tr>
+                            <td>Average</td>
+                            ${footerCells}
+                        </tr>
+                    </tfoot>
+                </table>
+            `;
+        }
+
+        function setActiveView(view) {
+            activeView = view;
+            chartsView.hidden = view !== "charts";
+            analysisView.hidden = view !== "analysis";
+            nextView.hidden = view !== "next";
+            viewTabs.querySelectorAll(".view-tab").forEach((button) => {
+                button.classList.toggle("active", button.dataset.view === view);
+            });
+
+            if (view === "charts") {
+                renderCharts(latestEntries);
+            } else {
+                chartsByKey.forEach((chart) => chart.destroy());
+                chartsByKey.clear();
+                if (view === "analysis") {
+                    renderAnalysis(latestEntries);
+                } else {
+                    renderNext(latestEntries);
+                }
+            }
         }
 
         function renderCharts(entries) {
@@ -315,6 +558,13 @@
             renderCharts(latestEntries);
         });
 
+        viewTabs.addEventListener("click", (event) => {
+            const tab = event.target.closest(".view-tab");
+            if (!tab) return;
+
+            setActiveView(tab.dataset.view);
+        });
+
         function renderHistory(entries) {
             historyLog.innerHTML = "";
 
@@ -369,7 +619,7 @@
             const entries = [];
             if (snapshot.empty) {
                 latestEntries = entries;
-                renderCharts(entries);
+                setActiveView(activeView);
                 if (historyDetails.open) {
                     renderHistory(entries);
                 }
@@ -386,7 +636,7 @@
             });
 
             latestEntries = entries;
-            renderCharts(entries);
+            setActiveView(activeView);
             if (historyDetails.open) {
                 renderHistory(entries);
             }
