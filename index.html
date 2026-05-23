@@ -118,7 +118,7 @@
     <section id="analysisView" class="analysis-view" hidden>
         <h2>Analysis</h2>
         <div id="analysisTable" class="analysis-table-wrap">Loading analysis...</div>
-        <p class="analysis-note">Weighted exercises use Epley estimated 1-rep max. Bodyweight entries use reps as the strength score.</p>
+        <p class="analysis-note">Weighted exercises trend reps within each period, then convert the change to estimated lifting capacity with the Epley formula. Bodyweight entries use reps as the strength score.</p>
     </section>
 
     <section id="nextView" class="next-view" hidden>
@@ -128,6 +128,7 @@
 
     <details id="historyDetails">
         <summary>History</summary>
+	<div class="version">1.0.0</div>
         <div id="historyLog"></div>
     </details>
 
@@ -259,20 +260,13 @@
             return colors[index % colors.length];
         }
 
-        function getStrengthScore(entry) {
-            if (entry.weight > 0) {
-                return entry.weight * (1 + (entry.reps / 30));
-            }
-            return entry.reps;
-        }
-
-        function getLinearPrediction(points, timestamp) {
+        function getRepPrediction(points, timestamp) {
             if (points.length < 2) return null;
 
             const firstTimestamp = points[0].timestamp;
             const normalizedPoints = points.map((point) => ({
                 x: (point.timestamp - firstTimestamp) / (24 * 60 * 60),
-                y: getStrengthScore(point)
+                y: point.reps
             }));
             const targetX = (timestamp - firstTimestamp) / (24 * 60 * 60);
             const count = normalizedPoints.length;
@@ -289,18 +283,41 @@
             return intercept + (slope * targetX);
         }
 
-        function getTrendPercent(points, days) {
-            const sortedPoints = points.slice().sort((a, b) => a.timestamp - b.timestamp);
-            const now = Math.floor(Date.now() / 1000);
-            const previous = now - (days * 24 * 60 * 60);
-            const previousScore = getLinearPrediction(sortedPoints, previous);
-            const currentScore = getLinearPrediction(sortedPoints, now);
+        function getEstimatedOneRepMax(weight, reps) {
+            return weight * (1 + (reps / 30));
+        }
 
-            if (previousScore === null || currentScore === null || previousScore <= 0) {
+        function getEquivalentWeightForReps(oneRepMax, reps) {
+            return oneRepMax / (1 + (reps / 30));
+        }
+
+        function getTrendPercent(points, days) {
+            const now = Math.floor(Date.now() / 1000);
+            const periodStart = now - (days * 24 * 60 * 60);
+            const periodPoints = points
+                .filter((point) => point.timestamp >= periodStart && point.timestamp <= now)
+                .sort((a, b) => a.timestamp - b.timestamp);
+
+            if (periodPoints.length < 2) return null;
+
+            const firstTimestamp = periodPoints[0].timestamp;
+            const lastTimestamp = periodPoints[periodPoints.length - 1].timestamp;
+            const previousReps = getRepPrediction(periodPoints, firstTimestamp);
+            const currentReps = getRepPrediction(periodPoints, lastTimestamp);
+            const weight = Number(periodPoints[0]?.weight);
+
+            if (previousReps === null || currentReps === null || previousReps <= 0 || currentReps <= 0) {
                 return null;
             }
 
-            return ((currentScore - previousScore) / previousScore) * 100;
+            if (weight <= 0) {
+                return ((currentReps - previousReps) / previousReps) * 100;
+            }
+
+            const currentOneRepMax = getEstimatedOneRepMax(weight, currentReps);
+            const currentWeightAtPreviousReps = getEquivalentWeightForReps(currentOneRepMax, previousReps);
+
+            return ((currentWeightAtPreviousReps - weight) / weight) * 100;
         }
 
         function getAverage(values) {
@@ -331,20 +348,42 @@
             return String(days);
         }
 
+        function formatWeightList(weights) {
+            if (weights.length === 0) return "none";
+            return weights
+                .sort((a, b) => a - b)
+                .map((weight) => weight > 0 ? String(weight) : "bodyweight")
+                .join(", ");
+        }
+
         function renderNext(entries) {
-            const latestByExercise = entries.reduce((latest, entry) => {
+            const exerciseHistory = entries.reduce((history, entry) => {
                 const exercise = getExerciseLabel(entry.exercise);
-                const currentLatest = latest.get(exercise);
-                if (!currentLatest || entry.timestamp > currentLatest) {
-                    latest.set(exercise, entry.timestamp);
+                if (!history.has(exercise)) {
+                    history.set(exercise, {
+                        latestTimestamp: null,
+                        weights: new Set()
+                    });
                 }
-                return latest;
+
+                const exerciseData = history.get(exercise);
+                if (!exerciseData.latestTimestamp || entry.timestamp > exerciseData.latestTimestamp) {
+                    exerciseData.latestTimestamp = entry.timestamp;
+                }
+                if (Number.isFinite(entry.weight)) {
+                    exerciseData.weights.add(entry.weight);
+                }
+                return history;
             }, new Map());
             const rows = getAllExerciseLabels()
-                .map((exercise) => ({
-                    exercise,
-                    timestamp: latestByExercise.get(exercise) || null
-                }))
+                .map((exercise) => {
+                    const history = exerciseHistory.get(exercise);
+                    return {
+                        exercise,
+                        timestamp: history?.latestTimestamp || null,
+                        weights: history ? Array.from(history.weights) : []
+                    };
+                })
                 .sort((a, b) => {
                     if (!a.timestamp && !b.timestamp) {
                         return a.exercise.localeCompare(b.exercise);
@@ -358,6 +397,7 @@
                 <tr>
                     <td>${row.exercise}</td>
                     <td>${getDaysSince(row.timestamp)}</td>
+                    <td>${formatWeightList(row.weights)}</td>
                 </tr>
             `).join("");
 
@@ -367,6 +407,7 @@
                         <tr>
                             <th>Exercise</th>
                             <th>Days since last done</th>
+                            <th>Weights</th>
                         </tr>
                     </thead>
                     <tbody>${bodyRows}</tbody>
