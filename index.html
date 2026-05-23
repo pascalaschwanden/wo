@@ -14,6 +14,8 @@
         .view-tab, .chart-tab { background-color: #e9ecef; color: #222; border: 1px solid #ccc; }
         .view-tab.active, .chart-tab.active { background-color: #007bff; color: white; border-color: #007bff; }
         .chart-view[hidden], .analysis-view[hidden], .next-view[hidden] { display: none; }
+        .chart-range { margin-bottom: 20px; }
+        .chart-range select { width: 100%; }
         .chart-grid { display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; }
         .chart-panel { border: 1px solid #ccc; padding: 12px; }
         .chart-panel h3 { font-size: 16px; margin: 0 0 10px; }
@@ -86,6 +88,23 @@
 
     <section id="chartsView" class="chart-view">
         <h2>Charts</h2>
+        <div class="chart-range">
+            <select id="chartRange" aria-label="Chart time range">
+                <option value="2w" selected>2 weeks</option>
+                <option value="1m">1 month</option>
+                <option value="2m">2 months</option>
+                <option value="3m">3 months</option>
+                <option value="4m">4 months</option>
+                <option value="6m">6 months</option>
+                <option value="9m">9 months</option>
+                <option value="1y">1 year</option>
+                <option value="2y">2 years</option>
+                <option value="3y">3 years</option>
+                <option value="4y">4 years</option>
+                <option value="5y">5 years</option>
+                <option value="6y">6 years</option>
+            </select>
+        </div>
         <div id="chartTabs" class="chart-tabs">
             <button type="button" class="chart-tab active" data-category="Chest">Chest</button>
             <button type="button" class="chart-tab" data-category="Arms">Arms</button>
@@ -136,6 +155,7 @@
         const analysisView = document.getElementById("analysisView");
         const nextView = document.getElementById("nextView");
         const chartTabs = document.getElementById("chartTabs");
+        const chartRange = document.getElementById("chartRange");
         const chartGrid = document.getElementById("chartGrid");
         const analysisTable = document.getElementById("analysisTable");
         const nextTable = document.getElementById("nextTable");
@@ -209,10 +229,29 @@
             });
         }
 
-        function getLastTwoWeeksRange() {
-            const end = Math.floor(Date.now() / 1000);
-            const start = end - (14 * 24 * 60 * 60);
-            return { start, end };
+        function getChartRange() {
+            const endDate = new Date();
+            const startDate = new Date(endDate);
+            const selectedRange = chartRange.value;
+
+            if (selectedRange === "2w") startDate.setDate(startDate.getDate() - 14);
+            if (selectedRange === "1m") startDate.setMonth(startDate.getMonth() - 1);
+            if (selectedRange === "2m") startDate.setMonth(startDate.getMonth() - 2);
+            if (selectedRange === "3m") startDate.setMonth(startDate.getMonth() - 3);
+            if (selectedRange === "4m") startDate.setMonth(startDate.getMonth() - 4);
+            if (selectedRange === "6m") startDate.setMonth(startDate.getMonth() - 6);
+            if (selectedRange === "9m") startDate.setMonth(startDate.getMonth() - 9);
+            if (selectedRange === "1y") startDate.setFullYear(startDate.getFullYear() - 1);
+            if (selectedRange === "2y") startDate.setFullYear(startDate.getFullYear() - 2);
+            if (selectedRange === "3y") startDate.setFullYear(startDate.getFullYear() - 3);
+            if (selectedRange === "4y") startDate.setFullYear(startDate.getFullYear() - 4);
+            if (selectedRange === "5y") startDate.setFullYear(startDate.getFullYear() - 5);
+            if (selectedRange === "6y") startDate.setFullYear(startDate.getFullYear() - 6);
+
+            return {
+                start: Math.floor(startDate.getTime() / 1000),
+                end: Math.floor(endDate.getTime() / 1000)
+            };
         }
 
         function getLineColor(index) {
@@ -460,7 +499,7 @@
             Array.from(groupedEntries.entries())
                 .sort(([, a], [, b]) => a.exercise.localeCompare(b.exercise))
                 .forEach(([key, group]) => {
-                    const { start, end } = getLastTwoWeeksRange();
+                    const { start, end } = getChartRange();
                     const weightEntries = Array.from(group.weights.entries())
                         .sort(([a], [b]) => Number(a) - Number(b));
 
@@ -546,6 +585,10 @@
                     chartsByKey.set(key, chart);
                 });
         }
+
+        chartRange.addEventListener("change", () => {
+            renderCharts(latestEntries);
+        });
 
         chartTabs.addEventListener("click", (event) => {
             const tab = event.target.closest(".chart-tab");

@@ -1,0 +1,11 @@
+
+- We will have two groups of tabs.  Make "Charts" a tab above all the excercise tabs and next to the Charts tab put a tab called "Analysis".  When charts is selected, all the excercise tabs and charts are shown just like before.  If Analysis is selected, you will hide the excercise/charts and instead show a table.  The table will contain the following:
+1st column will have each excercise (everything from Lat pull downs to bicep curls, etc).  the 2nd column will calculatea trendline for all datapoints for each excercise and use that to calculate the percentage increase in strength from 2 weeks earlier until now.  the 3rd column will do the same thing but for 4 weeks.  4th column same but for last 2 months.  if an excercise type has multiple weights (for example bench press has several weights: 95, 115, etc), you should calculate the trendline for each weight and it's percentage increase and average all those out.  Basically, i want to get an estimate of how much stronger I'm getting over a particular time period and have it broken down for each excercise type.  At the bottom of the table I want you add up the entire column and average those percentage increases.
+Some excercise/weight combinations only have 1 data point.  if that's the case then you won't be able to make a trendline, so just handle it gracefully.  you'll need to figure out some way to convert rep increases to strength percentage increase.  perhaps use a formula or if possible use the data we have to figure that out.
+
+
+
+- select dropdown below "Charts" title
+"Create a time selector dropdown below the Charts title which contains "2 weeks, 1 month, 2 months, 3 months, 4 months, 6 months, 1 year, 2 years.  When it's selected, the X axis for all charts start at a unix epoch date that is equal to NOW - time period selected."
+
+
