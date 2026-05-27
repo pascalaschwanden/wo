@@ -1,3 +1,18 @@
+- make sure you're modifying ~/OneDocument/wo/index.html  not some random version you found lying around.
+- next to the tab "Next", create a tab called "Benchmarks"
+Under Benchmarks, you should put these graphs: Barbell Bicep Curl, Bench Press, Barbell Row, Military Press, Squat and Deadlift.  For each graph put lifting Weight on the Y Axis, and date on the X Axis.  Then to calculate the graph, i want you to use my weight lifting data points to figure out how much weight i can lift for 6 reps.  then fit a best fit line curve.  then after that I want you to calculate the expected weight a typical person would be expected to lift after a certain amount of weeks of lifting and draw that line as a dotted line.  assume that typical person started on a start date specified by a date picker at the top of this tab.  that date picker should default to may 12th.  that's when i started.  i want to compare my strength increases to a typical lifter and see if i'm making good progress.
+
+
+- next make it so that the body weight excercises calculate strenth increase on the analysis page, rather than just showing the percent of repititions increased.
+
+
+
+
+
+
+
+
+
 
 - We will have two groups of tabs.  Make "Charts" a tab above all the excercise tabs and next to the Charts tab put a tab called "Analysis".  When charts is selected, all the excercise tabs and charts are shown just like before.  If Analysis is selected, you will hide the excercise/charts and instead show a table.  The table will contain the following:
 1st column will have each excercise (everything from Lat pull downs to bicep curls, etc).  the 2nd column will calculatea trendline for all datapoints for each excercise and use that to calculate the percentage increase in strength from 2 weeks earlier until now.  the 3rd column will do the same thing but for 4 weeks.  4th column same but for last 2 months.  if an excercise type has multiple weights (for example bench press has several weights: 95, 115, etc), you should calculate the trendline for each weight and it's percentage increase and average all those out.  Basically, i want to get an estimate of how much stronger I'm getting over a particular time period and have it broken down for each excercise type.  At the bottom of the table I want you add up the entire column and average those percentage increases.
