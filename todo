@@ -1,4 +1,9 @@
+
 - make sure you're modifying ~/OneDocument/wo/index.html  not some random version you found lying around.
+- for the analysis tab I want you to have two tables instead of 1.
+One table has these excercises (bench press, barbell row, military press, squat, deadlift, bicep curl, tricep curl and lateral raises).. the 2nd table has every other type of excercise.  each table should have the average at the bottom, like before.  and for both tables add one more column for 4 month duration.
+
+
 - next to the tab "Next", create a tab called "Benchmarks"
 Under Benchmarks, you should put these graphs: Barbell Bicep Curl, Bench Press, Barbell Row, Military Press, Squat and Deadlift.  For each graph put lifting Weight on the Y Axis, and date on the X Axis.  Then to calculate the graph, i want you to use my weight lifting data points to figure out how much weight i can lift for 6 reps.  then fit a best fit line curve.  then after that I want you to calculate the expected weight a typical person would be expected to lift after a certain amount of weeks of lifting and draw that line as a dotted line.  assume that typical person started on a start date specified by a date picker at the top of this tab.  that date picker should default to may 12th.  that's when i started.  i want to compare my strength increases to a typical lifter and see if i'm making good progress.
 

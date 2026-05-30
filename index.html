@@ -22,7 +22,8 @@
         .chart-canvas-wrap { height: 240px; position: relative; }
         .chart-canvas-wrap canvas { display: block; }
         .analysis-table-wrap { overflow-x: auto; margin-bottom: 30px; }
-        .analysis-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .analysis-table-wrap h3 { font-size: 16px; margin: 0 0 10px; }
+        .analysis-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px; }
         .analysis-table th, .analysis-table td { border: 1px solid #ccc; padding: 10px; text-align: right; }
         .analysis-table th:first-child, .analysis-table td:first-child { text-align: left; }
         .analysis-table th { background: #f8f9fa; }
@@ -119,7 +120,7 @@
     <section id="analysisView" class="analysis-view" hidden>
         <h2>Analysis</h2>
         <div id="analysisTable" class="analysis-table-wrap">Loading analysis...</div>
-        <p class="analysis-note">Weighted exercises trend reps within each period, then convert the change to estimated lifting capacity with the Epley formula. Bodyweight entries use reps as the strength score.</p>
+        <p class="analysis-note">Exercises trend reps within each period, then convert the change to estimated lifting capacity with the Epley formula. Bodyweight entries use one bodyweight unit for the same strength estimate.</p>
     </section>
 
     <section id="nextView" class="next-view" hidden>
@@ -330,14 +331,11 @@
                 return null;
             }
 
-            if (weight <= 0) {
-                return ((currentReps - previousReps) / previousReps) * 100;
-            }
-
-            const currentOneRepMax = getEstimatedOneRepMax(weight, currentReps);
+            const comparisonWeight = weight > 0 ? weight : 1;
+            const currentOneRepMax = getEstimatedOneRepMax(comparisonWeight, currentReps);
             const currentWeightAtPreviousReps = getEquivalentWeightForReps(currentOneRepMax, previousReps);
 
-            return ((currentWeightAtPreviousReps - weight) / weight) * 100;
+            return ((currentWeightAtPreviousReps - comparisonWeight) / comparisonWeight) * 100;
         }
 
         function getAverage(values) {
@@ -439,7 +437,18 @@
             const periods = [
                 { key: "twoWeeks", label: "2 weeks", days: 14 },
                 { key: "fourWeeks", label: "4 weeks", days: 28 },
-                { key: "twoMonths", label: "2 months", days: 61 }
+                { key: "twoMonths", label: "2 months", days: 61 },
+                { key: "fourMonths", label: "4 months", days: 122 }
+            ];
+            const mainAnalysisExercises = [
+                { label: "Bench Press", matches: ["Bench Press"] },
+                { label: "Barbell Row", matches: ["Barbell Row"] },
+                { label: "Military Press", matches: ["Military Press"] },
+                { label: "Squat", matches: ["Squat"] },
+                { label: "Deadlift", matches: ["Deadlift"] },
+                { label: "Bicep Curl", matches: ["Bicep Curl"] },
+                { label: "Tricep Curl", matches: ["Tricep Curl"] },
+                { label: "Lateral Raises", matches: ["Lateral Raises", "Side Laterals"] }
             ];
             const groupedEntries = entries.reduce((groups, entry) => {
                 const exercise = getExerciseLabel(entry.exercise);
@@ -472,36 +481,57 @@
                     return { exercise, trends };
                 });
 
-            const totals = {};
-            periods.forEach((period) => {
-                totals[period.key] = getAverage(rows.map((row) => row.trends[period.key]));
-            });
+            function renderAnalysisTable(title, tableRows) {
+                const totals = {};
+                periods.forEach((period) => {
+                    totals[period.key] = getAverage(tableRows.map((row) => row.trends[period.key]));
+                });
 
-            const headerCells = periods.map((period) => `<th>${period.label}</th>`).join("");
-            const bodyRows = rows.map((row) => `
-                <tr>
-                    <td>${row.exercise}</td>
-                    ${periods.map((period) => `<td>${formatPercent(row.trends[period.key])}</td>`).join("")}
-                </tr>
-            `).join("");
-            const footerCells = periods.map((period) => `<td>${formatPercent(totals[period.key])}</td>`).join("");
+                const headerCells = periods.map((period) => `<th>${period.label}</th>`).join("");
+                const bodyRows = tableRows.length === 0
+                    ? `<tr><td colspan="${periods.length + 1}">No entries found.</td></tr>`
+                    : tableRows.map((row) => `
+                        <tr>
+                            <td>${row.exercise}</td>
+                            ${periods.map((period) => `<td>${formatPercent(row.trends[period.key])}</td>`).join("")}
+                        </tr>
+                    `).join("");
+                const footerCells = periods.map((period) => `<td>${formatPercent(totals[period.key])}</td>`).join("");
+
+                return `
+                    <h3>${title}</h3>
+                    <table class="analysis-table">
+                        <thead>
+                            <tr>
+                                <th>Exercise</th>
+                                ${headerCells}
+                            </tr>
+                        </thead>
+                        <tbody>${bodyRows}</tbody>
+                        <tfoot>
+                            <tr>
+                                <td>Average</td>
+                                ${footerCells}
+                            </tr>
+                        </tfoot>
+                    </table>
+                `;
+            }
+
+            const mainExerciseNames = new Set(mainAnalysisExercises.flatMap((exercise) => exercise.matches));
+            const mainRows = mainAnalysisExercises.map((exercise) => {
+                const matchingRows = rows.filter((row) => exercise.matches.includes(row.exercise));
+                const trends = {};
+                periods.forEach((period) => {
+                    trends[period.key] = getAverage(matchingRows.map((row) => row.trends[period.key]));
+                });
+                return { exercise: exercise.label, trends };
+            });
+            const otherRows = rows.filter((row) => !mainExerciseNames.has(row.exercise));
 
             analysisTable.innerHTML = `
-                <table class="analysis-table">
-                    <thead>
-                        <tr>
-                            <th>Exercise</th>
-                            ${headerCells}
-                        </tr>
-                    </thead>
-                    <tbody>${bodyRows}</tbody>
-                    <tfoot>
-                        <tr>
-                            <td>Average</td>
-                            ${footerCells}
-                        </tr>
-                    </tfoot>
-                </table>
+                ${renderAnalysisTable("Main exercises", mainRows)}
+                ${renderAnalysisTable("Other exercises", otherRows)}
             `;
         }
 
@@ -754,4 +784,3 @@
     </script>
 </body>
 </html>
-
