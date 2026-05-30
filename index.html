@@ -21,6 +21,7 @@
         .chart-panel h3 { font-size: 16px; margin: 0 0 10px; }
         .chart-canvas-wrap { height: 240px; position: relative; }
         .chart-canvas-wrap canvas { display: block; }
+        .benchmarks-view .chart-canvas-wrap { height: 280px; }
         .benchmarks-controls { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
         .benchmarks-controls label { font-size: 14px; font-weight: bold; }
         .benchmarks-note { color: #555; font-size: 13px; margin-top: -14px; margin-bottom: 20px; }
@@ -559,6 +560,13 @@
                     { x: startTimestamp, y: typicalStartWeight },
                     { x: chartEnd, y: typicalEndWeight }
                 ];
+                const plottedYValues = [...points, ...yourTrendPoints, ...typicalPoints]
+                    .map((point) => point.y)
+                    .filter((value) => Number.isFinite(value));
+                const lowestY = Math.min(...plottedYValues);
+                const highestY = Math.max(...plottedYValues);
+                const yPadding = Math.max((highestY - lowestY) * 0.12, highestY * 0.03, 5);
+                const yMin = Math.max(0, Math.floor((lowestY - yPadding) / 5) * 5);
 
                 const chart = new Chart(canvas, {
                     type: "line",
@@ -620,7 +628,7 @@
                                 }
                             },
                             y: {
-                                beginAtZero: true,
+                                min: yMin,
                                 title: {
                                     display: true,
                                     text: "Lifting Weight"
