@@ -25,6 +25,12 @@
         .benchmarks-controls { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
         .benchmarks-controls label { font-size: 14px; font-weight: bold; }
         .benchmarks-note { color: #555; font-size: 13px; margin-top: -14px; margin-bottom: 20px; }
+        .backup-controls { margin-bottom: 20px; }
+        .backup-button:disabled { background: #adb5bd; cursor: not-allowed; }
+        .log-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px; border-bottom: 1px solid #ccc; }
+        .log-entry-text { flex: 1 1 auto; }
+        .delete-entry-button { flex: 0 0 auto; width: 28px; height: 28px; padding: 0; line-height: 1; background: #dc3545; border-radius: 4px; }
+        .delete-entry-button:hover { background: #b02a37; }
         .analysis-table-wrap { overflow-x: auto; margin-bottom: 30px; }
         .analysis-table-wrap h3 { font-size: 16px; margin: 0 0 10px; }
         .analysis-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px; }
@@ -39,7 +45,6 @@
         .next-table th { background: #f8f9fa; }
         details { margin-bottom: 30px; }
         summary { cursor: pointer; font-size: 1.5em; font-weight: bold; margin: 0.83em 0; }
-        .log-item { padding: 10px; border-bottom: 1px solid #ccc; }
     </style>
 </head>
 <body>
@@ -143,6 +148,10 @@
         <p class="benchmarks-note">Each point estimates the weight you could lift for 6 reps using the Epley formula. The solid line is your best-fit trend, and the dotted line is a typical novice progression starting from your first benchmark estimate.</p>
     </section>
 
+    <div class="backup-controls">
+        <button type="button" id="backupButton" class="backup-button" disabled>Backup</button>
+    </div>
+
     <details id="historyDetails">
         <summary>History</summary>
 	<div class="version">1.0.0</div>
@@ -153,7 +162,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
         // Firebase web app configuration. These values are safe to include in a static GitHub Pages site.
         const firebaseConfig = {
@@ -181,6 +190,7 @@
         const nextTable = document.getElementById("nextTable");
         const benchmarkStartDate = document.getElementById("benchmarkStartDate");
         const benchmarkGrid = document.getElementById("benchmarkGrid");
+        const backupButton = document.getElementById("backupButton");
         const historyDetails = document.getElementById("historyDetails");
         const historyLog = document.getElementById("historyLog");
         const chartsByKey = new Map();
@@ -237,6 +247,7 @@
         };
 
         const bodyweightExercises = new Set(["Bath dips", "Chin ups", "Pull ups", "Push ups", "Calf Raises, single"]);
+        const squatBodyweightOffset = 144;
         const benchmarkExercises = [
             { name: "Barbell Bicep Curl", weeklyGain: 1 },
             { name: "Bench Press", weeklyGain: 2.5 },
@@ -342,6 +353,14 @@
         function getEstimatedWeightForReps(weight, actualReps, targetReps) {
             const oneRepMax = getEstimatedOneRepMax(weight, actualReps);
             return getEquivalentWeightForReps(oneRepMax, targetReps);
+        }
+
+        function getBenchmarkLiftWeight(entry) {
+            const exercise = getExerciseLabel(entry.exercise);
+            if (exercise === "Squat") {
+                return entry.weight + squatBodyweightOffset;
+            }
+            return entry.weight;
         }
 
         function getBenchmarkStartTimestamp() {
@@ -514,7 +533,7 @@
                     .filter((entry) => entry.weight > 0 && entry.reps > 0 && entry.timestamp)
                     .map((entry) => ({
                         x: entry.timestamp,
-                        y: getEstimatedWeightForReps(entry.weight, entry.reps, 6)
+                        y: getEstimatedWeightForReps(getBenchmarkLiftWeight(entry), entry.reps, 6)
                     }))
                     .filter((point) => Number.isFinite(point.y) && point.y > 0)
                     .sort((a, b) => a.x - b.x);
@@ -938,13 +957,91 @@
                 return;
             }
 
-            entries.forEach((entry) => {
-                const div = document.createElement("div");
-                div.className = "log-item";
-                div.innerHTML = `<strong>Exercise:</strong> ${entry.exercise} | <strong>Weight:</strong> ${entry.weight} | <strong>Reps:</strong> ${entry.reps} | <strong>Epoch:</strong> ${entry.timestamp}`;
-                historyLog.appendChild(div);
-            });
+            entries
+                .slice()
+                .sort((a, b) => b.timestamp - a.timestamp)
+                .forEach((entry) => {
+                    const div = document.createElement("div");
+                    div.className = "log-item";
+
+                    const entryText = document.createElement("div");
+                    entryText.className = "log-entry-text";
+                    [
+                        ["Exercise", entry.exercise],
+                        ["Weight", entry.weight],
+                        ["Reps", entry.reps],
+                        ["Epoch", entry.timestamp]
+                    ].forEach(([label, value], index) => {
+                        if (index > 0) {
+                            entryText.append(" | ");
+                        }
+
+                        const labelElement = document.createElement("strong");
+                        labelElement.textContent = `${label}:`;
+                        entryText.append(labelElement, ` ${value}`);
+                    });
+
+                    const deleteButton = document.createElement("button");
+                    deleteButton.type = "button";
+                    deleteButton.className = "delete-entry-button";
+                    deleteButton.dataset.entryId = entry.id;
+                    deleteButton.setAttribute("aria-label", `Delete ${entry.exercise} entry from ${getDateLabel(entry.timestamp)}`);
+                    deleteButton.textContent = "x";
+
+                    div.appendChild(entryText);
+                    div.appendChild(deleteButton);
+                    historyLog.appendChild(div);
+                });
         }
+
+        function getBackupFilename() {
+            const timestamp = new Date()
+                .toISOString()
+                .replace(/[:.]/g, "-");
+            return `workout-backup-${timestamp}.json`;
+        }
+
+        function downloadBackup(entries) {
+            if (entries.length === 0) {
+                alert("No entries found to back up.");
+                return;
+            }
+
+            const backup = {
+                exportedAt: new Date().toISOString(),
+                count: entries.length,
+                entries: entries
+                    .slice()
+                    .sort((a, b) => b.timestamp - a.timestamp)
+            };
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = getBackupFilename();
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 0);
+        }
+
+        historyLog.addEventListener("click", async (event) => {
+            const deleteButton = event.target.closest(".delete-entry-button");
+            if (!deleteButton) return;
+
+            deleteButton.disabled = true;
+            try {
+                await deleteDoc(doc(db, "workouts", deleteButton.dataset.entryId));
+            } catch (error) {
+                console.error("Error deleting document: ", error);
+                deleteButton.disabled = false;
+                alert("Failed to delete entry. Check database rules.");
+            }
+        });
+
+        backupButton.addEventListener("click", () => {
+            downloadBackup(latestEntries);
+        });
 
         historyDetails.addEventListener("toggle", () => {
             if (historyDetails.open) {
@@ -984,15 +1081,17 @@
             const entries = [];
             if (snapshot.empty) {
                 latestEntries = entries;
+                backupButton.disabled = true;
                 setActiveView(activeView);
                 if (historyDetails.open) {
                     renderHistory(entries);
                 }
                 return;
             }
-            snapshot.forEach((doc) => {
-                const data = doc.data();
+            snapshot.forEach((snapshotDoc) => {
+                const data = snapshotDoc.data();
                 entries.push({
+                    id: snapshotDoc.id,
                     exercise: getExerciseLabel(data.exercise || "Not set"),
                     weight: Number(data.weight),
                     reps: Number(data.reps),
@@ -1001,6 +1100,7 @@
             });
 
             latestEntries = entries;
+            backupButton.disabled = entries.length === 0;
             setActiveView(activeView);
             if (historyDetails.open) {
                 renderHistory(entries);
