@@ -198,6 +198,7 @@
         let latestEntries = [];
         let activeView = "charts";
         let activeChartCategory = "Chest";
+        const chartRangeStorageKey = "workoutChartRange";
 
         const hasFirebaseConfig = Object.values(firebaseConfig).every((value) => !value.startsWith("YOUR_"));
 
@@ -287,6 +288,17 @@
 
         function setDefaultChartEndDate() {
             chartEndDate.value = getDateInputValue(new Date());
+        }
+
+        function restoreChartRange() {
+            const storedRange = localStorage.getItem(chartRangeStorageKey);
+            if (!storedRange) return;
+
+            const hasStoredOption = Array.from(chartRange.options)
+                .some((option) => option.value === storedRange);
+            if (hasStoredOption) {
+                chartRange.value = storedRange;
+            }
         }
 
         function getChartRange() {
@@ -915,9 +927,11 @@
         }
 
         setDefaultChartEndDate();
+        restoreChartRange();
         benchmarkStartDate.value = "2026-05-12";
 
         chartRange.addEventListener("change", () => {
+            localStorage.setItem(chartRangeStorageKey, chartRange.value);
             renderCharts(latestEntries);
         });
 
