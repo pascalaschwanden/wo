@@ -88,6 +88,7 @@
             <option value="Shoulder Hammer Press">Shoulder Hammer Press</option>
             <option value="Shoulder Press">Shoulder Press</option>
             <option value="Side Laterals">Side Laterals</option>
+            <option value="Skull Crushers">Skull Crushers</option>
             <option value="Squat">Squat</option>
             <option value="Squat - front">Squat - front</option>
             <option value="Squat - bulgarian">Squat - bulgarian</option>
@@ -235,6 +236,7 @@
 
         const exerciseCategories = {
             "Bath dips": "Arms",
+            "Skull Crushers": "Arms",
 	    "Barbell Row": "Back",
 	    "Barbell Bicep Curl": "Arms",
 	    "Lat Pull-down": "Back",
@@ -298,6 +300,24 @@
                 targets: [65, [95, 135], [135, 185], [175, 215], [195, 245], [215, 275], [235, 295], [265, 335], [295, 375]]
             },
             {
+                label: "Hip Thrust",
+                matches: ["Hip Thrust"],
+                targetReps: 8,
+                targets: [45, [75, 105], [105, 145], [135, 185], [165, 215], [185, 245], [205, 275], [245, 315], [275, 365]]
+            },
+            {
+                label: "Barbell Lunge",
+                matches: ["Lunge - walking", "Lunge - front foot elevated"],
+                targetReps: 8,
+                targets: [20, [35, 45], [45, 65], [65, 95], [85, 115], [105, 135], [115, 150], [135, 175], [155, 195]]
+            },
+            {
+                label: "Bulgarian Split Squat",
+                matches: ["Squat - bulgarian"],
+                targetReps: 8,
+                targets: [0, 0, [0, 15], [15, 30], [25, 45], [35, 60], [45, 75], [60, 95], [75, 120]]
+            },
+            {
                 label: "Bench Press",
                 matches: ["Bench Press"],
                 targetReps: 6,
@@ -323,7 +343,7 @@
             },
             {
                 label: "Skull Crushers",
-                matches: ["Overhead tricep extention", "Tricep Pull-down"],
+                matches: ["Skull Crushers", "Overhead tricep extention", "Tricep Pull-down"],
                 targetReps: 8,
                 targets: [20, [25, 35], [35, 45], [45, 55], [50, 65], [55, 75], [60, 80], [65, 90], [75, 100]]
             },
@@ -332,24 +352,6 @@
                 matches: ["Side Laterals"],
                 targetReps: 14,
                 targets: [5, [5, 10], [10, 12], [10, 15], [12, 18], [15, 20], [15, 22], [18, 25], [20, 30]]
-            },
-            {
-                label: "Hip Thrust",
-                matches: ["Hip Thrust"],
-                targetReps: 8,
-                targets: [45, [75, 105], [105, 145], [135, 185], [165, 215], [185, 245], [205, 275], [245, 315], [275, 365]]
-            },
-            {
-                label: "Barbell Lunge",
-                matches: ["Lunge - walking", "Lunge - front foot elevated"],
-                targetReps: 8,
-                targets: [20, [35, 45], [45, 65], [65, 95], [85, 115], [105, 135], [115, 150], [135, 175], [155, 195]]
-            },
-            {
-                label: "Bulgarian Split Squat",
-                matches: ["Squat - bulgarian"],
-                targetReps: 8,
-                targets: [0, 0, [0, 15], [15, 30], [25, 45], [35, 60], [45, 75], [60, 95], [75, 120]]
             }
         ];
 
