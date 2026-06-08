@@ -13,7 +13,7 @@
         .view-tabs, .chart-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
         .view-tab, .chart-tab { background-color: #e9ecef; color: #222; border: 1px solid #ccc; }
         .view-tab.active, .chart-tab.active { background-color: #007bff; color: white; border-color: #007bff; }
-        .chart-view[hidden], .analysis-view[hidden], .next-view[hidden], .benchmarks-view[hidden] { display: none; }
+        .chart-view[hidden], .analysis-view[hidden], .next-view[hidden], .benchmarks-view[hidden], .progress-view[hidden] { display: none; }
         .chart-range { display: flex; gap: 10px; margin-bottom: 20px; }
         .chart-range select, .chart-range input { flex: 1 1 0; min-width: 0; width: 50%; }
         .chart-grid { display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; }
@@ -25,6 +25,8 @@
         .benchmarks-controls { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
         .benchmarks-controls label { font-size: 14px; font-weight: bold; }
         .benchmarks-note { color: #555; font-size: 13px; margin-top: -14px; margin-bottom: 20px; }
+        .progress-canvas-wrap { height: 560px; position: relative; margin-bottom: 30px; }
+        .progress-note { color: #555; font-size: 13px; margin-top: -14px; margin-bottom: 20px; }
         .backup-controls { margin-bottom: 20px; }
         .backup-button:disabled { background: #adb5bd; cursor: not-allowed; }
         .log-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px; border-bottom: 1px solid #ccc; }
@@ -75,6 +77,7 @@
             <option value="Leg extension">Leg extension</option>
             <option value="Low horizontal Row">Low horizontal Row</option>
 	    <option value="Lunge - walking">Lunge - walking</option>
+	    <option value="Lunge - front foot elevated">Lunge - walking</option>
             <option value="Military Press">Military Press</option>
             <option value="Overhead tricep extention">Overhead tricep extention</option>
             <option value="Reverse Dumbbell Fly">Reverse Dumbbell Fly</option>
@@ -100,6 +103,7 @@
         <button type="button" class="view-tab" data-view="analysis">Analysis</button>
         <button type="button" class="view-tab" data-view="next">Next</button>
         <button type="button" class="view-tab" data-view="benchmarks">Benchmarks</button>
+        <button type="button" class="view-tab" data-view="progress">Progress</button>
     </div>
 
     <section id="chartsView" class="chart-view">
@@ -153,6 +157,14 @@
         <p class="benchmarks-note">Each point estimates the weight you could lift for 6 reps using the Epley formula. The solid line is your best-fit trend, and the dotted line is a typical novice progression starting from your first benchmark estimate.</p>
     </section>
 
+    <section id="progressView" class="progress-view" hidden>
+        <h2>Progress</h2>
+        <div class="progress-canvas-wrap">
+            <canvas id="progressChart"></canvas>
+        </div>
+        <p class="progress-note">Progress converts each logged set to the target rep count from the reference table, then interpolates between the table's month targets. Ranges use their midpoint.</p>
+    </section>
+
     <div class="backup-controls">
         <button type="button" id="backupButton" class="backup-button" disabled>Backup</button>
     </div>
@@ -187,6 +199,7 @@
         const analysisView = document.getElementById("analysisView");
         const nextView = document.getElementById("nextView");
         const benchmarksView = document.getElementById("benchmarksView");
+        const progressView = document.getElementById("progressView");
         const chartTabs = document.getElementById("chartTabs");
         const chartRange = document.getElementById("chartRange");
         const chartEndDate = document.getElementById("chartEndDate");
@@ -195,11 +208,13 @@
         const nextTable = document.getElementById("nextTable");
         const benchmarkStartDate = document.getElementById("benchmarkStartDate");
         const benchmarkGrid = document.getElementById("benchmarkGrid");
+        const progressChartCanvas = document.getElementById("progressChart");
         const backupButton = document.getElementById("backupButton");
         const historyDetails = document.getElementById("historyDetails");
         const historyLog = document.getElementById("historyLog");
         const chartsByKey = new Map();
         const benchmarkChartsByKey = new Map();
+        let progressChart = null;
         let latestEntries = [];
         let activeView = "charts";
         let activeChartCategory = "Chest";
@@ -243,6 +258,7 @@
             "Dumbbell Upright Row": "Shoulder",
             "Cable Face Pulls": "Shoulder",
 	    "Lunge - walking": "Legs",
+	    "Lunge - front foot elevated": "Legs",
             "Squat": "Legs",
             "Squat - front": "Legs",
             "Squat - bulgarian": "Legs",
@@ -266,6 +282,75 @@
             { name: "Military Press", weeklyGain: 1.25 },
             { name: "Squat", weeklyGain: 5 },
             { name: "Deadlift", weeklyGain: 5 }
+        ];
+        const progressReferenceMonths = [0, 2, 4, 6, 8, 10, 12, 18, 24];
+        const progressExercises = [
+            {
+                label: "Squat",
+                matches: ["Squat"],
+                targetReps: 6,
+                targets: [45, [75, 105], [105, 145], [135, 175], [155, 195], [175, 215], [195, 235], [215, 260], [235, 285]]
+            },
+            {
+                label: "Deadlift",
+                matches: ["Deadlift"],
+                targetReps: 6,
+                targets: [65, [95, 135], [135, 185], [175, 215], [195, 245], [215, 275], [235, 295], [265, 335], [295, 375]]
+            },
+            {
+                label: "Bench Press",
+                matches: ["Bench Press"],
+                targetReps: 6,
+                targets: [45, [65, 85], [85, 115], [105, 135], [115, 150], [125, 160], [135, 170], [155, 195], [175, 215]]
+            },
+            {
+                label: "Military Press",
+                matches: ["Military Press"],
+                targetReps: 6,
+                targets: [30, [35, 45], [45, 65], [55, 80], [65, 90], [75, 100], [85, 110], [95, 120], [105, 135]]
+            },
+            {
+                label: "Barbell Row",
+                matches: ["Barbell Row"],
+                targetReps: 6,
+                targets: [45, [45, 65], [65, 95], [85, 115], [105, 135], [115, 145], [125, 160], [145, 185], [165, 205]]
+            },
+            {
+                label: "Barbell Curl",
+                matches: ["Barbell Bicep Curl"],
+                targetReps: 8,
+                targets: [20, [25, 35], [35, 45], [45, 60], [50, 70], [55, 75], [60, 80], [70, 90], [75, 105]]
+            },
+            {
+                label: "Skull Crushers",
+                matches: ["Overhead tricep extention", "Tricep Pull-down"],
+                targetReps: 8,
+                targets: [20, [25, 35], [35, 45], [45, 55], [50, 65], [55, 75], [60, 80], [65, 90], [75, 100]]
+            },
+            {
+                label: "Lateral Raises",
+                matches: ["Side Laterals"],
+                targetReps: 14,
+                targets: [5, [5, 10], [10, 12], [10, 15], [12, 18], [15, 20], [15, 22], [18, 25], [20, 30]]
+            },
+            {
+                label: "Hip Thrust",
+                matches: ["Hip Thrust"],
+                targetReps: 8,
+                targets: [45, [75, 105], [105, 145], [135, 185], [165, 215], [185, 245], [205, 275], [245, 315], [275, 365]]
+            },
+            {
+                label: "Barbell Lunge",
+                matches: ["Lunge - walking", "Lunge - front foot elevated"],
+                targetReps: 8,
+                targets: [20, [35, 45], [45, 65], [65, 95], [85, 115], [105, 135], [115, 150], [135, 175], [155, 195]]
+            },
+            {
+                label: "Bulgarian Split Squat",
+                matches: ["Squat - bulgarian"],
+                targetReps: 8,
+                targets: [0, 0, [0, 15], [15, 30], [25, 45], [35, 60], [45, 75], [60, 95], [75, 120]]
+            }
         ];
 
         function getExerciseLabel(exercise) {
@@ -683,6 +768,135 @@
             });
         }
 
+        function getProgressTargetValue(target) {
+            if (Array.isArray(target)) {
+                return (target[0] + target[1]) / 2;
+            }
+            return target;
+        }
+
+        function getProgressMonthsForWeight(weight, targets) {
+            const targetValues = targets.map(getProgressTargetValue);
+
+            if (!Number.isFinite(weight)) return null;
+
+            for (let index = 1; index < targetValues.length; index += 1) {
+                const lowerWeight = targetValues[index - 1];
+                const upperWeight = targetValues[index];
+                const lowerMonth = progressReferenceMonths[index - 1];
+                const upperMonth = progressReferenceMonths[index];
+
+                if (weight <= upperWeight) {
+                    if (upperWeight === lowerWeight) {
+                        return upperMonth;
+                    }
+                    const progressBetweenTargets = (weight - lowerWeight) / (upperWeight - lowerWeight);
+                    return Math.max(0, lowerMonth + ((upperMonth - lowerMonth) * progressBetweenTargets));
+                }
+            }
+
+            const lastIndex = targetValues.length - 1;
+            const previousWeight = targetValues[lastIndex - 1];
+            const lastWeight = targetValues[lastIndex];
+            const previousMonth = progressReferenceMonths[lastIndex - 1];
+            const lastMonth = progressReferenceMonths[lastIndex];
+            const monthlyGain = (lastWeight - previousWeight) / (lastMonth - previousMonth);
+
+            if (monthlyGain <= 0) return lastMonth;
+            return lastMonth + ((weight - lastWeight) / monthlyGain);
+        }
+
+        function getBestProgressEstimate(entries, progressExercise) {
+            const estimates = entries
+                .filter((entry) => progressExercise.matches.includes(getExerciseLabel(entry.exercise)))
+                .filter((entry) => Number.isFinite(entry.weight) && Number.isFinite(entry.reps) && entry.reps > 0)
+                .map((entry) => getEstimatedWeightForReps(entry.weight, entry.reps, progressExercise.targetReps))
+                .filter((weight) => Number.isFinite(weight) && weight >= 0);
+
+            if (estimates.length === 0) return null;
+            return Math.max(...estimates);
+        }
+
+        function renderProgress(entries) {
+            const progressRows = progressExercises.map((progressExercise) => {
+                const estimatedWeight = getBestProgressEstimate(entries, progressExercise);
+                const months = estimatedWeight === null
+                    ? null
+                    : getProgressMonthsForWeight(estimatedWeight, progressExercise.targets);
+                return {
+                    label: progressExercise.label,
+                    targetReps: progressExercise.targetReps,
+                    estimatedWeight,
+                    months
+                };
+            });
+            const validMonths = progressRows
+                .map((row) => row.months)
+                .filter((months) => Number.isFinite(months));
+            const maxMonth = validMonths.length
+                ? Math.max(2, Math.ceil(Math.max(...validMonths) / 2) * 2)
+                : 24;
+
+            if (progressChart) {
+                progressChart.destroy();
+            }
+
+            progressChart = new Chart(progressChartCanvas, {
+                type: "bar",
+                data: {
+                    labels: progressRows.map((row) => row.label),
+                    datasets: [
+                        {
+                            label: "Progress in months",
+                            data: progressRows.map((row) => Number.isFinite(row.months) ? row.months : 0),
+                            backgroundColor: progressRows.map((row) => Number.isFinite(row.months) ? "#007bff" : "#adb5bd"),
+                            borderColor: progressRows.map((row) => Number.isFinite(row.months) ? "#0056b3" : "#868e96"),
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    indexAxis: "y",
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (item) => {
+                                    const row = progressRows[item.dataIndex];
+                                    if (!Number.isFinite(row.months)) {
+                                        return "No matching entries";
+                                    }
+                                    return `${row.months.toFixed(1)} months from ${row.estimatedWeight.toFixed(1)} lbs x${row.targetReps}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            min: 0,
+                            max: maxMonth,
+                            ticks: {
+                                callback: (value) => `${value}m`
+                            },
+                            title: {
+                                display: true,
+                                text: "Progress"
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                autoSkip: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         function renderAnalysis(entries) {
             const periods = [
                 { key: "twoWeeks", label: "2 weeks", days: 14 },
@@ -791,6 +1005,7 @@
             analysisView.hidden = view !== "analysis";
             nextView.hidden = view !== "next";
             benchmarksView.hidden = view !== "benchmarks";
+            progressView.hidden = view !== "progress";
             viewTabs.querySelectorAll(".view-tab").forEach((button) => {
                 button.classList.toggle("active", button.dataset.view === view);
             });
@@ -798,6 +1013,10 @@
             if (view === "charts") {
                 benchmarkChartsByKey.forEach((chart) => chart.destroy());
                 benchmarkChartsByKey.clear();
+                if (progressChart) {
+                    progressChart.destroy();
+                    progressChart = null;
+                }
                 renderCharts(latestEntries);
             } else {
                 chartsByKey.forEach((chart) => chart.destroy());
@@ -805,12 +1024,28 @@
                 if (view === "analysis") {
                     benchmarkChartsByKey.forEach((chart) => chart.destroy());
                     benchmarkChartsByKey.clear();
+                    if (progressChart) {
+                        progressChart.destroy();
+                        progressChart = null;
+                    }
                     renderAnalysis(latestEntries);
                 } else if (view === "benchmarks") {
+                    if (progressChart) {
+                        progressChart.destroy();
+                        progressChart = null;
+                    }
                     renderBenchmarks(latestEntries);
+                } else if (view === "progress") {
+                    benchmarkChartsByKey.forEach((chart) => chart.destroy());
+                    benchmarkChartsByKey.clear();
+                    renderProgress(latestEntries);
                 } else {
                     benchmarkChartsByKey.forEach((chart) => chart.destroy());
                     benchmarkChartsByKey.clear();
+                    if (progressChart) {
+                        progressChart.destroy();
+                        progressChart = null;
+                    }
                     renderNext(latestEntries);
                 }
             }
