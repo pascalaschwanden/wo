@@ -318,6 +318,12 @@
                 targets: [0, 0, [0, 15], [15, 30], [25, 45], [35, 60], [45, 75], [60, 95], [75, 120]]
             },
             {
+                label: "Calves",
+                matches: ["Calf Raises, single"],
+                targetReps: 12,
+                targets: [0, [5, 10], [15, 25], [30, 40], [45, 55], [60, 70], [75, 85], [90, 100], [105,115]]
+            },
+            {
                 label: "Bench Press",
                 matches: ["Bench Press"],
                 targetReps: 6,
@@ -1318,7 +1324,7 @@
 
             const exercise = document.getElementById("exercise").value;
             const enteredWeight = parseFloat(document.getElementById("weight").value);
-            const weight = bodyweightExercises.has(exercise) ? 0 : enteredWeight;
+            const weight = enteredWeight; // bodyweightExercises.has(exercise) ? 0 : enteredWeight;
             const reps = parseInt(document.getElementById("reps").value, 10);
             const epochTimestamp = Math.floor(Date.now() / 1000); // Unix epoch timestamp in seconds
 
