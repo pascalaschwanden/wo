@@ -1,3 +1,11 @@
+- fix calves:
+the progress tab extrapolates 6 reps @ 20 lbs to 17.1 lbs at 12 reps but this is highly unrealistic.
+the other excercises seem to be fine.
+
+- fix analysis:
+the amount of strength increased seems to be wrong.  seems too low for what i see.
+
+
 
 - make sure you're modifying ~/OneDocument/wo/index.html  not some random version you found lying around.
 - for the analysis tab I want you to have two tables instead of 1.

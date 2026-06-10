@@ -76,8 +76,8 @@
             <option value="Leg Curl">Leg Curl</option>
             <option value="Leg extension">Leg extension</option>
             <option value="Low horizontal Row">Low horizontal Row</option>
-	    <option value="Lunge - walking">Lunge - walking</option>
-	    <option value="Lunge - front foot elevated">Lunge - walking</option>
+	    <option value="Lunge - reverse">Lunge - reverse</option>
+	    <option value="Lunge - front foot elevated">Lunge - reverse</option>
             <option value="Military Press">Military Press</option>
             <option value="Overhead tricep extention">Overhead tricep extention</option>
             <option value="Reverse Dumbbell Fly">Reverse Dumbbell Fly</option>
@@ -259,7 +259,7 @@
             "Side Laterals": "Shoulder",
             "Dumbbell Upright Row": "Shoulder",
             "Cable Face Pulls": "Shoulder",
-	    "Lunge - walking": "Legs",
+	    "Lunge - reverse": "Legs",
 	    "Lunge - front foot elevated": "Legs",
             "Squat": "Legs",
             "Squat - front": "Legs",
@@ -307,7 +307,7 @@
             },
             {
                 label: "Barbell Lunge",
-                matches: ["Lunge - walking", "Lunge - front foot elevated"],
+                matches: ["Lunge - reverse", "Lunge - front foot elevated"],
                 targetReps: 8,
                 targets: [20, [35, 45], [45, 65], [65, 95], [85, 115], [105, 135], [115, 150], [135, 175], [155, 195]]
             },
@@ -783,6 +783,54 @@
             return target;
         }
 
+function getProgressMonthsForWeight2(weight, targets, reps = 12) {
+  if (!Number.isFinite(weight) || !Number.isFinite(reps) || reps <= 0) return null;
+
+  const BODY_WEIGHT = 144;
+  let normalized12RepWeight = weight;
+
+  // 1. If reps are not 12, normalize the weight to its 12-rep equivalent
+  if (reps !== 12) {
+    // Epley formula adjusted for total moving system weight
+    const totalSystemWeight = weight + BODY_WEIGHT;
+    const estimated1RM = totalSystemWeight * (1 + (reps / 30));
+    const target12RepSystemWeight = estimated1RM / (1 + (12 / 30));
+    
+    // Subtract body weight back out to isolate the backpack weight
+    normalized12RepWeight = Math.max(0, target12RepSystemWeight - BODY_WEIGHT);
+  }
+
+  // 2. Map targets to their values
+  const targetValues = targets.map(getProgressTargetValue);
+
+  // 3. Compare the normalized 12-rep weight against the timeline targets
+  for (let index = 1; index < targetValues.length; index += 1) {
+    const lowerWeight = targetValues[index - 1];
+    const upperWeight = targetValues[index];
+    const lowerMonth = progressReferenceMonths[index - 1];
+    const upperMonth = progressReferenceMonths[index];
+
+    if (normalized12RepWeight <= upperWeight) {
+      if (upperWeight === lowerWeight) {
+        return upperMonth;
+      }
+      const progressBetweenTargets = (normalized12RepWeight - lowerWeight) / (upperWeight - lowerWeight);
+      return Math.max(0, lowerMonth + ((upperMonth - lowerMonth) * progressBetweenTargets));
+    }
+  }
+
+  // 4. Handle extrapolation beyond the last target
+  const lastIndex = targetValues.length - 1;
+  const previousWeight = targetValues[lastIndex - 1];
+  const lastWeight = targetValues[lastIndex];
+  const previousMonth = progressReferenceMonths[lastIndex - 1];
+  const lastMonth = progressReferenceMonths[lastIndex];
+  const monthlyGain = (lastWeight - previousWeight) / (lastMonth - previousMonth);
+
+  if (monthlyGain <= 0) return lastMonth;
+  return lastMonth + ((normalized12RepWeight - lastWeight) / monthlyGain);
+}
+
         function getProgressMonthsForWeight(weight, targets) {
             const targetValues = targets.map(getProgressTargetValue);
 
@@ -830,7 +878,7 @@
                 const estimatedWeight = getBestProgressEstimate(entries, progressExercise);
                 const months = estimatedWeight === null
                     ? null
-                    : getProgressMonthsForWeight(estimatedWeight, progressExercise.targets);
+                    : getProgressMonthsForWeight(estimatedWeight, progressExercise.targets, progressExercise.targetReps);
                 return {
                     label: progressExercise.label,
                     targetReps: progressExercise.targetReps,
