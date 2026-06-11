@@ -47,6 +47,49 @@
         .next-table th { background: #f8f9fa; }
         details { margin-bottom: 30px; }
         summary { cursor: pointer; font-size: 1.5em; font-weight: bold; margin: 0.83em 0; }
+
+
+table.myInputs {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 15px;
+}
+.myInputs {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.myInputs th,
+.myInputs td {
+    border: 1px solid #ccc;
+    padding: 8px;
+}
+
+.myInputs th {
+    background: #f0f0f0;
+}
+
+.myInputs input[type="number"] {
+    width: 70px;
+}
+
+.myInputs .summary {
+    margin-top: 25px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    background: #fafafa;
+}
+
+.myInputs .totals-table {
+    width: auto;
+    margin-top: 10px;
+}
+
+.myInputs h2 {
+    margin-top: 30px;
+}
     </style>
 </head>
 <body>
@@ -91,6 +134,8 @@
             <option value="Squat">Squat</option>
             <option value="Squat - front">Squat - front</option>
             <option value="Squat - bulgarian">Squat - bulgarian</option>
+            <option value="Squat - cossack">Squat - cossack</option>
+            <option value="Squat - wide-stance">Squat - wide-stance</option>
 	    <option value="Tricep Pull-down">Tricep Pull-down</option>
         </select>
         <input type="number" id="weight" placeholder="Weight (lbs/kg)" required step="any">
@@ -104,6 +149,7 @@
         <button type="button" class="view-tab" data-view="next">Next</button>
         <button type="button" class="view-tab" data-view="benchmarks">Benchmarks</button>
         <button type="button" class="view-tab" data-view="progress">Progress</button>
+        <button type="button" class="view-tab" data-view="workout">Workout</button>
     </div>
 
     <section id="chartsView" class="chart-view">
@@ -157,6 +203,53 @@
         <p class="benchmarks-note">Each point estimates the weight you could lift for 6 reps using the Epley formula. The solid line is your best-fit trend, and the dotted line is a typical novice progression starting from your first benchmark estimate.</p>
     </section>
 
+    <section id="workoutView" class="workout-view" hidden>
+
+<h1>Lower Body Volume Calculator</h1>
+
+<label>
+    Workouts Per Week:
+    <select id="workoutsPerWeek">
+        <option value="1">1x</option>
+        <option value="2">2x</option>
+        <option value="3" selected>3x</option>
+    </select>
+</label>
+
+<table class="myInputs">
+    <thead>
+        <tr>
+            <th>Exercise</th>
+            <th>Sets Per Workout</th>
+        </tr>
+    </thead>
+    <tbody id="exerciseTable"></tbody>
+</table>
+
+<div class="summary">
+    <h2>Per Workout Totals</h2>
+    <table class="totals-table">
+        <tr><td>Glutes</td><td id="glutesWorkout">0</td></tr>
+        <tr><td>Hamstrings</td><td id="hamstringsWorkout">0</td></tr>
+        <tr><td>Quads</td><td id="quadsWorkout">0</td></tr>
+        <tr><td>Calves</td><td id="calvesWorkout">0</td></tr>
+<tr><td>Adductors</td><td id="adductorsWorkout">0</td></tr>
+<tr><td>Abductors</td><td id="abductorsWorkout">0</td></tr>
+    </table>
+
+    <h2>Weekly Totals</h2>
+    <table class="totals-table">
+        <tr><td>Glutes</td><td id="glutesWeek">0</td></tr>
+        <tr><td>Hamstrings</td><td id="hamstringsWeek">0</td></tr>
+        <tr><td>Quads</td><td id="quadsWeek">0</td></tr>
+        <tr><td>Calves</td><td id="calvesWeek">0</td></tr>
+<tr><td>Adductors</td><td id="adductorsWeek">0</td></tr>
+<tr><td>Abductors</td><td id="abductorsWeek">0</td></tr>
+    </table>
+</div>
+
+    </section>
+
     <section id="progressView" class="progress-view" hidden>
         <h2>Progress</h2>
         <div class="progress-canvas-wrap">
@@ -200,6 +293,7 @@
         const nextView = document.getElementById("nextView");
         const benchmarksView = document.getElementById("benchmarksView");
         const progressView = document.getElementById("progressView");
+        const workoutView = document.getElementById("workoutView");
         const chartTabs = document.getElementById("chartTabs");
         const chartRange = document.getElementById("chartRange");
         const chartEndDate = document.getElementById("chartEndDate");
@@ -262,6 +356,8 @@
             "Squat": "Legs",
             "Squat - front": "Legs",
             "Squat - bulgarian": "Legs",
+            "Squat - cossack": "Legs",
+            "Squat - wide-stance": "Legs",
 	    "Seated Hip Abduction": "Legs",
 	    "Seated Hip Adduction": "Legs",
             "Deadlift": "Legs",
@@ -1060,6 +1156,8 @@ function getProgressMonthsForWeight2(weight, targets, reps = 12) {
             nextView.hidden = view !== "next";
             benchmarksView.hidden = view !== "benchmarks";
             progressView.hidden = view !== "progress";
+            workoutView.hidden = view !== "workout";
+
             viewTabs.querySelectorAll(".view-tab").forEach((button) => {
                 button.classList.toggle("active", button.dataset.view === view);
             });
@@ -1419,6 +1517,276 @@ function getProgressMonthsForWeight2(weight, targets, reps = 12) {
                 renderHistory(entries);
             }
         });
+
+const exercises = [
+    "Squat",
+    "Front Squat",
+"Cossack Squat",
+"Wide-Stance Squat",
+    "Hip Thrusts",
+    "Glute Bridge",
+    "DeadLift",
+    "RDL",
+    "Calf Raises",
+    "Lunges",
+    "Bulgarian Split Squat",
+    "Nordic",
+   "Step Ups"
+];
+
+/*
+Contribution factors per set.
+1.0 = full set
+0.5 = half set
+Adjust however you prefer.
+*/
+const contributions = {
+    "Squat": {
+        quads: 1.0,
+        hamstrings: 0.5,
+        glutes: 1.0,
+        calves: 0.0,
+        adductors: 0.75,
+        abductors: 0.25
+    },
+
+    "Front Squat": {
+        quads: 1.0,
+        hamstrings: 0.0,
+        glutes: 0.5,
+        calves: 0.0,
+        adductors: 0.5,
+        abductors: 0.25
+    },
+
+    "Hip Thrusts": {
+        quads: 0.0,
+        hamstrings: 0.25,
+        glutes: 1.0,
+        calves: 0.0,
+        adductors: 0.25,
+        abductors: 0.25
+    },
+
+    "Glute Bridge": {
+        quads: 0.0,
+        hamstrings: 0.25,
+        glutes: 1.0,
+        calves: 0.0,
+        adductors: 0.25,
+        abductors: 0.25
+    },
+
+    "DeadLift": {
+        quads: 0.25,
+        hamstrings: 1.0,
+        glutes: 1.0,
+        calves: 0.0,
+        adductors: 0.5,
+        abductors: 0.25
+    },
+
+    "RDL": {
+        quads: 0.0,
+        hamstrings: 1.0,
+        glutes: 0.75,
+        calves: 0.0,
+        adductors: 0.5,
+        abductors: 0.25
+    },
+
+    "Calf Raises": {
+        quads: 0.0,
+        hamstrings: 0.0,
+        glutes: 0.0,
+        calves: 1.0,
+        adductors: 0.0,
+        abductors: 0.0
+    },
+
+    "Lunges": {
+        quads: 1.0,
+        hamstrings: 0.5,
+        glutes: 1.0,
+        calves: 0.0,
+        adductors: 0.5,
+        abductors: 0.5
+    },
+
+    "Bulgarian Split Squat": {
+        quads: 1.0,
+        hamstrings: 0.5,
+        glutes: 1.0,
+        calves: 0.0,
+        adductors: 0.5,
+        abductors: 0.5
+    },
+
+    "Nordic": {
+        quads: 0.0,
+        hamstrings: 1.0,
+        glutes: 0.0,
+        calves: 0.0,
+        adductors: 0.0,
+        abductors: 0.0
+    },
+
+    "Step Ups": {
+        quads: 1.0,
+        hamstrings: 0.25,
+        glutes: 1.0,
+        calves: 0.0,
+        adductors: 0.25,
+        abductors: 0.5
+    },
+
+    "Cossack Squat": {
+        quads: 1.0,
+        hamstrings: 0.25,
+        glutes: 1.0,
+        calves: 0.0,
+        adductors: 1.0,
+        abductors: 0.75
+    },
+
+    "Wide-Stance Squat": {
+        quads: 0.75,
+        hamstrings: 0.5,
+        glutes: 1.0,
+        calves: 0.0,
+        adductors: 1.0,
+        abductors: 0.25
+    }
+};
+
+const STORAGE_KEY = "lowerBodyVolumeCalculator";
+
+const tableBody = document.getElementById("exerciseTable");
+
+function loadState() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : {};
+}
+
+function saveState() {
+    const state = {
+        workoutsPerWeek: document.getElementById("workoutsPerWeek").value,
+        exercises: {}
+    };
+
+    exercises.forEach(ex => {
+        state.exercises[ex] = Number(
+            document.getElementById(idFor(ex)).value
+        );
+    });
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function idFor(exercise) {
+    return exercise.replace(/\s+/g, "_");
+}
+
+function buildTable() {
+    const state = loadState();
+
+    exercises.forEach(exercise => {
+        const tr = document.createElement("tr");
+
+        const tdName = document.createElement("td");
+        tdName.textContent = exercise;
+
+        const tdInput = document.createElement("td");
+
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = 0;
+        input.step = 1;
+        input.id = idFor(exercise);
+        input.value = state.exercises?.[exercise] ?? 0;
+
+        input.addEventListener("input", () => {
+            calculate();
+            saveState();
+        });
+
+        tdInput.appendChild(input);
+
+        tr.appendChild(tdName);
+        tr.appendChild(tdInput);
+
+        tableBody.appendChild(tr);
+    });
+
+    if (state.workoutsPerWeek) {
+        document.getElementById("workoutsPerWeek").value =
+            state.workoutsPerWeek;
+    }
+}
+
+function calculate() {
+    let totals = {
+        glutes: 0,
+        hamstrings: 0,
+        quads: 0,
+        calves: 0,
+adductors: 0,
+    abductors: 0
+    };
+
+    exercises.forEach(exercise => {
+        const sets = Number(
+            document.getElementById(idFor(exercise)).value || 0
+        );
+
+        totals.glutes += sets * contributions[exercise].glutes;
+        totals.hamstrings += sets * contributions[exercise].hamstrings;
+        totals.quads += sets * contributions[exercise].quads;
+        totals.calves += sets * contributions[exercise].calves;
+totals.adductors += sets * contributions[exercise].adductors;
+totals.abductors += sets * contributions[exercise].abductors;
+    });
+
+    const workoutsPerWeek = Number(
+        document.getElementById("workoutsPerWeek").value
+    );
+
+    document.getElementById("glutesWorkout").textContent =
+        totals.glutes.toFixed(1);
+    document.getElementById("hamstringsWorkout").textContent =
+        totals.hamstrings.toFixed(1);
+    document.getElementById("quadsWorkout").textContent =
+        totals.quads.toFixed(1);
+    document.getElementById("calvesWorkout").textContent =
+        totals.calves.toFixed(1);
+document.getElementById("adductorsWorkout").textContent =
+    totals.adductors.toFixed(1);
+
+document.getElementById("abductorsWorkout").textContent =
+    totals.abductors.toFixed(1);
+
+    document.getElementById("glutesWeek").textContent =
+        (totals.glutes * workoutsPerWeek).toFixed(1);
+    document.getElementById("hamstringsWeek").textContent =
+        (totals.hamstrings * workoutsPerWeek).toFixed(1);
+    document.getElementById("quadsWeek").textContent =
+        (totals.quads * workoutsPerWeek).toFixed(1);
+    document.getElementById("calvesWeek").textContent =
+        (totals.calves * workoutsPerWeek).toFixed(1);
+document.getElementById("adductorsWeek").textContent =
+    (totals.adductors * workoutsPerWeek).toFixed(1);
+
+document.getElementById("abductorsWeek").textContent =
+    (totals.abductors * workoutsPerWeek).toFixed(1);
+}
+
+document.getElementById("workoutsPerWeek").addEventListener("change", () => {
+    calculate();
+    saveState();
+});
+
+buildTable();
+calculate();
     </script>
 </body>
 </html>
