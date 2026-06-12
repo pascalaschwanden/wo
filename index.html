@@ -199,7 +199,7 @@ table.myInputs {
     <section id="benchmarksView" class="benchmarks-view" hidden>
         <h2>Benchmarks</h2>
         <div class="benchmarks-controls">
-            <label for="benchmarkStartDate">Typical lifter start date</label>
+            <label for="benchmarkStartDate">Start date</label>
             <input type="date" id="benchmarkStartDate">
         </div>
         <div id="benchmarkGrid" class="chart-grid">Loading benchmarks...</div>
@@ -789,7 +789,7 @@ table.myInputs {
                 const fit = getLinearFit(points);
                 const firstPoint = points[0];
                 const lastPoint = points[points.length - 1];
-                const chartStart = Math.min(startTimestamp, firstPoint.x);
+                const chartStart = startTimestamp;
                 const chartEnd = Math.max(endTimestamp, lastPoint.x);
                 const yourTrendPoints = fit
                     ? [
@@ -798,9 +798,11 @@ table.myInputs {
                     ]
                     : [];
 const typicalStartWeight = fit
-    ? fit.predict(startTimestamp)
+    ? fit.predict(chartStart)
     : firstPoint.y;
-                const typicalEndWeight = typicalStartWeight + (((chartEnd - startTimestamp) / (7 * 24 * 60 * 60)) * benchmark.weeklyGain);
+
+                const typicalEndWeight = typicalStartWeight + (((chartEnd - chartStart) / (7 * 24 * 60 * 60)) * benchmark.weeklyGain);
+
                 const typicalPoints = [
                     { x: startTimestamp, y: typicalStartWeight },
                     { x: chartEnd, y: typicalEndWeight }
