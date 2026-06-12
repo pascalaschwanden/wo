@@ -378,12 +378,21 @@ table.myInputs {
         const bodyweightExercises = new Set(["Bath dips", "Chin ups", "Pull ups", "Push ups", "Calf Raises, single"]);
         const squatBodyweightOffset = 144;
         const benchmarkExercises = [
-            { name: "Barbell Bicep Curl", weeklyGain: 1 },
-            { name: "Bench Press", weeklyGain: 2.5 },
-            { name: "Barbell Row", weeklyGain: 2.5 },
+            { name: "Bench Press", weeklyGain: 1.1 },
+            { name: "Barbell Row", weeklyGain: 0.6 },
+            { name: "Barbell Bicep Curl", weeklyGain: 0.6 },
+            { name: "Side Laterals", weeklyGain: .1 },
+            { name: "Shoulder Press", weeklyGain: .6 },
             { name: "Military Press", weeklyGain: 1.25 },
+            { name: "Reverse Dumbbell Fly", weeklyGain: .1},
+            { name: "Lying Reverse Fly", weeklyGain: .1},
+            { name: "Skull Crushers", weeklyGain: 0.6},
+            { name: "Lunge - reverse", weeklyGain: 2.5 },
+            { name: "Squat - bulgarian", weeklyGain: 2.5 },
+            { name: "Hip Thrust", weeklyGain: 3 },
             { name: "Squat", weeklyGain: 5 },
-            { name: "Deadlift", weeklyGain: 5 }
+            { name: "Deadlift", weeklyGain: 5 },
+            { name: "Calf Raises, single", weeklyGain: 1.5}
         ];
         const progressReferenceMonths = [0, 2, 4, 6, 8, 10, 12, 18, 24];
         const progressExercises = [
@@ -788,7 +797,9 @@ table.myInputs {
                         { x: chartEnd, y: fit.predict(chartEnd) }
                     ]
                     : [];
-                const typicalStartWeight = firstPoint.y;
+const typicalStartWeight = fit
+    ? fit.predict(startTimestamp)
+    : firstPoint.y;
                 const typicalEndWeight = typicalStartWeight + (((chartEnd - startTimestamp) / (7 * 24 * 60 * 60)) * benchmark.weeklyGain);
                 const typicalPoints = [
                     { x: startTimestamp, y: typicalStartWeight },
