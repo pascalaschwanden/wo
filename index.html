@@ -115,7 +115,18 @@ table.myInputs {
     background: #fafafa;
 }
 
+.benchmark-summary-table tr:nth-child(1) {
+    background: #e8f5e9;
+    font-weight: 600;
+}
 
+.benchmark-summary-table tr:nth-child(2) {
+    background: #f1f8e9;
+}
+
+.benchmark-summary-table tr:nth-child(3) {
+    background: #fafafa;
+}
 
     </style>
 </head>
@@ -810,6 +821,12 @@ function computeBenchmarkStats(points) {
             benchmarkChartsByKey.clear();
             benchmarkGrid.innerHTML = "";
 
+const tableContainer = document.createElement("div");
+const chartsContainer = document.createElement("div");
+
+benchmarkGrid.appendChild(tableContainer);
+benchmarkGrid.appendChild(chartsContainer);
+
             benchmarkExercises.forEach((benchmark) => {
                 const points = entries
                     .filter((entry) => getExerciseLabel(entry.exercise) === benchmark.name)
@@ -847,12 +864,12 @@ if (stats) {
                     const emptyMessage = document.createElement("p");
                     emptyMessage.textContent = "No benchmark entries found.";
                     panel.appendChild(emptyMessage);
-                    benchmarkGrid.appendChild(panel);
+                    chartsContainer.appendChild(panel);//benchmarkGrid.appendChild(panel);
                     return;
                 }
 
                 panel.appendChild(canvasWrap);
-                benchmarkGrid.appendChild(panel);
+                chartsContainer.appendChild(panel);
 
                 const lastPoint = points[points.length - 1];
                 const chartStart = startTimestamp;
@@ -995,7 +1012,7 @@ summaryRows.forEach((row) => {
 });
 
 summaryTable.appendChild(tbody);
-benchmarkGrid.parentElement.appendChild(summaryTable);
+tableContainer.appendChild(summaryTable);
         }
 
         function getProgressTargetValue(target) {
