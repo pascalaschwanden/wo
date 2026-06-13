@@ -811,9 +811,10 @@ function computeBenchmarkStats(points) {
     };
 }
 
-        function renderBenchmarks(entries) {
-		const summaryRows = [];
-            const startTimestamp = getBenchmarkStartTimestamp();
+function renderBenchmarks(entries, startTimestamp) {
+
+    startTimestamp = startTimestamp ?? getBenchmarkStartTimestamp();
+		const summaryRows = [];0
             const now = Math.floor(Date.now() / 1000);
             const endTimestamp = Math.max(now, startTimestamp + (7 * 24 * 60 * 60));
 
@@ -838,7 +839,9 @@ benchmarkGrid.appendChild(chartsContainer);
                     .filter((point) => Number.isFinite(point.y) && point.y > 0)
                     .sort((a, b) => a.x - b.x);
 
-const stats = computeBenchmarkStats(points);
+const visiblePoints = points.filter((p) => p.x >= startTimestamp);
+
+const stats = computeBenchmarkStats(visiblePoints);
 
 if (stats) {
     summaryRows.push({
@@ -860,7 +863,7 @@ if (stats) {
                 canvasWrap.appendChild(canvas);
                 panel.appendChild(title);
 
-                if (points.length === 0) {
+                if (visiblePoints.length === 0) {
                     const emptyMessage = document.createElement("p");
                     emptyMessage.textContent = "No benchmark entries found.";
                     panel.appendChild(emptyMessage);
@@ -871,16 +874,16 @@ if (stats) {
                 panel.appendChild(canvasWrap);
                 chartsContainer.appendChild(panel);
 
-                const lastPoint = points[points.length - 1];
+                const lastPoint = visiblePoints[visiblePoints.length - 1];
                 const chartStart = startTimestamp;
                 const chartEnd = Math.max(endTimestamp, lastPoint.x);
 
-		const pointsForFit = points.filter(
-    			(p) => p.x >= chartStart && p.x <= chartEnd
-		);
+const fit = visiblePoints.length >= 2
+    ? getLinearFit(visiblePoints)
+    : null;
 
-		const fit = getLinearFit(pointsForFit);
-                const firstPoint = pointsForFit[0] || points[0];
+const firstPoint = visiblePoints[0];
+
                 const yourTrendPoints = fit
                     ? [
                         { x: chartStart, y: fit.predict(chartStart) },
@@ -897,7 +900,7 @@ const typicalStartWeight = fit
                     { x: startTimestamp, y: typicalStartWeight },
                     { x: chartEnd, y: typicalEndWeight }
                 ];
-                const plottedYValues = [...points, ...yourTrendPoints, ...typicalPoints]
+                const plottedYValues = [...visiblePoints, ...yourTrendPoints, ...typicalPoints]
                     .map((point) => point.y)
                     .filter((value) => Number.isFinite(value));
                 const lowestY = Math.min(...plottedYValues);
@@ -911,7 +914,7 @@ const typicalStartWeight = fit
                         datasets: [
                             {
                                 label: "Estimated 6RM",
-                                data: points,
+                                data: visiblePoints,
                                 borderColor: "#007bff",
                                 backgroundColor: "#007bff",
                                 showLine: false,
@@ -1332,6 +1335,7 @@ function getProgressMonthsForWeight2(weight, targets, reps = 12) {
                         progressChart = null;
                     }
                     renderBenchmarks(latestEntries);
+//renderBenchmarks(latestEntries, getBenchmarkStartTimestamp());
                 } else if (view === "progress") {
                     benchmarkChartsByKey.forEach((chart) => chart.destroy());
                     benchmarkChartsByKey.clear();
@@ -1481,9 +1485,14 @@ function getProgressMonthsForWeight2(weight, targets, reps = 12) {
             renderCharts(latestEntries);
         });
 
-        benchmarkStartDate.addEventListener("change", () => {
+        benchmarkStartDate.addEventListener("change", (e) => {
             if (activeView === "benchmarks") {
-                renderBenchmarks(latestEntries);
+                //renderBenchmarks(latestEntries);
+
+const newTimestamp = Math.floor(
+    new Date(e.target.value).getTime() / 1000
+);
+    		renderBenchmarks(latestEntries, newTimestamp);
             }
         });
 
