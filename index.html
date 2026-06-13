@@ -90,6 +90,33 @@ table.myInputs {
 .myInputs h2 {
     margin-top: 30px;
 }
+
+.benchmark-summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    font-size: 14px;
+}
+
+.benchmark-summary-table th,
+.benchmark-summary-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e5e5;
+    text-align: left;
+}
+
+.benchmark-summary-table th {
+    font-weight: 600;
+    background: #f7f7f7;
+}
+
+.benchmark-summary-table tr:hover {
+    background: #fafafa;
+}
+
+
+
     </style>
 </head>
 <body>
@@ -742,7 +769,39 @@ table.myInputs {
             `;
         }
 
+function computeBenchmarkStats(points) {
+    if (points.length < 2) return null;
+
+    const sorted = [...points].sort((a, b) => a.x - b.x);
+
+    const startPoint = sorted[0];
+    const endPoint = sorted[sorted.length - 1];
+
+    const startWeight = startPoint.y;
+    const endWeight = endPoint.y;
+
+    const deltaLbs = endWeight - startWeight;
+
+    const percent = startWeight !== 0
+        ? (deltaLbs / startWeight) * 100
+        : 0;
+
+    const durationSeconds = Math.max(endPoint.x - startPoint.x, 1);
+    const secondsIn30Days = 30 * 24 * 60 * 60;
+
+    const scale = secondsIn30Days / durationSeconds;
+
+    return {
+        exercise: null, // filled later
+        deltaLbs,
+        percent,
+        deltaLbs30: deltaLbs * scale,
+        percent30: percent * scale
+    };
+}
+
         function renderBenchmarks(entries) {
+		const summaryRows = [];
             const startTimestamp = getBenchmarkStartTimestamp();
             const now = Math.floor(Date.now() / 1000);
             const endTimestamp = Math.max(now, startTimestamp + (7 * 24 * 60 * 60));
@@ -761,6 +820,15 @@ table.myInputs {
                     }))
                     .filter((point) => Number.isFinite(point.y) && point.y > 0)
                     .sort((a, b) => a.x - b.x);
+
+const stats = computeBenchmarkStats(points);
+
+if (stats) {
+    summaryRows.push({
+        name: benchmark.name,
+        ...stats
+    });
+}
 
                 const panel = document.createElement("div");
                 panel.className = "chart-panel";
@@ -786,11 +854,16 @@ table.myInputs {
                 panel.appendChild(canvasWrap);
                 benchmarkGrid.appendChild(panel);
 
-                const fit = getLinearFit(points);
-                const firstPoint = points[0];
                 const lastPoint = points[points.length - 1];
                 const chartStart = startTimestamp;
                 const chartEnd = Math.max(endTimestamp, lastPoint.x);
+
+		const pointsForFit = points.filter(
+    			(p) => p.x >= chartStart && p.x <= chartEnd
+		);
+
+		const fit = getLinearFit(pointsForFit);
+                const firstPoint = pointsForFit[0] || points[0];
                 const yourTrendPoints = fit
                     ? [
                         { x: chartStart, y: fit.predict(chartStart) },
@@ -887,6 +960,42 @@ const typicalStartWeight = fit
 
                 benchmarkChartsByKey.set(benchmark.name, chart);
             });
+
+		summaryRows.sort((a, b) => b.deltaLbs30 - a.deltaLbs30);
+
+const summaryTable = document.createElement("table");
+summaryTable.className = "benchmark-summary-table";
+
+summaryTable.innerHTML = `
+<thead>
+<tr>
+  <th>Exercise</th>
+  <th>Lbs Δ</th>
+  <th>% Δ</th>
+  <th>Lbs / 30d</th>
+  <th>% / 30d</th>
+</tr>
+</thead>
+`;
+
+const tbody = document.createElement("tbody");
+
+summaryRows.forEach((row) => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+        <td>${row.name}</td>
+        <td>${row.deltaLbs.toFixed(1)}</td>
+        <td>${row.percent.toFixed(1)}%</td>
+        <td>${row.deltaLbs30.toFixed(2)}</td>
+        <td>${row.percent30.toFixed(1)}%</td>
+    `;
+
+    tbody.appendChild(tr);
+});
+
+summaryTable.appendChild(tbody);
+benchmarkGrid.parentElement.appendChild(summaryTable);
         }
 
         function getProgressTargetValue(target) {
