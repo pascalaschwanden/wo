@@ -780,34 +780,49 @@ table.myInputs {
             `;
         }
 
-function computeBenchmarkStats(points) {
-    if (points.length < 2) return null;
+function computeBenchmarkStats(points, startTimestamp, endTimestamp) {
+    if (points.length === 0) {
+        return null;
+    }
 
-    const sorted = [...points].sort((a, b) => a.x - b.x);
+    let startWeight;
+    let endWeight;
 
-    const startPoint = sorted[0];
-    const endPoint = sorted[sorted.length - 1];
+    if (points.length >= 2) {
+        const fit = getLinearFit(points);
 
-    const startWeight = startPoint.y;
-    const endWeight = endPoint.y;
+        startWeight = fit.predict(startTimestamp);
+        endWeight = fit.predict(endTimestamp);
+    } else {
+        startWeight = points[0].y;
+        endWeight = points[0].y;
+    }
 
     const deltaLbs = endWeight - startWeight;
 
-    const percent = startWeight !== 0
-        ? (deltaLbs / startWeight) * 100
-        : 0;
+    const percent =
+        startWeight > 0
+            ? (deltaLbs / startWeight) * 100
+            : 0;
 
-    const durationSeconds = Math.max(endPoint.x - startPoint.x, 1);
-    const secondsIn30Days = 30 * 24 * 60 * 60;
+    const days =
+        (endTimestamp - startTimestamp) / (24 * 60 * 60);
 
-    const scale = secondsIn30Days / durationSeconds;
+    const deltaLbs30 =
+        days > 0
+            ? deltaLbs * (30 / days)
+            : 0;
+
+    const percent30 =
+        days > 0
+            ? percent * (30 / days)
+            : 0;
 
     return {
-        exercise: null, // filled later
         deltaLbs,
         percent,
-        deltaLbs30: deltaLbs * scale,
-        percent30: percent * scale
+        deltaLbs30,
+        percent30
     };
 }
 
@@ -841,14 +856,6 @@ benchmarkGrid.appendChild(chartsContainer);
 
 const visiblePoints = points.filter((p) => p.x >= startTimestamp);
 
-const stats = computeBenchmarkStats(visiblePoints);
-
-if (stats) {
-    summaryRows.push({
-        name: benchmark.name,
-        ...stats
-    });
-}
 
                 const panel = document.createElement("div");
                 panel.className = "chart-panel";
@@ -877,6 +884,19 @@ if (stats) {
                 const lastPoint = visiblePoints[visiblePoints.length - 1];
                 const chartStart = startTimestamp;
                 const chartEnd = Math.max(endTimestamp, lastPoint.x);
+
+const stats = computeBenchmarkStats(
+    visiblePoints,
+    startTimestamp,
+    chartEnd
+);
+
+if (stats) {
+    summaryRows.push({
+        name: benchmark.name,
+        ...stats
+    });
+}
 
 const fit = visiblePoints.length >= 2
     ? getLinearFit(visiblePoints)
