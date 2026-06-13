@@ -1001,7 +1001,8 @@ const typicalStartWeight = fit
                 benchmarkChartsByKey.set(benchmark.name, chart);
             });
 
-		summaryRows.sort((a, b) => b.deltaLbs30 - a.deltaLbs30);
+		//summaryRows.sort((a, b) => b.deltaLbs30 - a.deltaLbs30);
+		summaryRows.sort((a, b) => b.percent30 - a.percent30);
 
 const summaryTable = document.createElement("table");
 summaryTable.className = "benchmark-summary-table";
