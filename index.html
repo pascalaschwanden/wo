@@ -622,7 +622,8 @@ table.myInputs {
 
         function getBenchmarkLiftWeight(entry) {
             const exercise = getExerciseLabel(entry.exercise);
-            if (exercise === "Squat") {
+            if (exercise.indexOf("Squat") > -1 ||
+		exercise === "Calf Raises, single") {
                 return entry.weight + squatBodyweightOffset;
             }
             return entry.weight;
@@ -849,7 +850,7 @@ benchmarkGrid.appendChild(chartsContainer);
             benchmarkExercises.forEach((benchmark) => {
                 const points = entries
                     .filter((entry) => getExerciseLabel(entry.exercise) === benchmark.name)
-                    .filter((entry) => entry.weight > 0 && entry.reps > 0 && entry.timestamp)
+                    .filter((entry) => entry.weight >= 0 && entry.reps > 0 && entry.timestamp)
                     .map((entry) => ({
                         x: entry.timestamp,
                         y: getEstimatedWeightForReps(getBenchmarkLiftWeight(entry), entry.reps, 6)
