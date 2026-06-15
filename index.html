@@ -433,7 +433,10 @@ table.myInputs {
             { name: "Hip Thrust", weeklyGain: 3 },
             { name: "Squat", weeklyGain: 5 },
             { name: "Deadlift", weeklyGain: 5 },
-            { name: "Calf Raises, single", weeklyGain: 1.5}
+            { name: "Calf Raises, single", weeklyGain: 1.5},
+            { name: "Bath dips", weeklyGain: 0.5},
+            { name: "Chin ups", weeklyGain: 0.5},
+            { name: "Pull ups", weeklyGain: 0.5}
         ];
         const progressReferenceMonths = [0, 2, 4, 6, 8, 10, 12, 18, 24];
         const progressExercises = [
@@ -622,8 +625,11 @@ table.myInputs {
 
         function getBenchmarkLiftWeight(entry) {
             const exercise = getExerciseLabel(entry.exercise);
+
             if (exercise.indexOf("Squat") > -1 ||
-		exercise === "Calf Raises, single") {
+		exercise === "Calf Raises, single" ||
+		exercise === "Chin ups" || exercise === "Pull ups" ||
+		exercise === "Bath dips" ) {
                 return entry.weight + squatBodyweightOffset;
             }
             return entry.weight;
