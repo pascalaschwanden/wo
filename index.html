@@ -160,6 +160,7 @@ table.myInputs {
             <option value="Low horizontal Row">Low horizontal Row</option>
 	    <option value="Lunge - reverse">Lunge - reverse</option>
 	    <option value="Lying Reverse Fly">Lying Reverse Fly</option>
+	    <option value="Lying Side Raise">Lying Side Raise</option>
 	    <option value="Face Pull Resistance Band">Face Pull Resistance Band</option>
             <option value="Military Press">Military Press</option>
             <option value="Overhead tricep extention">Overhead tricep extention</option>
@@ -187,7 +188,7 @@ table.myInputs {
 
     <div id="viewTabs" class="view-tabs" aria-label="Workout views">
         <button type="button" class="view-tab active" data-view="charts">Charts</button>
-        <button type="button" class="view-tab" data-view="analysis">Analysis</button>
+        <button type="button" class="view-tab" data-view="analysis">Per</button>
         <button type="button" class="view-tab" data-view="next">Next</button>
         <button type="button" class="view-tab" data-view="benchmarks">Benchmarks</button>
         <button type="button" class="view-tab" data-view="progress">Progress</button>
@@ -376,7 +377,7 @@ table.myInputs {
 	    "Barbell Bicep Curl": "Arms",
 	    "Lat Pull-down": "Back",
 	    "Chest Fly Bench": "Chest",
-	    "Reverse Dumbbell Fly": "Back",
+	    "Reverse Dumbbell Fly": "Shoulder",
 	    "High Row": "Back",
 	    "Tricep Pull-down": "Arms",
             "Bench Press": "Chest",
@@ -411,6 +412,7 @@ table.myInputs {
             "Leg Curl": "Legs",
             "Hip Thrust": "Legs",
 	    "Lying Reverse Fly": "Shoulder",
+	    "Lying Side Raise": "Shoulder",
 	    "Face Pull Resistance Band": "Shoulder",
             "Dumbbell Upright Row - Elbow": "Shoulder"
         };
@@ -427,6 +429,7 @@ table.myInputs {
             { name: "Military Press", weeklyGain: 1.25 },
             { name: "Reverse Dumbbell Fly", weeklyGain: .1},
             { name: "Lying Reverse Fly", weeklyGain: .1},
+            { name: "Lying Side Raise", weeklyGain: .05},
             { name: "Skull Crushers", weeklyGain: 0.6},
             { name: "Lunge - reverse", weeklyGain: 2.5 },
             { name: "Squat - bulgarian", weeklyGain: 2.5 },
@@ -1707,6 +1710,8 @@ const exercises = [
     "Squat",
     "Front Squat",
 "Cossack Squat",
+"Sissy Squat",
+"Zercher Squat",
 "Wide-Stance Squat",
     "Hip Thrusts",
     "Glute Bridge",
@@ -1824,6 +1829,24 @@ const contributions = {
         adductors: 0.25,
         abductors: 0.5
     },
+
+"Sissy Squat": {
+    quads: 1.0,
+    hamstrings: 0.0,
+    glutes: 0.1,
+    calves: 0.0,
+    adductors: 0.1,
+    abductors: 0.0
+},
+
+"Zercher Squat": {
+    quads: 1.0,
+    hamstrings: 0.5,
+    glutes: 1.0,
+    calves: 0.0,
+    adductors: 1.0,
+    abductors: 0.25
+},
 
     "Cossack Squat": {
         quads: 1.0,
