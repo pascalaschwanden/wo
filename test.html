@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Workout Volume Tracker</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f3f6fa;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 { text-align:center; }
+
+.section {
+    margin-bottom: 28px;
+}
+
+.section-title {
+    font-size: 26px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.btn {
+    position: relative;
+    width: 170px;
+    height: 120px;
+    border: none;
+    border-radius: 16px;
+    background: #1976d2;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 8px 0 #0d47a1;
+    transition: 0.08s;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+}
+
+.btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 4px 0 #0d47a1;
+}
+
+.icon svg {
+    width: 42px;
+    height: 42px;
+    fill: white;
+}
+
+.label {
+    margin-top: 6px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.badge {
+    position:absolute;
+    right: 8px;
+    bottom: 8px;
+    background:white;
+    color:#1976d2;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+}
+.topbar {
+    display:flex;
+    gap:10px;
+    margin-bottom: 20px;
+}
+.topbar button {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border:none;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Workout Volume Tracker</h1>
+
+<div class="topbar">
+    <button onclick="testWrite()">Firestore Test</button>
+    <button onclick="resetAll()">Reset</button>
+</div>
+
+<div id="app"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
+// --- Firebase Config ---
+const firebaseConfig = {
+    apiKey: "AIzaSyApCs8oH1lgpvweICAu3MNr6QwzTC1iVq8",
+    authDomain: "workouts-246c5.firebaseapp.com",
+    databaseURL: "https://workouts-246c5-default-rtdb.firebaseio.com",
+    projectId: "workouts-246c5",
+    storageBucket: "workouts-246c5.firebasestorage.app",
+    messagingSenderId: "238007804712",
+    appId: "1:238007804712:web:d4ee8df8b38103a634661d",
+    measurementId: "G-1F034HFJCX"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const docRef = doc(db, "volumeTracker", "current");
+
+let counters = {
+    frontDelt:0, sideDelt:0, rearDelt:0,
+    flys:0, pushChest:0,
+    verticalPull:0, horizontalPull:0,
+    biceps:0, triceps:0,
+    deadlift:0, squat:0, bulgarian:0, lunge:0, stepUp:0,
+    calves:0
+};
+
+function icon(name){
+    return `<div class="icon">
+    <svg viewBox="0 0 64 64">
+    <circle cx="32" cy="16" r="6"></circle>
+    <line x1="32" y1="22" x2="32" y2="44" stroke="white" stroke-width="4"/>
+    <line x1="32" y1="30" x2="18" y2="24" stroke="white" stroke-width="4"/>
+    <line x1="32" y1="30" x2="46" y2="24" stroke="white" stroke-width="4"/>
+    </svg>
+    </div>`;
+}
+
+const sections = {
+    "Delts":[
+        ["frontDelt","Front Delt"],
+        ["sideDelt","Side Delt"],
+        ["rearDelt","Rear Delt"]
+    ],
+    "Chest":[
+        ["flys","Flys"],
+        ["pushChest","Push (Bench)"]
+    ],
+    "Back":[
+        ["verticalPull","Vertical Pull"],
+        ["horizontalPull","Horizontal Pull"]
+    ],
+    "Arms":[
+        ["biceps","Biceps"],
+        ["triceps","Triceps"]
+    ],
+    "Legs":[
+        ["deadlift","Deadlift"],
+        ["squat","Squat"],
+        ["bulgarian","Bulgarian"],
+        ["lunge","Lunge"],
+        ["stepUp","Step Up"]
+    ],
+    "Calves":[
+        ["calves","Calves"]
+    ]
+};
+
+const appDiv = document.getElementById("app");
+
+function render(){
+    appDiv.innerHTML = "";
+
+    for(const [sec, items] of Object.entries(sections)){
+        const wrap = document.createElement("div");
+        wrap.className = "section";
+
+        const title = document.createElement("div");
+        title.className = "section-title";
+        title.textContent = sec;
+
+        const grid = document.createElement("div");
+        grid.className = "grid";
+
+        items.forEach(([key,label])=>{
+            const btn = document.createElement("button");
+            btn.className = "btn";
+
+            btn.innerHTML = `
+                ${icon(key)}
+                <div class="label">${label}</div>
+                <div class="badge">${counters[key] || 0}</div>
+            `;
+
+            btn.onclick = async () => {
+                counters[key] = (counters[key] || 0) + 1;
+                render();
+                await save();
+            };
+
+            grid.appendChild(btn);
+        });
+
+        wrap.appendChild(title);
+        wrap.appendChild(grid);
+        appDiv.appendChild(wrap);
+    }
+}
+
+async function load(){
+    const snap = await getDoc(docRef);
+    if(snap.exists()){
+        counters = snap.data();
+    } else {
+        await setDoc(docRef, counters);
+    }
+    render();
+}
+
+async function save(){
+    await updateDoc(docRef, {
+        ...counters,
+        updatedAt: serverTimestamp()
+    });
+}
+
+window.testWrite = async function(){
+    await setDoc(docRef, {
+        test:"ok",
+        updatedAt: serverTimestamp()
+    }, { merge:true });
+    alert("Firestore write OK");
+};
+
+window.resetAll = async function(){
+    for(const k in counters) counters[k]=0;
+    render();
+    await save();
+};
+
+load();
+</script>
+
+</body>
+</html>

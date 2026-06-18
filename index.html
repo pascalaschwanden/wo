@@ -128,6 +128,82 @@ table.myInputs {
     background: #fafafa;
 }
 
+
+.volume-view h1 {
+    text-align: center;
+}
+
+.volume-view .section {
+    margin-bottom: 20px;
+    width: 250px;
+    display: inline-block;
+}
+
+.volume-view .section.Legs {
+	width: 500px;
+}
+
+.volume-view .section-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.volume-view .button-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.volume-view .exercise-btn {
+    position: relative;
+    width: 100px;
+    height: 70px;
+    border: none;
+    border-radius: 16px;
+    background: #1976d2;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 8px 0 #0d47a1;
+    transition: all 0.08s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+.volume-view .exercise-btn:active {
+    transform: translateY(5px);
+    box-shadow: 0 3px 0 #0d47a1;
+}
+
+.volume-view .icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.volume-view .label {
+    font-size: 13px;
+    font-weight: bold;
+    text-align: center;
+    padding: 0 6px;
+}
+
+.volume-view .counter {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    min-width: 22px;
+    height: 22px;
+    border-radius: 14px;
+    background: white;
+    color: #1976d2;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
     </style>
 </head>
 <body>
@@ -193,6 +269,7 @@ table.myInputs {
         <button type="button" class="view-tab" data-view="benchmarks">Benchmarks</button>
         <button type="button" class="view-tab" data-view="progress">Progress</button>
         <button type="button" class="view-tab" data-view="workout">Workout</button>
+        <button type="button" class="view-tab" data-view="volume">Volume</button>
     </div>
 
     <section id="chartsView" class="chart-view">
@@ -244,6 +321,10 @@ table.myInputs {
         </div>
         <div id="benchmarkGrid" class="chart-grid">Loading benchmarks...</div>
         <p class="benchmarks-note">Each point estimates the weight you could lift for 6 reps using the Epley formula. The solid line is your best-fit trend, and the dotted line is a typical novice progression starting from your first benchmark estimate.</p>
+    </section>
+
+    <section id="volumeView" class="volume-view" hidden>
+	<div id="app"></div>
     </section>
 
     <section id="workoutView" class="workout-view" hidden>
@@ -337,6 +418,7 @@ table.myInputs {
         const benchmarksView = document.getElementById("benchmarksView");
         const progressView = document.getElementById("progressView");
         const workoutView = document.getElementById("workoutView");
+        const volumeView = document.getElementById("volumeView");
         const chartTabs = document.getElementById("chartTabs");
         const chartRange = document.getElementById("chartRange");
         const chartEndDate = document.getElementById("chartEndDate");
@@ -1331,6 +1413,79 @@ function getProgressMonthsForWeight2(weight, targets, reps = 12) {
             `;
         }
 
+	function renderVolume() {
+
+const sections = {
+    "Delts": [
+        ["🏋️", "Front Delt"],
+        ["↔️", "Side Delt"],
+        ["🔄", "Rear Delt"]
+    ],
+    "Chest": [
+        ["🦋", "Flys"],
+        ["💪", "Push Type"]
+    ],
+    "Back": [
+        ["⬇️", "Vertical Pull"],
+        ["↔️", "Horizontal Pull"]
+    ],
+    "Arms": [
+        ["💪", "Biceps"],
+        ["🦾", "Triceps"]
+    ],
+    "Legs": [
+        ["🏋️", "Deadlifts"],
+        ["⬆️", "Squats"],
+        ["🦵", "Bulgarian"],
+        ["🚶", "Lunges"],
+        ["📦", "Step Ups"],
+        ["🐄", "Calves"]
+    ]
+};
+
+const app = document.getElementById("app");
+
+for (const [sectionName, exercises] of Object.entries(sections)) {
+
+    const section = document.createElement("div");
+    section.className = "section " + sectionName;
+
+    const title = document.createElement("div");
+    title.className = "section-title";
+    title.textContent = sectionName;
+
+    const grid = document.createElement("div");
+    grid.className = "button-grid";
+
+    exercises.forEach(([icon, label]) => {
+
+        let count = 0;
+
+        const btn = document.createElement("button");
+        btn.className = "exercise-btn";
+
+        btn.innerHTML = `
+            <div class="icon">${icon}</div>
+            <div class="label">${label}</div>
+            <div class="counter">0</div>
+        `;
+
+        const counter = btn.querySelector(".counter");
+
+        btn.addEventListener("click", () => {
+            count++;
+            counter.textContent = count;
+        });
+
+        grid.appendChild(btn);
+    });
+
+    section.appendChild(title);
+    section.appendChild(grid);
+    app.appendChild(section);
+}
+	}
+
         function setActiveView(view) {
             activeView = view;
             chartsView.hidden = view !== "charts";
@@ -1339,6 +1494,7 @@ function getProgressMonthsForWeight2(weight, targets, reps = 12) {
             benchmarksView.hidden = view !== "benchmarks";
             progressView.hidden = view !== "progress";
             workoutView.hidden = view !== "workout";
+            volumeView.hidden = view !== "volume";
 
             viewTabs.querySelectorAll(".view-tab").forEach((button) => {
                 button.classList.toggle("active", button.dataset.view === view);
@@ -1355,6 +1511,9 @@ function getProgressMonthsForWeight2(weight, targets, reps = 12) {
             } else {
                 chartsByKey.forEach((chart) => chart.destroy());
                 chartsByKey.clear();
+                if (view === "volume") {
+			renderVolume();
+		}
                 if (view === "analysis") {
                     benchmarkChartsByKey.forEach((chart) => chart.destroy());
                     benchmarkChartsByKey.clear();
