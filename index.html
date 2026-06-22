@@ -134,9 +134,14 @@ table.myInputs {
 }
 
 .volume-view .section {
-    margin-bottom: 20px;
-    width: 250px;
+    width: 500px;
     display: inline-block;
+	padding: 9px 0 25px 20px;
+	border-top: 1px solid #DDDDDD;
+}
+
+.volume-view .section:nth-child(odd) {
+	background-color: #F1F1F1;
 }
 
 .volume-view .section.Legs {
@@ -144,8 +149,7 @@ table.myInputs {
 }
 
 .volume-view .section-title {
-    font-size: 14px;
-    font-weight: bold;
+    font-size: 13px;
     margin-bottom: 6px;
 }
 
@@ -161,21 +165,28 @@ table.myInputs {
     height: 70px;
     border: none;
     border-radius: 16px;
-    background: #1976d2;
+    background: #ff6666;
     color: white;
     cursor: pointer;
-    box-shadow: 0 8px 0 #0d47a1;
+    box-shadow: 0 8px 0 #cc5555;
     transition: all 0.08s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     user-select: none;
+    margin: 0 9px 0 0;
 }
-
+.volume-view .exercise-btn.orange {
+    background: #F28500;
+    box-shadow: 0 8px 0 #D26500;
+}
+.volume-view .exercise-btn.green {
+    background: #28A745;
+    box-shadow: 0 8px 0 #089725;
+}
 .volume-view .exercise-btn:active {
     transform: translateY(5px);
-    box-shadow: 0 3px 0 #0d47a1;
 }
 
 .volume-view .icon {
@@ -198,11 +209,14 @@ table.myInputs {
     height: 22px;
     border-radius: 14px;
     background: white;
-    color: #1976d2;
+    color: #bb6666;
     font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+.volume-view .green counter {
+    color: green;
 }
     </style>
 </head>
@@ -506,6 +520,7 @@ table.myInputs {
             { name: "Barbell Row", weeklyGain: 0.6 },
             { name: "Barbell Bicep Curl", weeklyGain: 0.6 },
             { name: "Bicep Curl", weeklyGain: 0.3 },
+            { name: "Dumbbell Upright Row", weeklyGain: 0.2 },
             { name: "Side Laterals", weeklyGain: .1 },
             { name: "Shoulder Press", weeklyGain: .6 },
             { name: "Military Press", weeklyGain: 1.25 },
@@ -1416,30 +1431,30 @@ function getProgressMonthsForWeight2(weight, targets, reps = 12) {
 	function renderVolume() {
 
 const sections = {
-    "Delts": [
-        ["🏋️", "Front Delt"],
-        ["↔️", "Side Delt"],
-        ["🔄", "Rear Delt"]
+    "Delts, Core": [
+        ["🏋️", "Front Delt", 2],
+        ["↔️", "Side Delt", 4],
+        ["🔄", "Rear Delt", 3],
+	["", "Core", 3]  // Side Plank, Ab Wheel
     ],
-    "Chest": [
-        ["🦋", "Flys"],
-        ["💪", "Push Type"]
+    "Chest, Arms": [
+        ["🦋", "Flys", 1],
+        ["💪", "Push Type", 3],
+        ["💪", "Biceps", 2],
+        ["🦾", "Triceps", 2]
     ],
     "Back": [
-        ["⬇️", "Vertical Pull"],
-        ["↔️", "Horizontal Pull"]
-    ],
-    "Arms": [
-        ["💪", "Biceps"],
-        ["🦾", "Triceps"]
+        ["⬇️", "Vertical Pull", 3],
+        ["↔️", "Horizontal Pull", 3], 
     ],
     "Legs": [
-        ["🏋️", "Deadlifts"],
-        ["⬆️", "Squats"],
-        ["🦵", "Bulgarian"],
-        ["🚶", "Lunges"],
-        ["📦", "Step Ups"],
-        ["🐄", "Calves"]
+        ["🏋️", "Deadlifts/RDL", 3],
+	["", "Hip Thrusts", 2],
+        ["⬆️", "Squats", 3],
+        ["🦵", "Bulgarian", 1],
+        ["📦", "Step, Lunges", 1],
+	["", "Nordic", 1],
+        ["🐄", "Calves", 4]
     ]
 };
 
@@ -1457,11 +1472,11 @@ for (const [sectionName, exercises] of Object.entries(sections)) {
     const grid = document.createElement("div");
     grid.className = "button-grid";
 
-    exercises.forEach(([icon, label]) => {
+    exercises.forEach(([icon, label, green_min]) => {
 
         let count = 0;
 
-        const btn = document.createElement("button");
+        const btn = document.createElement("button");  
         btn.className = "exercise-btn";
 
         btn.innerHTML = `
@@ -1475,6 +1490,14 @@ for (const [sectionName, exercises] of Object.entries(sections)) {
         btn.addEventListener("click", () => {
             count++;
             counter.textContent = count;
+	
+	if (count > 0) {
+    		btn.classList.add("orange");
+  	}
+	if( count >= green_min ) {
+		btn.classList.remove("orange");
+		btn.classList.add("green");
+	}
         });
 
         grid.appendChild(btn);
