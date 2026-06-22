@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workout Tracker</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 500px; margin: 40px auto; padding: 0 20px; }
+        body { font-family: Arial, sans-serif; max-width: 500px; margin: 40px auto; padding: 0 0; }
+
         form { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
         input, select, button { padding: 10px; font-size: 16px; }
         button { background-color: #007bff; color: white; border: none; cursor: pointer; }
@@ -134,9 +135,9 @@ table.myInputs {
 }
 
 .volume-view .section {
-    width: 360px;
+    width: 400px;
     display: inline-block;
-	padding: 9px 0 25px 0;
+	padding: 9px 0 25px 20px;
 	border-top: 1px solid #DDDDDD;
 }
 
@@ -215,6 +216,9 @@ table.myInputs {
 }
 .volume-view .green counter {
     color: green;
+}
+#workoutForm, #viewTabs, h2 {
+	padding: 0 20px;
 }
     </style>
 </head>
@@ -341,7 +345,7 @@ table.myInputs {
 
     <section id="workoutView" class="workout-view" hidden>
 
-<h1>Lower Body Volume Calculator</h1>
+<h2>Lower Body Volume Calculator</h2>
 
 <label>
     Workouts Per Week:
@@ -1457,6 +1461,7 @@ const sections = {
 };
 
 const app = document.getElementById("app");
+app.innerHTML = "";
 
 for (const [sectionName, exercises] of Object.entries(sections)) {
 
