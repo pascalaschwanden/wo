@@ -134,18 +134,14 @@ table.myInputs {
 }
 
 .volume-view .section {
-    width: 500px;
+    width: 360px;
     display: inline-block;
-	padding: 9px 0 25px 20px;
+	padding: 9px 0 25px 0;
 	border-top: 1px solid #DDDDDD;
 }
 
 .volume-view .section:nth-child(odd) {
 	background-color: #F1F1F1;
-}
-
-.volume-view .section.Legs {
-	width: 500px;
 }
 
 .volume-view .section-title {
@@ -161,7 +157,7 @@ table.myInputs {
 
 .volume-view .exercise-btn {
     position: relative;
-    width: 100px;
+    width: 78px;
     height: 70px;
     border: none;
     border-radius: 16px;
@@ -175,7 +171,7 @@ table.myInputs {
     align-items: center;
     justify-content: center;
     user-select: none;
-    margin: 0 9px 0 0;
+    margin: 0 0 0 0;
 }
 .volume-view .exercise-btn.orange {
     background: #F28500;
@@ -191,11 +187,13 @@ table.myInputs {
 
 .volume-view .icon {
     font-size: 28px;
-    margin-bottom: 8px;
+    margin-bottom: 2px;
+    position: relative;
+    left: -9px;
 }
 
 .volume-view .label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: bold;
     text-align: center;
     padding: 0 6px;
@@ -1448,7 +1446,7 @@ const sections = {
         ["↔️", "Horizontal Pull", 3], 
     ],
     "Legs": [
-        ["🏋️", "Deadlifts/RDL", 3],
+        ["🏋️", "Deadlifts, RDL", 3],
 	["", "Hip Thrusts", 2],
         ["⬆️", "Squats", 3],
         ["🦵", "Bulgarian", 1],
