@@ -220,6 +220,47 @@ table.myInputs {
 .volume-view .green counter {
     color: green;
 }
+.volume-view .planner {
+    border-top: 1px solid #DDDDDD;
+    margin-top: 20px;
+    padding: 18px 20px 24px;
+}
+.volume-view .planner-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.volume-view .planner-controls label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: bold;
+}
+.volume-view .planner-controls select {
+    min-width: 130px;
+}
+.volume-view .planner-grid {
+    display: grid;
+    gap: 14px;
+}
+.volume-view .planner-workout {
+    border-top: 1px solid #DDDDDD;
+    padding-top: 10px;
+}
+.volume-view .planner-workout h3 {
+    font-size: 15px;
+    margin: 0 0 8px;
+}
+.volume-view .planner-workout ul {
+    margin: 0;
+    padding-left: 18px;
+}
+.volume-view .planner-workout li {
+    margin-bottom: 5px;
+    font-size: 14px;
+}
 #workoutForm, #viewTabs, h2 {
 	padding: 0 20px;
 }
@@ -416,7 +457,7 @@ table.myInputs {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, deleteDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, query, orderBy, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
         // Firebase web app configuration. These values are safe to include in a static GitHub Pages site.
         const firebaseConfig = {
@@ -471,6 +512,7 @@ table.myInputs {
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const workoutCollection = collection(db, "workouts");
+        const volumeWeeksCollection = collection(db, "volumeWeeks");
 
         const exerciseCategories = {
             "Bath dips": "Arms",
@@ -545,6 +587,58 @@ table.myInputs {
             { name: "Chin ups", weeklyGain: 0.5},
             { name: "Pull ups", weeklyGain: 0.5}
         ];
+        const volumeSections = {
+            "Delts, Core": [
+                ["🏋️", "Front Delt", 2],
+                ["↔️", "Side Delt", 4],
+                ["🔄", "Rear Delt", 3],
+                ["🐉", "Core", 3]
+            ],
+            "Chest, Arms": [
+                ["🦋", "Flys", 2],
+                ["💪", "Push Type", 3],
+                ["💪", "Biceps", 2],
+                ["🦾", "Triceps", 2]
+            ],
+            "Back": [
+                ["⬇️", "Vertical Pull", 3],
+                ["↔️", "Horizontal Pull", 3],
+                ["💧", "Fast < 1K", 2]
+            ],
+            "Legs": [
+                ["🏋️", "Deadlifts, RDL", 3],
+                ["🍑", "Hip Thrusts", 2],
+                ["⬆️", "Squats", 3],
+                ["🦵", "Bulgarian", 2],
+                ["📦", "Step, Lunges", 1],
+                ["🦯", "Nordic", 2],
+                ["🐄", "Calves", 4]
+            ]
+        };
+        const volumePlannerItems = [
+            { section: "Delts, Core", label: "Front Delt", type: "upper", exercises: ["Military Press", "Shoulder Press"] },
+            { section: "Delts, Core", label: "Side Delt", type: "upper", exercises: ["Lying Side Raise"] },
+            { section: "Delts, Core", label: "Rear Delt", type: "upper", exercises: ["Lying Reverse Fly", "Reverse Fly"] },
+            { section: "Delts, Core", label: "Core", type: "upper", exercises: ["Leg Raises", "Roll Out Wheel"] },
+            { section: "Chest, Arms", label: "Flys", type: "upper", exercises: ["Chest Flys"] },
+            { section: "Chest, Arms", label: "Push Type", type: "upper", exercises: ["Bench Press"] },
+            { section: "Chest, Arms", label: "Biceps", type: "upper", exercises: ["Bicep Curls", "Barbell Bicep Curls"] },
+            { section: "Chest, Arms", label: "Triceps", type: "upper", exercises: ["Skull Crushers", "Bath Dips"] },
+            { section: "Back", label: "Vertical Pull", type: "upper", exercises: ["Pull Ups", "Chin Ups"] },
+            { section: "Back", label: "Horizontal Pull", type: "upper", exercises: ["Rows"] },
+            { section: "Legs", label: "Deadlifts, RDL", type: "lower", exercises: ["Deadlift", "RDL"] },
+            { section: "Legs", label: "Hip Thrusts", type: "lower", exercises: ["Hip Thrust"] },
+            { section: "Legs", label: "Squats", type: "lower", exercises: ["Squat"] },
+            { section: "Legs", label: "Bulgarian", type: "lower", exercises: ["Bulgarian Split Squat"] },
+            { section: "Legs", label: "Step, Lunges", type: "lower", exercises: ["Step Up", "Lunge"] },
+            { section: "Legs", label: "Nordic", type: "lower", exercises: ["Nordic Curl", "Leg Curl"] },
+            { section: "Legs", label: "Calves", type: "lower", exercises: ["Calf Raises"] }
+        ];
+        let volumeCounters = {};
+        let volumePlannerSettings = { upper: 3, lower: 3 };
+        let unsubscribeVolumeWeek = null;
+        let activeVolumeWeekKey = null;
+
         const progressReferenceMonths = [0, 2, 4, 6, 8, 10, 12, 18, 24];
         const progressExercises = [
             {
@@ -1435,88 +1529,282 @@ function getProgressMonthsForWeight2(weight, targets, reps = 12) {
             `;
         }
 
+        function getVolumeWeekStartDate(date = new Date()) {
+            const weekStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            const day = weekStart.getDay();
+            const mondayOffset = day === 0 ? -6 : 1 - day;
+            weekStart.setDate(weekStart.getDate() + mondayOffset);
+            weekStart.setHours(0, 0, 0, 0);
+            return weekStart;
+        }
+
+        function getVolumeWeekKey(date = new Date()) {
+            return getDateInputValue(getVolumeWeekStartDate(date));
+        }
+
+        function getVolumeCounterKey(sectionName, label) {
+            return `${sectionName}-${label}`
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-+|-+$/g, "");
+        }
+
+        function getVolumeWeekDocRef() {
+            return doc(volumeWeeksCollection, getVolumeWeekKey());
+        }
+
+        function setVolumeButtonState(button, count, greenMin) {
+            button.classList.toggle("orange", count > 0 && count < greenMin);
+            button.classList.toggle("green", count >= greenMin);
+        }
+
+        async function saveVolumeCounters() {
+            const weekStart = getVolumeWeekStartDate();
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+
+            try {
+                await setDoc(getVolumeWeekDocRef(), {
+                    weekStart: getDateInputValue(weekStart),
+                    weekEnd: getDateInputValue(weekEnd),
+                    counters: volumeCounters,
+                    plannerSettings: volumePlannerSettings,
+                    updatedAt: Date.now()
+                }, { merge: true });
+            } catch (error) {
+                console.error("Error saving volume counters: ", error);
+                alert("Failed to save volume counters. Check database rules.");
+            }
+        }
+
+        function getVolumeCount(sectionName, label) {
+            return Number(volumeCounters[getVolumeCounterKey(sectionName, label)] || 0);
+        }
+
+        function getVolumeWeeklyTarget(sectionName, label) {
+            const section = volumeSections[sectionName] || [];
+            const item = section.find(([, itemLabel]) => itemLabel === label);
+            return Number(item?.[2] || 0);
+        }
+
+        function formatPlannerSets(value) {
+            if (!Number.isFinite(value) || value <= 0) return "0";
+            return String(Math.round(value));
+        }
+
+        function distributeIntegerSets(totalSets, slotCount, startIndex = 0) {
+            const total = Math.max(0, Math.round(Number(totalSets) || 0));
+            const slots = Math.max(1, slotCount);
+            const baseSets = Math.floor(total / slots);
+            const extraSets = total % slots;
+            const sets = Array.from({ length: slots }, () => baseSets);
+
+            for (let index = 0; index < extraSets; index += 1) {
+                sets[(startIndex + index) % slots] += 1;
+            }
+
+            return sets;
+        }
+
+        function distributeSetsAcrossWorkouts(totalSets, currentWorkoutTotals) {
+            const workoutCount = currentWorkoutTotals.length;
+            const total = Math.max(0, Math.round(Number(totalSets) || 0));
+            const baseSets = Math.floor(total / workoutCount);
+            const extraSets = total % workoutCount;
+            const sets = Array.from({ length: workoutCount }, () => baseSets);
+            const projectedTotals = currentWorkoutTotals.map((totalSetsSoFar) => totalSetsSoFar + baseSets);
+
+            for (let index = 0; index < extraSets; index += 1) {
+                let smallestIndex = 0;
+                for (let workoutIndex = 1; workoutIndex < projectedTotals.length; workoutIndex += 1) {
+                    if (projectedTotals[workoutIndex] < projectedTotals[smallestIndex]) {
+                        smallestIndex = workoutIndex;
+                    }
+                }
+                sets[smallestIndex] += 1;
+                projectedTotals[smallestIndex] += 1;
+            }
+
+            return sets;
+        }
+
+        function getPlannerWorkouts(type) {
+            const workoutCount = Math.max(1, Number(volumePlannerSettings[type] || 1));
+            const workouts = Array.from({ length: workoutCount }, (_, index) => ({
+                title: `${type === "upper" ? "Upper" : "Lower"} ${index + 1}`,
+                items: []
+            }));
+            const workoutTotals = Array.from({ length: workoutCount }, () => 0);
+
+            volumePlannerItems
+                .filter((item) => item.type === type)
+                .forEach((item, itemIndex) => {
+                    const weeklySets = getVolumeWeeklyTarget(item.section, item.label);
+                    if (weeklySets <= 0) return;
+
+                    const workoutSets = distributeSetsAcrossWorkouts(weeklySets, workoutTotals);
+                    workoutSets.forEach((sets, index) => {
+                        workoutTotals[index] += sets;
+                    });
+                    workouts.forEach((workout, workoutIndex) => {
+                        const exerciseSets = distributeIntegerSets(
+                            workoutSets[workoutIndex],
+                            item.exercises.length,
+                            (workoutIndex + itemIndex) % item.exercises.length
+                        );
+                        item.exercises.forEach((exercise, exerciseIndex) => {
+                            const sets = exerciseSets[exerciseIndex];
+                            if (sets > 0) {
+                                workout.items.push({
+                                    exercise,
+                                    bodyPart: item.label,
+                                    sets
+                                });
+                            }
+                        });
+                    });
+                });
+
+            return workouts;
+        }
+
+        function renderPlannerWorkout(workout) {
+            const rows = workout.items.length === 0
+                ? "<li>No sets planned yet.</li>"
+                : workout.items.map((item) => `
+                    <li>${item.exercise}: ${formatPlannerSets(item.sets)} sets <span>(${item.bodyPart})</span></li>
+                `).join("");
+
+            return `
+                <div class="planner-workout">
+                    <h3>${workout.title}</h3>
+                    <ul>${rows}</ul>
+                </div>
+            `;
+        }
+
+        function renderVolumePlanner(app) {
+            const planner = document.createElement("div");
+            planner.className = "planner";
+            planner.innerHTML = `
+                <h2>Workout Planner</h2>
+                <div class="planner-controls">
+                    <label>
+                        Upper workouts/week
+                        <select id="upperPlannerWorkouts">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </select>
+                    </label>
+                    <label>
+                        Lower workouts/week
+                        <select id="lowerPlannerWorkouts">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="planner-grid">
+                    ${getPlannerWorkouts("upper").map(renderPlannerWorkout).join("")}
+                    ${getPlannerWorkouts("lower").map(renderPlannerWorkout).join("")}
+                </div>
+            `;
+
+            app.appendChild(planner);
+
+            const upperSelect = planner.querySelector("#upperPlannerWorkouts");
+            const lowerSelect = planner.querySelector("#lowerPlannerWorkouts");
+            upperSelect.value = String(volumePlannerSettings.upper);
+            lowerSelect.value = String(volumePlannerSettings.lower);
+
+            upperSelect.addEventListener("change", async () => {
+                volumePlannerSettings.upper = Number(upperSelect.value);
+                await saveVolumeCounters();
+                renderVolume();
+            });
+            lowerSelect.addEventListener("change", async () => {
+                volumePlannerSettings.lower = Number(lowerSelect.value);
+                await saveVolumeCounters();
+                renderVolume();
+            });
+        }
+
 	function renderVolume() {
+            const app = document.getElementById("app");
+            app.innerHTML = "";
 
-const sections = {
-    "Delts, Core": [
-        ["🏋️", "Front Delt", 2],
-        ["↔️", "Side Delt", 4],
-        ["🔄", "Rear Delt", 3],
-	["🐉", "Core", 3]  // Side Plank, Ab Wheel
-    ],
-    "Chest, Arms": [
-        ["🦋", "Flys", 1],
-        ["💪", "Push Type", 3],
-        ["💪", "Biceps", 2],
-        ["🦾", "Triceps", 2]
-    ],
-    "Back": [
-        ["⬇️", "Vertical Pull", 3],
-        ["↔️", "Horizontal Pull", 3], 
-	["💧", "Fast < 1K", 2]
-    ],
-    "Legs": [
-        ["🏋️", "Deadlifts, RDL", 3],
-	["🍑", "Hip Thrusts", 2],
-        ["⬆️", "Squats", 3],
-        ["🦵", "Bulgarian", 1],
-        ["📦", "Step, Lunges", 1],
-	["🦯", "Nordic", 1],
-        ["🐄", "Calves", 4]
-    ]
-};
+            for (const [sectionName, exercises] of Object.entries(volumeSections)) {
+                const section = document.createElement("div");
+                section.className = "section " + sectionName;
 
-const app = document.getElementById("app");
-app.innerHTML = "";
+                const title = document.createElement("div");
+                title.className = "section-title";
+                title.textContent = sectionName;
 
-for (const [sectionName, exercises] of Object.entries(sections)) {
+                const grid = document.createElement("div");
+                grid.className = "button-grid";
 
-    const section = document.createElement("div");
-    section.className = "section " + sectionName;
+                exercises.forEach(([icon, label, greenMin]) => {
+                    const counterKey = getVolumeCounterKey(sectionName, label);
+                    let count = Number(volumeCounters[counterKey] || 0);
 
-    const title = document.createElement("div");
-    title.className = "section-title";
-    title.textContent = sectionName;
+                    const btn = document.createElement("button");
+                    btn.className = "exercise-btn";
 
-    const grid = document.createElement("div");
-    grid.className = "button-grid";
+                    btn.innerHTML = `
+                        <div class="icon">${icon}</div>
+                        <div class="label">${label}</div>
+                        <div class="counter">${count}</div>
+                    `;
 
-    exercises.forEach(([icon, label, green_min]) => {
+                    const counter = btn.querySelector(".counter");
+                    setVolumeButtonState(btn, count, greenMin);
 
-        let count = 0;
+                    btn.addEventListener("click", async () => {
+                        count += 1;
+                        volumeCounters[counterKey] = count;
+                        counter.textContent = count;
+                        setVolumeButtonState(btn, count, greenMin);
+                        await saveVolumeCounters();
+                        renderVolume();
+                    });
 
-        const btn = document.createElement("button");  
-        btn.className = "exercise-btn";
+                    grid.appendChild(btn);
+                });
 
-        btn.innerHTML = `
-            <div class="icon">${icon}</div>
-            <div class="label">${label}</div>
-            <div class="counter">0</div>
-        `;
-
-        const counter = btn.querySelector(".counter");
-
-        btn.addEventListener("click", () => {
-            count++;
-            counter.textContent = count;
-	
-	if (count > 0) {
-    		btn.classList.add("orange");
-  	}
-	if( count >= green_min ) {
-		btn.classList.remove("orange");
-		btn.classList.add("green");
+                section.appendChild(title);
+                section.appendChild(grid);
+                app.appendChild(section);
+            }
+            renderVolumePlanner(app);
 	}
-        });
 
-        grid.appendChild(btn);
-    });
+        function listenToCurrentVolumeWeek() {
+            const weekKey = getVolumeWeekKey();
+            if (activeVolumeWeekKey === weekKey && unsubscribeVolumeWeek) return;
 
-    section.appendChild(title);
-    section.appendChild(grid);
-    app.appendChild(section);
-}
-	}
+            if (unsubscribeVolumeWeek) {
+                unsubscribeVolumeWeek();
+                unsubscribeVolumeWeek = null;
+            }
+
+            activeVolumeWeekKey = weekKey;
+            unsubscribeVolumeWeek = onSnapshot(getVolumeWeekDocRef(), (snapshot) => {
+                const data = snapshot.exists() ? snapshot.data() : {};
+                volumeCounters = data.counters || {};
+                volumePlannerSettings = {
+                    upper: Number(data.plannerSettings?.upper || volumePlannerSettings.upper || 3),
+                    lower: Number(data.plannerSettings?.lower || volumePlannerSettings.lower || 3)
+                };
+                if (activeView === "volume") {
+                    renderVolume();
+                }
+            }, (error) => {
+                console.error("Error loading volume counters: ", error);
+            });
+        }
 
         function setActiveView(view) {
             activeView = view;
@@ -1544,9 +1832,15 @@ for (const [sectionName, exercises] of Object.entries(sections)) {
                 chartsByKey.forEach((chart) => chart.destroy());
                 chartsByKey.clear();
                 if (view === "volume") {
-			renderVolume();
-		}
-                if (view === "analysis") {
+                    benchmarkChartsByKey.forEach((chart) => chart.destroy());
+                    benchmarkChartsByKey.clear();
+                    if (progressChart) {
+                        progressChart.destroy();
+                        progressChart = null;
+                    }
+                    listenToCurrentVolumeWeek();
+                    renderVolume();
+                } else if (view === "analysis") {
                     benchmarkChartsByKey.forEach((chart) => chart.destroy());
                     benchmarkChartsByKey.clear();
                     if (progressChart) {
