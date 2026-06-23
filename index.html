@@ -597,10 +597,10 @@ table.myInputs {
                 ["🐉", "Core", 3]
             ],
             "Chest, Arms": [
-                ["🦋", "Flys", 2],
-                ["💪", "Push Type", 3],
                 ["💪", "Biceps", 2],
-                ["🦾", "Triceps", 2]
+                ["🦾", "Triceps", 2],
+                ["🦋", "Flys", 2],
+                ["💪", "Push Type", 3]
             ],
             "Back": [
                 ["⬇️", "Vertical Pull", 2],
@@ -621,7 +621,7 @@ table.myInputs {
             { section: "Delts, Core", label: "Front Delt", type: "upper", exercises: ["Military Press", "Shoulder Press"] },
             { section: "Delts, Core", label: "Side Delt", type: "upper", exercises: ["Lying Side Raise"] },
             { section: "Delts, Core", label: "Rear Delt", type: "upper", exercises: ["Lying Reverse Fly", "Reverse Fly"] },
-            { section: "Delts, Core", label: "Core", type: "upper", exercises: ["Leg Raises", "Roll Out Wheel"] },
+            { section: "Delts, Core", label: "Core", type: "extra", exercises: ["Leg Raises", "Roll Out Wheel"] },
             { section: "Chest, Arms", label: "Flys", type: "upper", exercises: ["Chest Flys"] },
             { section: "Chest, Arms", label: "Push Type", type: "upper", exercises: ["Bench Press"] },
             { section: "Chest, Arms", label: "Biceps", type: "upper", exercises: ["Bicep Curls", "Barbell Bicep Curls"] },
@@ -634,10 +634,10 @@ table.myInputs {
             { section: "Legs", label: "Bulgarian", type: "lower", exercises: ["Bulgarian Split Squat"] },
             { section: "Legs", label: "Step, Lunges", type: "lower", exercises: ["Step Up", "Lunge"] },
             { section: "Legs", label: "Nordic", type: "lower", exercises: ["Nordic Curl", "Leg Curl"] },
-            { section: "Legs", label: "Calves", type: "lower", exercises: ["Calf Raises"] }
+            { section: "Legs", label: "Calves", type: "extra", exercises: ["Calf Raises"] }
         ];
         let volumeCounters = {};
-        let volumePlannerSettings = { upper: 3, lower: 3 };
+        let volumePlannerSettings = { upper: 3, lower: 3, other: 1 };
         let unsubscribeVolumeWeek = null;
         let activeVolumeWeekKey = null;
 
@@ -1629,9 +1629,15 @@ function getProgressMonthsForWeight2(weight, targets, reps = 12) {
         }
 
         function getPlannerWorkouts(type) {
+const workoutName = {
+    upper: "Upper",
+    lower: "Lower",
+    extra: "Extra"
+};
+
             const workoutCount = Math.max(1, Number(volumePlannerSettings[type] || 1));
             const workouts = Array.from({ length: workoutCount }, (_, index) => ({
-                title: `${type === "upper" ? "Upper" : "Lower"} ${index + 1}`,
+		title: `${workoutName[type]} ${index + 1}`,
                 items: []
             }));
             const workoutTotals = Array.from({ length: workoutCount }, () => 0);
@@ -1710,6 +1716,7 @@ function getProgressMonthsForWeight2(weight, targets, reps = 12) {
                 <div class="planner-grid">
                     ${getPlannerWorkouts("upper").map(renderPlannerWorkout).join("")}
                     ${getPlannerWorkouts("lower").map(renderPlannerWorkout).join("")}
+                    ${getPlannerWorkouts("extra").map(renderPlannerWorkout).join("")}
                 </div>
             `;
 
