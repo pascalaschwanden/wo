@@ -603,7 +603,7 @@ table.myInputs {
             "Back": [
                 ["⬇️", "Vertical Pull", 3],
                 ["↔️", "Horizontal Pull", 3],
-                ["💧", "Fast < 1K", 2]
+                ["💧", "Fast < 1200", 2]
             ],
             "Legs": [
                 ["🏋️", "Deadlifts, RDL", 3],
@@ -1609,12 +1609,10 @@ function getProgressMonthsForWeight2(weight, targets, reps = 12) {
         function distributeSetsAcrossWorkouts(totalSets, currentWorkoutTotals) {
             const workoutCount = currentWorkoutTotals.length;
             const total = Math.max(0, Math.round(Number(totalSets) || 0));
-            const baseSets = Math.floor(total / workoutCount);
-            const extraSets = total % workoutCount;
-            const sets = Array.from({ length: workoutCount }, () => baseSets);
-            const projectedTotals = currentWorkoutTotals.map((totalSetsSoFar) => totalSetsSoFar + baseSets);
+            const sets = Array.from({ length: workoutCount }, () => 0);
+            const projectedTotals = currentWorkoutTotals.slice();
 
-            for (let index = 0; index < extraSets; index += 1) {
+            for (let index = 0; index < total; index += 1) {
                 let smallestIndex = 0;
                 for (let workoutIndex = 1; workoutIndex < projectedTotals.length; workoutIndex += 1) {
                     if (projectedTotals[workoutIndex] < projectedTotals[smallestIndex]) {
@@ -1669,6 +1667,7 @@ function getProgressMonthsForWeight2(weight, targets, reps = 12) {
         }
 
         function renderPlannerWorkout(workout) {
+            const totalSets = workout.items.reduce((total, item) => total + item.sets, 0);
             const rows = workout.items.length === 0
                 ? "<li>No sets planned yet.</li>"
                 : workout.items.map((item) => `
@@ -1677,7 +1676,7 @@ function getProgressMonthsForWeight2(weight, targets, reps = 12) {
 
             return `
                 <div class="planner-workout">
-                    <h3>${workout.title}</h3>
+                    <h3>${workout.title} (${totalSets} sets)</h3>
                     <ul>${rows}</ul>
                 </div>
             `;
