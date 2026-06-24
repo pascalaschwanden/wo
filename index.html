@@ -1652,23 +1652,35 @@ const workoutName = {
                     workoutSets.forEach((sets, index) => {
                         workoutTotals[index] += sets;
                     });
-                    workouts.forEach((workout, workoutIndex) => {
-                        const exerciseSets = distributeIntegerSets(
-                            workoutSets[workoutIndex],
-                            item.exercises.length,
-                            (workoutIndex + itemIndex) % item.exercises.length
-                        );
-                        item.exercises.forEach((exercise, exerciseIndex) => {
-                            const sets = exerciseSets[exerciseIndex];
-                            if (sets > 0) {
-                                workout.items.push({
-                                    exercise,
-                                    bodyPart: item.label,
-                                    sets
-                                });
-                            }
-                        });
-                    });
+                    
+let nextExerciseIndex = 0;
+
+workouts.forEach((workout, workoutIndex) => {
+    const setsForWorkout = workoutSets[workoutIndex];
+
+    for (let s = 0; s < setsForWorkout; s++) {
+        const exercise =
+            item.exercises[nextExerciseIndex % item.exercises.length];
+
+        const existing = workout.items.find(
+            i =>
+                i.exercise === exercise &&
+                i.bodyPart === item.label
+        );
+
+        if (existing) {
+            existing.sets++;
+        } else {
+            workout.items.push({
+                exercise,
+                bodyPart: item.label,
+                sets: 1
+            });
+        }
+
+        nextExerciseIndex++;
+    }
+});
                 });
 
             return workouts;
