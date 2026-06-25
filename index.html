@@ -392,6 +392,18 @@ table.myInputs {
 
     <section id="workoutView" class="workout-view" hidden>
 
+<h2>Target Volumes</h2>
+<table class="targetVolumeInputs">
+    <thead>
+        <tr>
+            <th>Exercise</th>
+            <th>Sets Per Workout</th>
+        </tr>
+    </thead>
+    <tbody id="targetVolumeTable"></tbody>
+</table>
+
+
 <h2>Lower Body Volume Calculator</h2>
 
 <label>
@@ -515,6 +527,8 @@ table.myInputs {
         const db = getFirestore(app);
         const workoutCollection = collection(db, "workouts");
         const volumeWeeksCollection = collection(db, "volumeWeeks");
+	const targetVolume = collection(db, "targetVolumeJSON");
+	console.dir(targetVolume);
 
         const exerciseCategories = {
             "Bath dips": "Arms",
@@ -639,6 +653,7 @@ table.myInputs {
         let volumeCounters = {};
         let volumePlannerSettings = { upper: 3, lower: 3, other: 1 };
         let unsubscribeVolumeWeek = null;
+	let unsubscribeLoadTarget = null;
         let activeVolumeWeekKey = null;
 
         const progressReferenceMonths = [0, 2, 4, 6, 8, 10, 12, 18, 24];
@@ -1560,6 +1575,34 @@ function getProgressMonthsForWeight2(weight, targets, reps = 12) {
             button.classList.toggle("green", count >= greenMin);
         }
 
+	function getTargets() {
+
+const values = Object.fromEntries(
+  [...document.querySelectorAll('#targetVolumeTable input[type="number"]')]
+    .map(input => [input.id, Number(input.value)])
+);
+
+console.log(values);
+		return values;
+	}
+
+	async function saveTargetVolume() {
+		
+		var docRef = doc(db, "targetVolumeJSON", "global");
+
+            try {
+		var targs = getTargets();
+
+                await setDoc(docRef, {
+                    targets: targs,
+                    updatedAt: Date.now()
+                }, { merge: true });
+            } catch (error) {
+                console.error("Error saving target volume: ", error);
+                alert("Failed to save target volume. Check database rules.");
+            }
+	}
+
         async function saveVolumeCounters() {
             const weekStart = getVolumeWeekStartDate();
             const weekEnd = new Date(weekStart);
@@ -1584,9 +1627,13 @@ function getProgressMonthsForWeight2(weight, targets, reps = 12) {
         }
 
         function getVolumeWeeklyTarget(sectionName, label) {
-            const section = volumeSections[sectionName] || [];
-            const item = section.find(([, itemLabel]) => itemLabel === label);
-            return Number(item?.[2] || 0);
+		console.log('label='+label);
+		var label_un = label.replaceAll(" ", "_");
+		return targetVolumeData[ label_un ];
+
+//            const section = volumeSections[sectionName] || [];
+//            const item = section.find(([, itemLabel]) => itemLabel === label);
+//            return Number(item?.[2] || 0);
         }
 
         function formatPlannerSets(value) {
@@ -1751,6 +1798,11 @@ workouts.forEach((workout, workoutIndex) => {
             });
         }
 
+ 	function getVolumeTarg( label ) {
+		var label_un = label.replaceAll(" ", "_");
+		return targetVolumeData[ label_un ];
+	}
+
 	function renderVolume() {
             const app = document.getElementById("app");
             app.innerHTML = "";
@@ -1766,7 +1818,9 @@ workouts.forEach((workout, workoutIndex) => {
                 const grid = document.createElement("div");
                 grid.className = "button-grid";
 
-                exercises.forEach(([icon, label, greenMin]) => {
+                exercises.forEach(([icon, label, greenMinDeprecated]) => {
+
+		    var greenMin = getVolumeTarg( label );
                     const counterKey = getVolumeCounterKey(sectionName, label);
                     let count = Number(volumeCounters[counterKey] || 0);
 
@@ -1879,6 +1933,8 @@ workouts.forEach((workout, workoutIndex) => {
                     benchmarkChartsByKey.forEach((chart) => chart.destroy());
                     benchmarkChartsByKey.clear();
                     renderProgress(latestEntries);
+		} else if (view === "workout") {
+			renderTargetVolumeTable();
                 } else {
                     benchmarkChartsByKey.forEach((chart) => chart.destroy());
                     benchmarkChartsByKey.clear();
@@ -2375,6 +2431,21 @@ const contributions = {
 const STORAGE_KEY = "lowerBodyVolumeCalculator";
 
 const tableBody = document.getElementById("exerciseTable");
+const targetVolumeTableBody = document.getElementById("targetVolumeTable");
+var targetVolumeData = {};
+
+function loadTargetVolumeState() {
+	const targetDocRef = doc(db, "targetVolumeJSON", "global");
+            unsubscribeLoadTarget = onSnapshot(targetDocRef, (snapshot) => {
+                targetVolumeData = snapshot.exists() ? snapshot.data().targets : {};
+console.dir(targetVolumeData);
+                if (activeView === "workout") {
+                    renderTargetVolumeTable();
+                }
+            }, (error) => {
+                console.error("Error loading volume counters: ", error);
+            });
+}
 
 function loadState() {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -2435,6 +2506,50 @@ function buildTable() {
         document.getElementById("workoutsPerWeek").value =
             state.workoutsPerWeek;
     }
+}
+
+function renderTargetVolumeTable() {
+
+targetVolumeTableBody.innerHTML = '';
+
+var state  = targetVolumeData;
+// Loop through each workout section
+Object.entries(volumeSections).forEach(([sectionName, exercises]) => {
+  console.log(`--- ${sectionName} ---`);
+  
+  // Loop through each exercise array and destructure the values
+  exercises.forEach(([emoji, exerciseName, sets]) => {
+    console.log(`${emoji} ${exerciseName}: ${sets} sets`);
+        const tr = document.createElement("tr");
+
+        const tdName = document.createElement("td");
+        tdName.textContent = exerciseName;
+
+        const tdInput = document.createElement("td");
+
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = 0;
+        input.step = 1;
+        input.id = idFor(exerciseName);
+
+	//var norm = exerciseName.replaceAll(' ', '_');
+	var val = getVolumeTarg(exerciseName);
+        input.value = val || 0;
+
+        input.addEventListener("input", () => {
+		saveTargetVolume();
+        });
+
+        tdInput.appendChild(input);
+
+        tr.appendChild(tdName);
+        tr.appendChild(tdInput);
+
+        targetVolumeTableBody.appendChild(tr);
+  });
+});
+
 }
 
 function calculate() {
@@ -2499,6 +2614,7 @@ document.getElementById("workoutsPerWeek").addEventListener("change", () => {
 });
 
 buildTable();
+loadTargetVolumeState();
 calculate();
     </script>
 </body>
