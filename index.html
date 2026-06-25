@@ -2468,7 +2468,7 @@ function saveState() {
 }
 
 function idFor(exercise) {
-    return exercise.replace(/\s+/g, "_");
+    return "Lower_" + exercise.replace(/\s+/g, "_");
 }
 
 function buildTable() {
@@ -2531,7 +2531,7 @@ Object.entries(volumeSections).forEach(([sectionName, exercises]) => {
         input.type = "number";
         input.min = 0;
         input.step = 1;
-        input.id = idFor(exerciseName);
+        input.id = exerciseName.replace(/\s+/g, "_");;
 
 	//var norm = exerciseName.replaceAll(' ', '_');
 	var val = getVolumeTarg(exerciseName);
