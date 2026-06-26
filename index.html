@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workout Tracker</title>
     <style>
+table.targetVolumeInputs {
+	padding: 20px 0 0 20px;
+}
 table.mope {
     width: 100%;
     border-collapse: separate;
@@ -483,7 +486,7 @@ table.myInputs {
     <thead>
         <tr>
             <th>Exercise</th>
-            <th>Sets Per Workout</th>
+            <th>Sets Per Week</th>
         </tr>
     </thead>
     <tbody id="targetVolumeTable"></tbody>
@@ -492,28 +495,18 @@ table.myInputs {
 
 <h2>Lower Body Volume Calculator</h2>
 
-<label>
-    Workouts Per Week:
-    <select id="workoutsPerWeek">
-        <option value="1">1x</option>
-        <option value="2">2x</option>
-        <option value="3" selected>3x</option>
-    </select>
-</label>
-
 <table class="myInputs">
+    <tbody id="exerciseTable"></tbody>
+</table>
+
+<div class="summary">
+    <table class="totals-table mope">
     <thead>
         <tr>
             <th>Exercise</th>
             <th>Sets Per Workout</th>
         </tr>
     </thead>
-    <tbody id="exerciseTable"></tbody>
-</table>
-
-<div class="summary">
-    <h2>Per Workout Totals</h2>
-    <table class="totals-table">
         <tr><td>Glutes</td><td id="glutesWorkout">0</td></tr>
         <tr><td>Hamstrings</td><td id="hamstringsWorkout">0</td></tr>
         <tr><td>Quads</td><td id="quadsWorkout">0</td></tr>
@@ -522,15 +515,6 @@ table.myInputs {
 <tr><td>Abductors</td><td id="abductorsWorkout">0</td></tr>
     </table>
 
-    <h2>Weekly Totals</h2>
-    <table class="totals-table">
-        <tr><td>Glutes</td><td id="glutesWeek">0</td></tr>
-        <tr><td>Hamstrings</td><td id="hamstringsWeek">0</td></tr>
-        <tr><td>Quads</td><td id="quadsWeek">0</td></tr>
-        <tr><td>Calves</td><td id="calvesWeek">0</td></tr>
-<tr><td>Adductors</td><td id="adductorsWeek">0</td></tr>
-<tr><td>Abductors</td><td id="abductorsWeek">0</td></tr>
-    </table>
 </div>
 
     </section>
@@ -711,10 +695,11 @@ table.myInputs {
             ],
             "Legs": [
                 ["🏋️", "Deadlifts, RDL", 3],
-                ["🍑", "Hip Thrusts", 2],
+                ["🍑", "Hip Thrust", 2],
                 ["⬆️", "Squats", 3],
                 ["🦵", "Bulgarian", 2],
-                ["📦", "Step, Lunges", 1],
+                ["📦", "Step Up", 1],
+                ["🏃", "Lunge", 1],
                 ["🦯", "Nordic", 2],
                 ["🐄", "Calves", 4]
             ]
@@ -732,10 +717,11 @@ table.myInputs {
             { section: "Back", label: "Horizontal Pull", type: "upper", exercises: ["Rows"] },
 	    { section: "Back", label: "Shrugs", type: "upper", exercises: ["Shrugs"] },
             { section: "Legs", label: "Deadlifts, RDL", type: "lower", exercises: ["Deadlift", "RDL"] },
-            { section: "Legs", label: "Hip Thrusts", type: "lower", exercises: ["Hip Thrust"] },
+            { section: "Legs", label: "Hip Thrust", type: "lower", exercises: ["Hip Thrust"] },
             { section: "Legs", label: "Squats", type: "lower", exercises: ["Squat"] },
             { section: "Legs", label: "Bulgarian", type: "lower", exercises: ["Bulgarian Split Squat"] },
-            { section: "Legs", label: "Step, Lunges", type: "lower", exercises: ["Step Up", "Lunge"] },
+            { section: "Legs", label: "Step Up", type: "lower", exercises: ["Step Up"] },
+            { section: "Legs", label: "Lunge", type: "lower", exercises: [ "Lunge - reverse"] },
             { section: "Legs", label: "Nordic", type: "lower", exercises: ["Nordic Curl"] },
             { section: "Legs", label: "Calves", type: "extra", exercises: ["Calf Raises"] }
         ];
@@ -1716,7 +1702,6 @@ console.log(values);
         }
 
         function getVolumeWeeklyTarget(sectionName, label) {
-		console.log('label='+label);
 		var label_un = label.replaceAll(" ", "_");
 		return targetVolumeData[ label_un ];
 
@@ -2363,9 +2348,9 @@ const exercises = [
 "Sissy Squat",
 "Zercher Squat",
 "Wide-Stance Squat",
-    "Hip Thrusts",
+    "Hip Thrust",
     "Glute Bridge",
-    "DeadLift",
+    "Deadlift",
     "RDL",
     "Calf Raises",
     "Lunges",
@@ -2399,7 +2384,7 @@ const contributions = {
         abductors: 0.25
     },
 
-    "Hip Thrusts": {
+    "Hip Thrust": {
         quads: 0.0,
         hamstrings: 0.25,
         glutes: 1.0,
@@ -2417,7 +2402,7 @@ const contributions = {
         abductors: 0.25
     },
 
-    "DeadLift": {
+    "Deadlift": {
         quads: 0.25,
         hamstrings: 1.0,
         glutes: 1.0,
@@ -2444,7 +2429,7 @@ const contributions = {
         abductors: 0.0
     },
 
-    "Lunges": {
+    "Lunge - reverse": {
         quads: 1.0,
         hamstrings: 0.5,
         glutes: 1.0,
@@ -2462,7 +2447,7 @@ const contributions = {
         abductors: 0.5
     },
 
-    "Nordic": {
+    "Nordic Curl": {
         quads: 0.0,
         hamstrings: 1.0,
         glutes: 0.0,
@@ -2471,7 +2456,7 @@ const contributions = {
         abductors: 0.0
     },
 
-    "Step Ups": {
+    "Step Up": {
         quads: 1.0,
         hamstrings: 0.25,
         glutes: 1.0,
@@ -2557,10 +2542,12 @@ function saveState() {
 }
 
 function idFor(exercise) {
-    return "Lower_" + exercise.replace(/\s+/g, "_");
+    return exercise.replace(/\s+/g, "_");
 }
 
 function buildTable() {
+	//  this was the lowerbody volume calculator, now deprecated.
+    return false;
     const state = loadState();
 
     exercises.forEach(exercise => {
@@ -2604,11 +2591,9 @@ targetVolumeTableBody.innerHTML = '';
 var state  = targetVolumeData;
 // Loop through each workout section
 Object.entries(volumeSections).forEach(([sectionName, exercises]) => {
-  console.log(`--- ${sectionName} ---`);
   
   // Loop through each exercise array and destructure the values
   exercises.forEach(([emoji, exerciseName, sets]) => {
-    console.log(`${emoji} ${exerciseName}: ${sets} sets`);
         const tr = document.createElement("tr");
 
         const tdName = document.createElement("td");
@@ -2620,7 +2605,7 @@ Object.entries(volumeSections).forEach(([sectionName, exercises]) => {
         input.type = "number";
         input.min = 0;
         input.step = 1;
-        input.id = exerciseName.replace(/\s+/g, "_");;
+        input.id = exerciseName.replace(/\s+/g, "_");
 
 	//var norm = exerciseName.replaceAll(' ', '_');
 	var val = getVolumeTarg(exerciseName);
@@ -2628,6 +2613,7 @@ Object.entries(volumeSections).forEach(([sectionName, exercises]) => {
 
         input.addEventListener("input", () => {
 		saveTargetVolume();
+		setTimeout(calculate, 100);
         });
 
         tdInput.appendChild(input);
@@ -2651,22 +2637,34 @@ adductors: 0,
     abductors: 0
     };
 
-    exercises.forEach(exercise => {
-        const sets = Number(
-            document.getElementById(idFor(exercise)).value || 0
-        );
+	//  exercises
+	var exc0 = getPlannerWorkouts("lower");
+	var exc1 = getPlannerWorkouts("extra");
+	var exc = exc0.concat(exc1);
+	console.dir( exc );
 
-        totals.glutes += sets * contributions[exercise].glutes;
-        totals.hamstrings += sets * contributions[exercise].hamstrings;
-        totals.quads += sets * contributions[exercise].quads;
-        totals.calves += sets * contributions[exercise].calves;
-totals.adductors += sets * contributions[exercise].adductors;
-totals.abductors += sets * contributions[exercise].abductors;
+    exc.forEach(exerciseIs => {
+
+	exerciseIs.items.forEach( exercise => {
+
+	var eb = exercise.bodyPart.replaceAll(" ", "_");
+	var idf = idFor(eb);
+
+        const sets = Number(exercise.sets);
+
+	if( contributions[exercise.exercise] ) {
+	 
+          var exc_cont = contributions[exercise.exercise];
+
+          totals.glutes += sets * exc_cont.glutes;
+          totals.hamstrings += sets * exc_cont.hamstrings;
+          totals.quads += sets * exc_cont.quads;
+          totals.calves += sets * exc_cont.calves;
+	  totals.adductors += sets * exc_cont.adductors;
+	  totals.abductors += sets * exc_cont.abductors;
+	}
+	});
     });
-
-    const workoutsPerWeek = Number(
-        document.getElementById("workoutsPerWeek").value
-    );
 
     document.getElementById("glutesWorkout").textContent =
         totals.glutes.toFixed(1);
@@ -2682,25 +2680,7 @@ document.getElementById("adductorsWorkout").textContent =
 document.getElementById("abductorsWorkout").textContent =
     totals.abductors.toFixed(1);
 
-    document.getElementById("glutesWeek").textContent =
-        (totals.glutes * workoutsPerWeek).toFixed(1);
-    document.getElementById("hamstringsWeek").textContent =
-        (totals.hamstrings * workoutsPerWeek).toFixed(1);
-    document.getElementById("quadsWeek").textContent =
-        (totals.quads * workoutsPerWeek).toFixed(1);
-    document.getElementById("calvesWeek").textContent =
-        (totals.calves * workoutsPerWeek).toFixed(1);
-document.getElementById("adductorsWeek").textContent =
-    (totals.adductors * workoutsPerWeek).toFixed(1);
-
-document.getElementById("abductorsWeek").textContent =
-    (totals.abductors * workoutsPerWeek).toFixed(1);
 }
-
-document.getElementById("workoutsPerWeek").addEventListener("change", () => {
-    calculate();
-    saveState();
-});
 
 buildTable();
 loadTargetVolumeState();
