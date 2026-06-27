@@ -346,7 +346,7 @@ table.myInputs {
             <option value="Barbell Bicep Curl">Barbell Bicep Curl</option>
             <option value="Bench Press">Bench Press</option>
             <option value="Bicep Curl">Bicep Curl</option>
-            <option value="Bicep Curl - lying">Bicep Curl - lying</option>
+            <option value="Clown Curl">Clown Curl</option>
             <option value="Cable Face Pulls">Cable Face Pulls</option>
             <option value="Calf Raises, single">Calf Raises, single</option>
             <option value="Calf Extension">Calf Extension</option>
@@ -649,7 +649,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             "Bench Press": "Chest",
             "Dumbbell PUllover": "Chest",
             "Bicep Curl": "Arms",
-            "Bicep Curl - lying": "Arms",
+            "Clown Curl": "Arms",
             "Overhead tricep extention": "Arms",
             "Low horizontal Row": "Back",
             "Double Dumbbell Row": "Back",
@@ -747,7 +747,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { section: "Delts, Core", label: "Core", type: "extra", exercises: ["Leg Raises", "Roll Out Wheel"] },
             { section: "Chest, Arms", label: "Flys", type: "upper", exercises: ["Chest Flys"] },
             { section: "Chest, Arms", label: "Push Type", type: "upper", exercises: ["Bench Press"] },
-            { section: "Chest, Arms", label: "Biceps", type: "upper", exercises: ["Bicep Curls", "Barbell Bicep Curls", "Bicep Curl - lying"] },
+            { section: "Chest, Arms", label: "Biceps", type: "upper", exercises: ["Bicep Curls", "Barbell Bicep Curls", "Clown Curl"] },
             { section: "Chest, Arms", label: "Triceps", type: "upper", exercises: ["Skull Crushers", "Bath Dips", "Overhead tricep extention"] },
             { section: "Back", label: "Vertical Pull", type: "upper", exercises: ["Pull Ups", "Chin Ups"] },
             { section: "Back", label: "Horizontal Pull", type: "upper", exercises: ["Rows"] },
@@ -1810,33 +1810,22 @@ const workoutName = {
                         workoutTotals[index] += sets;
                     });
                     
-let nextExerciseIndex = 0;
+let nextExerciseIndex = itemIndex % item.exercises.length;
 
 workouts.forEach((workout, workoutIndex) => {
     const setsForWorkout = workoutSets[workoutIndex];
+    if (setsForWorkout === 0) return;
 
-    for (let s = 0; s < setsForWorkout; s++) {
-        const exercise =
-            item.exercises[nextExerciseIndex % item.exercises.length];
+    const exercise =
+        item.exercises[nextExerciseIndex % item.exercises.length];
 
-        const existing = workout.items.find(
-            i =>
-                i.exercise === exercise &&
-                i.bodyPart === item.label
-        );
+    workout.items.push({
+        exercise,
+        bodyPart: item.label,
+        sets: setsForWorkout
+    });
 
-        if (existing) {
-            existing.sets++;
-        } else {
-            workout.items.push({
-                exercise,
-                bodyPart: item.label,
-                sets: 1
-            });
-        }
-
-        nextExerciseIndex++;
-    }
+    nextExerciseIndex++;
 });
                 });
 
