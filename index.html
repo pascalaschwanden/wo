@@ -14,24 +14,24 @@ table.mope {
     border-spacing: 0;
     font: 14px/1.5 Inter, system-ui, sans-serif;
     background: #fff;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #d1d5db; /* Darkened from #e5e7eb */
     border-radius: 16px;
     overflow: hidden;
-	margin: 40px 0 40px 0;
+    margin: 40px 0;
     box-shadow:
-        0 1px 2px rgba(16, 24, 40, .05),
-        0 12px 32px rgba(16, 24, 40, .08);
+        0 1px 3px rgba(16, 24, 40, .1), /* Darkened opacity & blur */
+        0 16px 40px rgba(16, 24, 40, .15); /* Darkened opacity & increased distance */
 }
 
-table.mope thead th {
-    background: #fafafa;
+table.mope thead th, table.mope tr:first-child  {
+    background: #f3f4f6; /* Darkened from #fafafa */
     color: #6b7280;
     font-size: 12px;
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
     padding: 14px 22px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #d1d5db; /* Darkened from #e5e7eb */
 }
 
 table.mope tbody td {
@@ -456,6 +456,8 @@ table.myInputs {
 
     <section id="volumeView" class="volume-view" hidden>
 	<div id="app"></div>
+
+	<!--
 	<table class='mope' id="percent_of_max_gains">
 		<tr><td>Weekly Sets</td><td>Hypertrophy % of max</td><td>% of strength</td></tr>
 		<tr><td>1</td><td>45%</td><td>55%</td></tr>
@@ -469,14 +471,60 @@ table.myInputs {
 		<tr><td>9</td><td>94%</td><td>96%</td></tr>
 		<tr><td>10</td><td>100%</td><td>100%</td></tr>
 	</table>
+	-->
 
-	<table class='mope'>
-		<tr><td>Weekly Sets</td><td>Long term muscle potential reached</td></tr>
-	<tr><td>1-2</td><td>70-85%</td></tr>
-	<tr><td>3-5</td><td>85%-95%</td></tr>
-	<tr><td>6-10</td><td>95-100%</td></tr>
-	<tr><td>10-20</td><td>100% (for most people)</td></tr>
-	</table>
+
+    </section>
+
+    <section id="workoutView" class="workout-view" hidden>
+
+<h2>Target Volumes</h2>
+<table class="targetVolumeInputs">
+        <tr>
+            <th>Exercise</th>
+            <th>Sets Per Week</th>
+        </tr>
+    <tbody id="targetVolumeTable"></tbody>
+</table>
+
+
+<table class="all_totals mope">
+        <tr>
+            <td>Type</td>
+            <td>Set Count</td>
+        </tr>
+
+	<tr><td>Upper body sets</td>	<td><div class='totals0'></div></td></tr>
+	<tr><td>Lower body sets</td>	<td><div class='totals1'></div></td></tr>
+	<tr><td>Total Sets</td>		<td><div class='totals2'></div></td></tr>
+	<tr><td>Workout time (hrs)</td>	<td><div class='totals3'></div></td></tr>
+</table>
+
+<div class="summary">
+    <table class="totals-table mope">
+        <tr>
+            <td>Exercise</td>
+            <td>Sets Per Week</td>
+        </tr>
+        <tr><td>Glutes</td><td id="glutesWorkout">0</td></tr>
+        <tr><td>Hamstrings</td><td id="hamstringsWorkout">0</td></tr>
+        <tr><td>Quads</td><td id="quadsWorkout">0</td></tr>
+        <tr><td>Calves</td><td id="calvesWorkout">0</td></tr>
+<tr><td>Adductors</td><td id="adductorsWorkout">0</td></tr>
+<tr><td>Abductors</td><td id="abductorsWorkout">0</td></tr>
+    </table>
+
+</div>
+
+The Law of Diminishing ReturnsSports science landmark meta-analyses—such as the landmark volume studies by Dr. Brad Schoenfeld—clearly demonstrate a dose-response relationship between weekly sets and muscle growth. The return on your time investment breaks down into three distinct tiers:
+
+<table class='mope'>
+<tr><td>Set count</td><td>% of max potential</td></tr>
+<tr><td>1 - 4</td>  <td>60 - 65%</td> </tr>
+<tr><td>5 - 9</td>  <td>80 - 85%</td> </tr>
+<tr><td>10 - 20</td>  <td>100%</td> </tr>
+</table>
+
 
 <table class="mope">
     <tr>
@@ -493,64 +541,17 @@ table.myInputs {
     </tr>
     <tr>
         <td>3</td>
-        <td>87.5%</td>
+        <td>87%</td>
     </tr>
     <tr>
         <td>4</td>
-        <td>93.75%</td>
+        <td>94%</td>
     </tr>
     <tr>
         <td>5</td>
-        <td>96.875%</td>
+        <td>97%</td>
     </tr>
 </table>
-
-    </section>
-
-    <section id="workoutView" class="workout-view" hidden>
-
-<h2>Target Volumes</h2>
-<table class="targetVolumeInputs">
-    <thead>
-        <tr>
-            <th>Exercise</th>
-            <th>Sets Per Week</th>
-        </tr>
-    </thead>
-    <tbody id="targetVolumeTable"></tbody>
-</table>
-
-
-<table class="all_totals mope">
-    <thead>
-        <tr>
-            <th>Type</th>
-            <th>Set Count</th>
-        </tr>
-    </thead>
-	<tr><td>Upper body sets</td>	<td><div class='totals0'></div></td></tr>
-	<tr><td>Lower body sets</td>	<td><div class='totals1'></div></td></tr>
-	<tr><td>Total Sets</td>		<td><div class='totals2'></div></td></tr>
-	<tr><td>Workout time (hrs)</td>	<td><div class='totals3'></div></td></tr>
-</table>
-
-<div class="summary">
-    <table class="totals-table mope">
-    <thead>
-        <tr>
-            <th>Exercise</th>
-            <th>Sets Per Week</th>
-        </tr>
-    </thead>
-        <tr><td>Glutes</td><td id="glutesWorkout">0</td></tr>
-        <tr><td>Hamstrings</td><td id="hamstringsWorkout">0</td></tr>
-        <tr><td>Quads</td><td id="quadsWorkout">0</td></tr>
-        <tr><td>Calves</td><td id="calvesWorkout">0</td></tr>
-<tr><td>Adductors</td><td id="adductorsWorkout">0</td></tr>
-<tr><td>Abductors</td><td id="abductorsWorkout">0</td></tr>
-    </table>
-
-</div>
 
     </section>
 
@@ -2044,6 +2045,7 @@ workouts.forEach((workout, workoutIndex) => {
                     renderProgress(latestEntries);
 		} else if (view === "workout") {
 			renderTargetVolumeTable();
+			calculate();
                 } else {
                     benchmarkChartsByKey.forEach((chart) => chart.destroy());
                     benchmarkChartsByKey.clear();
