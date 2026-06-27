@@ -17,6 +17,7 @@ table.mope {
     border: 1px solid #e5e7eb;
     border-radius: 16px;
     overflow: hidden;
+	margin: 40px 0 40px 0;
     box-shadow:
         0 1px 2px rgba(16, 24, 40, .05),
         0 12px 32px rgba(16, 24, 40, .08);
@@ -468,15 +469,42 @@ table.myInputs {
 		<tr><td>9</td><td>94%</td><td>96%</td></tr>
 		<tr><td>10</td><td>100%</td><td>100%</td></tr>
 	</table>
-<br><br><br>
+
 	<table class='mope'>
 		<tr><td>Weekly Sets</td><td>Long term muscle potential reached</td></tr>
 	<tr><td>1-2</td><td>70-85%</td></tr>
 	<tr><td>3-5</td><td>85%-95%</td></tr>
 	<tr><td>6-10</td><td>95-100%</td></tr>
 	<tr><td>10-20</td><td>100% (for most people)</td></tr>
+	</table>
+
+<table class="mope">
+    <tr>
+        <td>Year</td>
+        <td>% of Genetic Gain Achieved</td>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>50%</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>75%</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>87.5%</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>93.75%</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>96.875%</td>
+    </tr>
 </table>
-<br><br><br>
+
     </section>
 
     <section id="workoutView" class="workout-view" hidden>
@@ -504,7 +532,7 @@ table.myInputs {
     <thead>
         <tr>
             <th>Exercise</th>
-            <th>Sets Per Workout</th>
+            <th>Sets Per Week</th>
         </tr>
     </thead>
         <tr><td>Glutes</td><td id="glutesWorkout">0</td></tr>
@@ -711,8 +739,8 @@ table.myInputs {
             { section: "Delts, Core", label: "Core", type: "extra", exercises: ["Leg Raises", "Roll Out Wheel"] },
             { section: "Chest, Arms", label: "Flys", type: "upper", exercises: ["Chest Flys"] },
             { section: "Chest, Arms", label: "Push Type", type: "upper", exercises: ["Bench Press"] },
-            { section: "Chest, Arms", label: "Biceps", type: "upper", exercises: ["Bicep Curls", "Barbell Bicep Curls"] },
-            { section: "Chest, Arms", label: "Triceps", type: "upper", exercises: ["Skull Crushers", "Bath Dips"] },
+            { section: "Chest, Arms", label: "Biceps", type: "upper", exercises: ["Bicep Curls", "Barbell Bicep Curls", "Bicep Curl - lying"] },
+            { section: "Chest, Arms", label: "Triceps", type: "upper", exercises: ["Skull Crushers", "Bath Dips", "Overhead tricep extention"] },
             { section: "Back", label: "Vertical Pull", type: "upper", exercises: ["Pull Ups", "Chin Ups"] },
             { section: "Back", label: "Horizontal Pull", type: "upper", exercises: ["Rows"] },
 	    { section: "Back", label: "Shrugs", type: "upper", exercises: ["Shrugs"] },
