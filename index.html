@@ -521,10 +521,17 @@ table.myInputs {
 </table>
 
 
-<h2>Lower Body Volume Calculator</h2>
-
-<table class="myInputs">
-    <tbody id="exerciseTable"></tbody>
+<table class="all_totals mope">
+    <thead>
+        <tr>
+            <th>Type</th>
+            <th>Set Count</th>
+        </tr>
+    </thead>
+	<tr><td>Upper body sets</td>	<td><div class='totals0'></div></td></tr>
+	<tr><td>Lower body sets</td>	<td><div class='totals1'></div></td></tr>
+	<tr><td>Total Sets</td>		<td><div class='totals2'></div></td></tr>
+	<tr><td>Workout time (hrs)</td>	<td><div class='totals3'></div></td></tr>
 </table>
 
 <div class="summary">
@@ -2655,6 +2662,15 @@ Object.entries(volumeSections).forEach(([sectionName, exercises]) => {
 
 }
 
+
+function countAllSets(data) {
+  return data.reduce((totalSets, workout) => {
+    // Add up sets for each exercise in this workout's items array
+    const workoutTotal = workout.items.reduce((sum, item) => sum + (item.sets || 0), 0);
+    return totalSets + workoutTotal;
+  }, 0);
+}
+
 function calculate() {
     let totals = {
         glutes: 0,
@@ -2666,9 +2682,23 @@ adductors: 0,
     };
 
 	//  exercises
+	var upp = getPlannerWorkouts("upper");
 	var exc0 = getPlannerWorkouts("lower");
 	var exc1 = getPlannerWorkouts("extra");
+
 	var exc = exc0.concat(exc1);
+	var alls = exc0.concat(exc1).concat(upp);
+
+	var upper_count = countAllSets( upp );
+	var lower_count = countAllSets( exc0 );
+	var all_count   = countAllSets( alls );
+	var hours 	= all_count * 5 / 60;
+
+	document.querySelector('.totals0').textContent = upper_count;
+	document.querySelector('.totals1').textContent = lower_count;
+	document.querySelector('.totals2').textContent = all_count;
+	document.querySelector('.totals3').textContent = hours.toFixed(1);
+
 	console.dir( exc );
 
     exc.forEach(exerciseIs => {
