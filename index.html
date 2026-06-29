@@ -396,8 +396,8 @@ table.myInputs {
 
     <div id="viewTabs" class="view-tabs" aria-label="Workout views">
         <button type="button" class="view-tab active" data-view="charts">Charts</button>
- <!--       <button type="button" class="view-tab" data-view="analysis">Per</button>
-        <button type="button" class="view-tab" data-view="next">Next</button>-->
+ <!--       <button type="button" class="view-tab" data-view="analysis">Per</button>-->
+        <button type="button" class="view-tab" data-view="next">Next</button>
         <button type="button" class="view-tab" data-view="benchmarks">Benchmarks</button>
         <button type="button" class="view-tab" data-view="progress">Progress</button>
         <button type="button" class="view-tab" data-view="workout">Workout</button>
@@ -1090,41 +1090,47 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         }
 
         function renderNext(entries) {
-            const exerciseHistory = entries.reduce((history, entry) => {
-                const exercise = getExerciseLabel(entry.exercise);
-                if (!history.has(exercise)) {
-                    history.set(exercise, {
-                        latestTimestamp: null,
-                        weights: new Set()
-                    });
-                }
+	   // 1. Changed from an Array to a Set for O(1) lookups
+const trackingSet = new Set(["Clown Curl", "Dumbbell Upright Row", "Shrugs", "Pull ups", "Chin ups", "Overhead tricep extention", "Push ups", "Shoulder Press", "Squat - bulgarian", "Lunge - reverse", "Bench Press", "Shoulder Hammer Press", "Lying Reverse Fly", "Reverse Dumbbell Fly", "Leg Raises", "Bicep Curl", "Barbell Row", "Chest Fly Bench", "Lying Side Raise", "Deadlif - Romanian", "Barbell Bicep Curl", "Side Laterals", "Bath dips", "Hip Thrust", "Calf Raises, single", "Military Press", "Skull Crushers", "Step Up", "Squat", "Deadlift" ]); 
 
-                const exerciseData = history.get(exercise);
-                if (!exerciseData.latestTimestamp || entry.timestamp > exerciseData.latestTimestamp) {
-                    exerciseData.latestTimestamp = entry.timestamp;
-                }
-                if (Number.isFinite(entry.weight)) {
-                    exerciseData.weights.add(entry.weight);
-                }
-                return history;
-            }, new Map());
-            const rows = getAllExerciseLabels()
-                .map((exercise) => {
-                    const history = exerciseHistory.get(exercise);
-                    return {
-                        exercise,
-                        timestamp: history?.latestTimestamp || null,
-                        weights: history ? Array.from(history.weights) : []
-                    };
-                })
-                .sort((a, b) => {
-                    if (!a.timestamp && !b.timestamp) {
-                        return a.exercise.localeCompare(b.exercise);
-                    }
-                    if (!a.timestamp) return -1;
-                    if (!b.timestamp) return 1;
-                    return a.timestamp - b.timestamp;
-                });
+// 2. Optimized the reducer to only process tracked exercises
+const exerciseHistory = entries.reduce((history, entry) => { 
+  const exercise = getExerciseLabel(entry.exercise); 
+  
+  if (!trackingSet.has(exercise)) return history; // ◄ ADD THIS LINE (Saves memory/time)
+
+  if (!history.has(exercise)) { 
+    history.set(exercise, { latestTimestamp: null, weights: new Set() }); 
+  } 
+  const exerciseData = history.get(exercise); 
+  if (!exerciseData.latestTimestamp || entry.timestamp > exerciseData.latestTimestamp) { 
+    exerciseData.latestTimestamp = entry.timestamp; 
+  } 
+  if (Number.isFinite(entry.weight)) { 
+    exerciseData.weights.add(entry.weight); 
+  } 
+  return history; 
+}, new Map()); 
+
+const rows = getAllExerciseLabels()
+  .filter((exercise) => trackingSet.has(exercise)) // ◄ ADD THIS LINE (Uses Set lookup)
+  .map((exercise) => { 
+    const history = exerciseHistory.get(exercise); 
+    return { 
+      exercise, 
+      timestamp: history?.latestTimestamp || null, 
+      weights: history ? Array.from(history.weights) : [] 
+    }; 
+  }) 
+  .sort((a, b) => { 
+    if (!a.timestamp && !b.timestamp) { 
+      return a.exercise.localeCompare(b.exercise); 
+    } 
+    if (!a.timestamp) return -1; 
+    if (!b.timestamp) return 1; 
+    return a.timestamp - b.timestamp; 
+  });
+
 
             const bodyRows = rows.map((row) => `
                 <tr>
