@@ -1154,43 +1154,59 @@ const rows = getAllExerciseLabels()
             `;
         }
 
+function computeSlope(points) {
+    if (!points || points.length < 2) return 0;
+
+    // normalize time so slope is stable
+    const t0 = points[0].x;
+
+    const norm = points.map(p => ({
+        x: (p.x - t0) / 86400, // convert seconds → days
+        y: p.y
+    }));
+
+    let sumX = 0;
+    let sumY = 0;
+    let sumXY = 0;
+    let sumX2 = 0;
+
+    for (const p of norm) {
+        sumX += p.x;
+        sumY += p.y;
+        sumXY += p.x * p.y;
+        sumX2 += p.x * p.x;
+    }
+
+    const n = norm.length;
+    const denom = n * sumX2 - sumX * sumX;
+
+    if (denom === 0) return 0;
+
+    return (n * sumXY - sumX * sumY) / denom;
+}
+
 function computeBenchmarkStats(points, startTimestamp, endTimestamp) {
-    if (points.length === 0) {
-        return null;
-    }
+    if (points.length < 2) return null;
 
-    let startWeight;
-    let endWeight;
+    const start = getNearest(points, startTimestamp);
+    const end = getNearest(points, endTimestamp);
 
-    if (points.length >= 2) {
-        const fit = getLinearFit(points);
+    const days = (endTimestamp - startTimestamp) / 86400;
 
-        startWeight = fit.predict(startTimestamp);
-        endWeight = fit.predict(endTimestamp);
-    } else {
-        startWeight = points[0].y;
-        endWeight = points[0].y;
-    }
+    if (days <= 0) return null;
 
-    const deltaLbs = endWeight - startWeight;
+    // slope-based trend (stable version)
+    const slope = computeSlope(points);
 
-    const percent =
-        startWeight > 0
-            ? (deltaLbs / startWeight) * 100
-            : 0;
+    const deltaLbs = slope * days;
 
-    const days =
-        (endTimestamp - startTimestamp) / (24 * 60 * 60);
+    const safeStart = Math.max(start.y, 50);
 
-    const deltaLbs30 =
-        days > 0
-            ? deltaLbs * (30 / days)
-            : 0;
+    const percent = (deltaLbs / safeStart) * 100;
 
-    const percent30 =
-        days > 0
-            ? percent * (30 / days)
-            : 0;
+    const deltaLbs30 = deltaLbs * (30 / days);
+
+    const percent30 = percent * (30 / days);
 
     return {
         deltaLbs,
@@ -1198,6 +1214,52 @@ function computeBenchmarkStats(points, startTimestamp, endTimestamp) {
         deltaLbs30,
         percent30
     };
+}
+
+function getNearest(points, timestamp) {
+    let best = points[0];
+
+    for (const p of points) {
+        if (p.x <= timestamp) best = p;
+        else break;
+    }
+
+    return best;
+}
+
+function getAlpha(exercise) {
+    if (exercise.includes("Deadlift") || exercise.includes("Squat")) return 0.15;
+    if (exercise.includes("Bench") || exercise.includes("Press")) return 0.25;
+    return 0.35; // isolation lifts
+}
+
+
+function exponentialSmooth(points, alpha = 0.25) {
+    if (points.length === 0) return [];
+
+    const sorted = [...points].sort((a, b) => a.x - b.x);
+
+    let smoothed = [];
+    let prev = sorted[0].y;
+
+    smoothed.push({
+        x: sorted[0].x,
+        y: prev
+    });
+
+    for (let i = 1; i < sorted.length; i++) {
+        const current = sorted[i].y;
+        const value = alpha * current + (1 - alpha) * prev;
+
+        smoothed.push({
+            x: sorted[i].x,
+            y: value
+        });
+
+        prev = value;
+    }
+
+    return smoothed;
 }
 
 function renderBenchmarks(entries, startTimestamp) {
@@ -1218,18 +1280,82 @@ benchmarkGrid.appendChild(tableContainer);
 benchmarkGrid.appendChild(chartsContainer);
 
             benchmarkExercises.forEach((benchmark) => {
-                const points = entries
-                    .filter((entry) => getExerciseLabel(entry.exercise) === benchmark.name)
-                    .filter((entry) => entry.weight >= 0 && entry.reps > 0 && entry.timestamp)
-                    .map((entry) => ({
-                        x: entry.timestamp,
-                        y: getEstimatedWeightForReps(getBenchmarkLiftWeight(entry), entry.reps, 6)
-                    }))
-                    .filter((point) => Number.isFinite(point.y) && point.y > 0)
-                    .sort((a, b) => a.x - b.x);
+const rawPoints = entries
+    .filter((entry) => getExerciseLabel(entry.exercise) === benchmark.name)
+    .filter((entry) => entry.weight >= 0 && entry.reps > 0 && entry.timestamp)
+    .map((entry) => ({
+        x: entry.timestamp,
+        y: getEstimatedOneRepMax(
+            getBenchmarkLiftWeight(entry),
+            entry.reps
+        )
+    }))
+    .filter((p) => Number.isFinite(p.y) && p.y > 0)
+    .sort((a, b) => a.x - b.x);
 
-const visiblePoints = points.filter((p) => p.x >= startTimestamp);
+const byDay = new Map();
 
+for (const p of rawPoints) {
+    const day = Math.floor(p.x / 86400);
+
+    if (!byDay.has(day)) {
+        byDay.set(day, { x: p.x, y: p.y });
+    } else {
+        const existing = byDay.get(day);
+        existing.y = Math.max(existing.y, p.y);
+    }
+}
+
+const dailyPoints = Array.from(byDay.values())
+    .sort((a, b) => a.x - b.x);
+
+function exponentialSmooth(points, alpha = 0.3) {
+    const sorted = [...points].sort((a, b) => a.x - b.x);
+
+    let prev = sorted[0].y;
+
+    return sorted.map((p, i) => {
+        if (i === 0) return { ...p, y: prev };
+
+        const smoothed = alpha * p.y + (1 - alpha) * prev;
+        prev = smoothed;
+
+        return { x: p.x, y: smoothed };
+    });
+}
+
+function computeSlope(points) {
+    if (points.length < 2) return null;
+
+    const n = points.length;
+
+    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+
+    for (const p of points) {
+        sumX += p.x;
+        sumY += p.y;
+        sumXY += p.x * p.y;
+        sumX2 += p.x * p.x;
+    }
+
+    const denom = (n * sumX2 - sumX * sumX);
+    if (denom === 0) return null;
+
+    return (n * sumXY - sumX * sumY) / denom;
+}
+
+const smoothedPoints = exponentialSmooth(dailyPoints, 0.3);
+
+const filteredDailyPoints = dailyPoints.filter(
+    (p) => p.x >= startTimestamp
+);
+
+const smoothPoints = exponentialSmooth(
+    filteredDailyPoints,
+    getAlpha(benchmark.name)
+);
+
+const visiblePoints = smoothPoints;
 
                 const panel = document.createElement("div");
                 panel.className = "chart-panel";
