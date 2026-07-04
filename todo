@@ -1,3 +1,15 @@
+
+- toggle to only show home charts vs all charts.
+
+- clean up and put code into models and views, one for each tab
+- clean up model for benchmarks, lots of extaneous code
+	* make it more accurate
+
+
+
+
+
+
 - chest: focus on the stretched position and pause at the bottom, full range of motion, can do partials at the bottom
 - tennyson: incline chest (3 sets), secondary flat chest (3 sets), chest fly (3 sets)
 - sets volume more important than 0-1 RIR,  as long as 3 or 4 RIR

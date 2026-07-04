@@ -765,7 +765,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { section: "Legs", label: "Calves", type: "extra", exercises: ["Calf Raises"] }
         ];
         let volumeCounters = {};
-        let volumePlannerSettings = { upper: 3, lower: 3, other: 1 };
+        let volumePlannerSettings = { upper: 3, lower: 3, other: 2 };
         let unsubscribeVolumeWeek = null;
 	let unsubscribeLoadTarget = null;
         let activeVolumeWeekKey = null;
@@ -1953,7 +1953,7 @@ const workoutName = {
     extra: "Extra"
 };
 
-            const workoutCount = Math.max(1, Number(volumePlannerSettings[type] || 1));
+            const workoutCount = Math.max(1, Number(volumePlannerSettings[type] || 2));
             const workouts = Array.from({ length: workoutCount }, (_, index) => ({
 		title: `${workoutName[type]} ${index + 1}`,
                 items: []
