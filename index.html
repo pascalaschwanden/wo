@@ -388,6 +388,7 @@ table.myInputs {
             <option value="Squat - wide-stance">Squat - wide-stance</option>
             <option value="Step Up">Step Up</option>
 	    <option value="Tricep Pull-down">Tricep Pull-down</option>
+	    <option value="Upright Row - barbell">Upright Row - barbell</option>
         </select>
         <input type="number" id="weight" placeholder="Weight (lbs/kg)" required step="any">
         <input type="number" id="reps" placeholder="Reps" required>
@@ -663,6 +664,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             "Shoulder Hammer Press": "Shoulder",
             "Side Laterals": "Shoulder",
             "Dumbbell Upright Row": "Shoulder",
+            "Upright Row - barbell": "Shoulder",
             "Cable Face Pulls": "Shoulder",
 	    "Lunge - reverse": "Legs",
             "Squat": "Legs",
@@ -695,6 +697,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { name: "Barbell Bicep Curl", weeklyGain: 0.6 },
             { name: "Bicep Curl", weeklyGain: 0.3 },
             { name: "Dumbbell Upright Row", weeklyGain: 0.2 },
+            { name: "Upright Row - barbell", weeklyGain: 0.2 },
             { name: "Side Laterals", weeklyGain: .1 },
             { name: "Shoulder Press", weeklyGain: .6 },
             { name: "Military Press", weeklyGain: 1.25 },
@@ -1234,34 +1237,6 @@ function getAlpha(exercise) {
 }
 
 
-function exponentialSmooth(points, alpha = 0.25) {
-    if (points.length === 0) return [];
-
-    const sorted = [...points].sort((a, b) => a.x - b.x);
-
-    let smoothed = [];
-    let prev = sorted[0].y;
-
-    smoothed.push({
-        x: sorted[0].x,
-        y: prev
-    });
-
-    for (let i = 1; i < sorted.length; i++) {
-        const current = sorted[i].y;
-        const value = alpha * current + (1 - alpha) * prev;
-
-        smoothed.push({
-            x: sorted[i].x,
-            y: value
-        });
-
-        prev = value;
-    }
-
-    return smoothed;
-}
-
 function renderBenchmarks(entries, startTimestamp) {
 
     startTimestamp = startTimestamp ?? getBenchmarkStartTimestamp();
@@ -1309,42 +1284,35 @@ for (const p of rawPoints) {
 const dailyPoints = Array.from(byDay.values())
     .sort((a, b) => a.x - b.x);
 
-function exponentialSmooth(points, alpha = 0.3) {
+function exponentialSmooth(points, alpha = 0.25) {
+    if (points.length === 0) return [];
+
     const sorted = [...points].sort((a, b) => a.x - b.x);
 
+    let smoothed = [];
     let prev = sorted[0].y;
 
-    return sorted.map((p, i) => {
-        if (i === 0) return { ...p, y: prev };
-
-        const smoothed = alpha * p.y + (1 - alpha) * prev;
-        prev = smoothed;
-
-        return { x: p.x, y: smoothed };
+    smoothed.push({
+        x: sorted[0].x,
+        y: prev
     });
-}
 
-function computeSlope(points) {
-    if (points.length < 2) return null;
+    for (let i = 1; i < sorted.length; i++) {
+        const current = sorted[i].y;
+        const value = alpha * current + (1 - alpha) * prev;
 
-    const n = points.length;
+        smoothed.push({
+            x: sorted[i].x,
+            y: value
+        });
 
-    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-
-    for (const p of points) {
-        sumX += p.x;
-        sumY += p.y;
-        sumXY += p.x * p.y;
-        sumX2 += p.x * p.x;
+        prev = value;
     }
 
-    const denom = (n * sumX2 - sumX * sumX);
-    if (denom === 0) return null;
-
-    return (n * sumXY - sumX * sumY) / denom;
+    return smoothed;
 }
 
-const smoothedPoints = exponentialSmooth(dailyPoints, 0.3);
+
 
 const filteredDailyPoints = dailyPoints.filter(
     (p) => p.x >= startTimestamp
@@ -1501,7 +1469,7 @@ const typicalStartWeight = fit
                 benchmarkChartsByKey.set(benchmark.name, chart);
             });
 
-		//summaryRows.sort((a, b) => b.deltaLbs30 - a.deltaLbs30);
+		//test888
 		summaryRows.sort((a, b) => b.percent30 - a.percent30);
 
 const summaryTable = document.createElement("table");
