@@ -991,7 +991,9 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
 		exercise === "Calf Raises, single" ||
 		exercise === "Chin ups" || exercise === "Pull ups" ||
 		exercise === "Bath dips" ) {
-                return entry.weight + squatBodyweightOffset;
+                var ret = entry.weight + squatBodyweightOffset;
+                console.log('ex=' + exercise + '  entry.weight + squatBodyweightOffset=' + ret);
+                return ret;
             }
             return entry.weight;
         }
@@ -1255,9 +1257,11 @@ benchmarkGrid.appendChild(tableContainer);
 benchmarkGrid.appendChild(chartsContainer);
 
             benchmarkExercises.forEach((benchmark) => {
-const rawPoints = entries
+const exerciseEntries = entries
     .filter((entry) => getExerciseLabel(entry.exercise) === benchmark.name)
-    .filter((entry) => entry.weight >= 0 && entry.reps > 0 && entry.timestamp)
+    .filter((entry) => entry.weight >= 0 && entry.reps > 0 && entry.timestamp);
+
+const rawPoints = exerciseEntries
     .map((entry) => ({
         x: entry.timestamp,
         y: getEstimatedOneRepMax(
@@ -1353,11 +1357,136 @@ const visiblePoints = smoothPoints;
                 const chartStart = startTimestamp;
                 const chartEnd = Math.max(endTimestamp, lastPoint.x);
 
-const stats = computeBenchmarkStats(
-    visiblePoints,
+const stats = computeWeightedBenchmarkStats(
+    exerciseEntries,
+    benchmark.name,
     startTimestamp,
     chartEnd
 );
+
+function computeWeightedBenchmarkStats(
+    exerciseEntries,
+    exerciseName,
+    startTimestamp,
+    endTimestamp
+) {
+    const groups = new Map();
+
+    exerciseEntries.forEach((entry) => {
+
+        const weight = getBenchmarkLiftWeight(entry);
+
+        if (!groups.has(weight))
+            groups.set(weight, []);
+
+        groups.get(weight).push({
+            x: entry.timestamp,
+            y: getEstimatedOneRepMax(weight, entry.reps)
+        });
+    });
+
+    let totalWeight = 0;
+
+    let deltaLbs = 0;
+    let percent = 0;
+    let deltaLbs30 = 0;
+    let percent30 = 0;
+
+    for (const points of groups.values()) {
+
+        if (points.length < 2)
+            continue;
+
+        points.sort((a, b) => a.x - b.x);
+
+// Keep only the best result for each day
+const byDay = new Map();
+
+for (const p of points) {
+    const day = Math.floor(p.x / 86400);
+
+    if (!byDay.has(day)) {
+        byDay.set(day, { ...p });
+    } else if (p.y > byDay.get(day).y) {
+        byDay.get(day).y = p.y;
+    }
+}
+
+const dailyPoints = Array.from(byDay.values())
+    .sort((a, b) => a.x - b.x);
+
+const filteredPoints = dailyPoints.filter(
+    p => p.x >= startTimestamp
+);
+
+const smoothPoints = exponentialSmooth(
+    filteredPoints,
+    getAlpha(exerciseName)
+);
+
+if (smoothPoints.length < 2)
+    continue;
+
+const stats = computeBenchmarkStats(
+    smoothPoints,
+    startTimestamp,
+    endTimestamp
+);
+
+if (!stats)
+    continue;
+
+const fit = getLinearFit(smoothPoints);
+
+if (!fit)
+    continue;
+        //----------------------------------------------------
+        // Calculate R²
+        //----------------------------------------------------
+
+        const mean =
+    smoothPoints.reduce((sum, p) => sum + p.y, 0) / smoothPoints.length;
+
+        let ssTot = 0;
+        let ssRes = 0;
+
+        for (const p of smoothPoints) {
+
+            const predicted = fit.predict(p.x);
+
+            ssTot += (p.y - mean) ** 2;
+            ssRes += (p.y - predicted) ** 2;
+        }
+
+        const r2 =
+            ssTot === 0
+                ? 1
+                : Math.max(0, 1 - ssRes / ssTot);
+
+        //----------------------------------------------------
+        // Weight = R² × number of points
+        //----------------------------------------------------
+
+        const weight = r2 * smoothPoints.length;
+
+        totalWeight += weight;
+
+        deltaLbs += stats.deltaLbs * weight;
+        percent += stats.percent * weight;
+        deltaLbs30 += stats.deltaLbs30 * weight;
+        percent30 += stats.percent30 * weight;
+    }
+
+    if (totalWeight === 0)
+        return null;
+
+    return {
+        deltaLbs: deltaLbs / totalWeight,
+        percent: percent / totalWeight,
+        deltaLbs30: deltaLbs30 / totalWeight,
+        percent30: percent30 / totalWeight
+    };
+}
 
 if (stats) {
     summaryRows.push({
