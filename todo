@@ -1,10 +1,10 @@
 
-- toggle to only show home charts vs all charts.
 
 - clean up and put code into models and views, one for each tab
+- toggle to only show home charts vs all charts.
 - clean up model for benchmarks, lots of extaneous code
-	* make it more accurate
-
+	* calculate epley gain for each weight of an excercise separately
+	* then take a weighted average of them all to figure out the final increase.
 
 
 
