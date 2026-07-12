@@ -1,6 +1,7 @@
 
 
 - clean up and put code into models and views, one for each tab
+= fix calf raise progress num
 - toggle to only show home charts vs all charts.
 - clean up model for benchmarks, lots of extaneous code
 	* calculate epley gain for each weight of an excercise separately
