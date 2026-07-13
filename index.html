@@ -1332,6 +1332,7 @@ const visiblePoints = smoothPoints;
 
                 const panel = document.createElement("div");
                 panel.className = "chart-panel";
+		panel.id = "jump_" + benchmark.name.toLowerCase().replace(' ', '');
 
                 const title = document.createElement("h3");
                 title.textContent = benchmark.name;
@@ -1621,9 +1622,10 @@ const tbody = document.createElement("tbody");
 
 summaryRows.forEach((row) => {
     const tr = document.createElement("tr");
+    row.jumpto = "jump_" + row.name.toLowerCase().replace(' ', '');
 
     tr.innerHTML = `
-        <td>${row.name}</td>
+        <td><a href="#${row.jumpto}">${row.name}</a></td>
         <td>${row.deltaLbs.toFixed(1)}</td>
         <td>${row.percent.toFixed(1)}%</td>
         <td>${row.deltaLbs30.toFixed(2)}</td>
