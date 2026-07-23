@@ -1,11 +1,12 @@
 
+- when page loading make sure that no race condition occurs.  sometimes the loading of the volume tab does not appear to show any data even though there is some.  closing hte browser and reopening usually fixes it.  its' intermittent, thus i suspec ta race condition.  please fix this.
 
-- clean up and put code into models and views, one for each tab
-= fix calf raise progress num
+- clean up and put code into models and views, one for each tab ("charts", "next", "Benchmarks", etc make ChartsModel.js and ChartsView.js, NextModel.js, NextView.js, BenchmarksView.js, BenchmarksModel.js, etc
 - toggle to only show home charts vs all charts.
 - clean up model for benchmarks, lots of extaneous code
 	* calculate epley gain for each weight of an excercise separately
 	* then take a weighted average of them all to figure out the final increase.
+= fix calf raise progress num
 
 
 

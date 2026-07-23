@@ -772,6 +772,8 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         let unsubscribeVolumeWeek = null;
 	let unsubscribeLoadTarget = null;
         let activeVolumeWeekKey = null;
+        let volumeWeekLoaded = false;
+        let targetVolumeLoaded = false;
 
         const progressReferenceMonths = [0, 2, 4, 6, 8, 10, 12, 18, 24];
         const progressExercises = [
@@ -1900,6 +1902,19 @@ tableContainer.appendChild(summaryTable);
             button.classList.toggle("green", count >= greenMin);
         }
 
+        function renderVolumeLoading() {
+            const app = document.getElementById("app");
+            app.innerHTML = "<p style=\"padding: 0 20px;\">Loading volume data...</p>";
+        }
+
+        function renderVolumeWhenReady() {
+            if (!volumeWeekLoaded || !targetVolumeLoaded) {
+                renderVolumeLoading();
+                return;
+            }
+            renderVolume();
+        }
+
 	function getTargets() {
 
 const values = Object.fromEntries(
@@ -2102,12 +2117,12 @@ workouts.forEach((workout, workoutIndex) => {
             upperSelect.addEventListener("change", async () => {
                 volumePlannerSettings.upper = Number(upperSelect.value);
                 await saveVolumeCounters();
-                renderVolume();
+                renderVolumeWhenReady();
             });
             lowerSelect.addEventListener("change", async () => {
                 volumePlannerSettings.lower = Number(lowerSelect.value);
                 await saveVolumeCounters();
-                renderVolume();
+                renderVolumeWhenReady();
             });
         }
 
@@ -2155,7 +2170,7 @@ workouts.forEach((workout, workoutIndex) => {
                         counter.textContent = count;
                         setVolumeButtonState(btn, count, greenMin);
                         await saveVolumeCounters();
-                        renderVolume();
+                        renderVolumeWhenReady();
                     });
 
                     grid.appendChild(btn);
@@ -2170,7 +2185,10 @@ workouts.forEach((workout, workoutIndex) => {
 
         function listenToCurrentVolumeWeek() {
             const weekKey = getVolumeWeekKey();
-            if (activeVolumeWeekKey === weekKey && unsubscribeVolumeWeek) return;
+            if (activeVolumeWeekKey === weekKey && unsubscribeVolumeWeek) {
+                renderVolumeWhenReady();
+                return;
+            }
 
             if (unsubscribeVolumeWeek) {
                 unsubscribeVolumeWeek();
@@ -2178,6 +2196,7 @@ workouts.forEach((workout, workoutIndex) => {
             }
 
             activeVolumeWeekKey = weekKey;
+            volumeWeekLoaded = false;
             unsubscribeVolumeWeek = onSnapshot(getVolumeWeekDocRef(), (snapshot) => {
                 const data = snapshot.exists() ? snapshot.data() : {};
                 volumeCounters = data.counters || {};
@@ -2185,8 +2204,9 @@ workouts.forEach((workout, workoutIndex) => {
                     upper: Number(data.plannerSettings?.upper || volumePlannerSettings.upper || 3),
                     lower: Number(data.plannerSettings?.lower || volumePlannerSettings.lower || 3)
                 };
+                volumeWeekLoaded = true;
                 if (activeView === "volume") {
-                    renderVolume();
+                    renderVolumeWhenReady();
                 }
             }, (error) => {
                 console.error("Error loading volume counters: ", error);
@@ -2226,7 +2246,7 @@ workouts.forEach((workout, workoutIndex) => {
                         progressChart = null;
                     }
                     listenToCurrentVolumeWeek();
-                    renderVolume();
+                    renderVolumeWhenReady();
                 } else if (view === "analysis") {
                     benchmarkChartsByKey.forEach((chart) => chart.destroy());
                     benchmarkChartsByKey.clear();
@@ -2752,9 +2772,13 @@ function loadTargetVolumeState() {
 	const targetDocRef = doc(db, "targetVolumeJSON", "global");
             unsubscribeLoadTarget = onSnapshot(targetDocRef, (snapshot) => {
                 targetVolumeData = snapshot.exists() ? snapshot.data().targets : {};
+                targetVolumeLoaded = true;
 console.dir(targetVolumeData);
                 if (activeView === "workout") {
                     renderTargetVolumeTable();
+                }
+                if (activeView === "volume") {
+                    renderVolumeWhenReady();
                 }
             }, (error) => {
                 console.error("Error loading volume counters: ", error);
