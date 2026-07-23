@@ -580,6 +580,16 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
         import { getFirestore, collection, addDoc, deleteDoc, doc, query, orderBy, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+        import { buildAnalysisTables } from "./js/tabs/AnalysisModel.js";
+        import { renderAnalysis as renderAnalysisView } from "./js/tabs/AnalysisView.js";
+        import { buildBenchmarkState } from "./js/tabs/BenchmarksModel.js";
+        import { renderBenchmarksView } from "./js/tabs/BenchmarksView.js";
+        import { buildChartGroups } from "./js/tabs/ChartsModel.js";
+        import { renderChartsView } from "./js/tabs/ChartsView.js";
+        import { buildNextRows } from "./js/tabs/NextModel.js";
+        import { renderNextTable } from "./js/tabs/NextView.js";
+        import { buildProgressRows } from "./js/tabs/ProgressModel.js";
+        import { renderProgressChart } from "./js/tabs/ProgressView.js";
 
         // Firebase web app configuration. These values are safe to include in a static GitHub Pages site.
         const firebaseConfig = {
@@ -620,6 +630,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         let latestEntries = [];
         let activeView = "charts";
         let activeChartCategory = "Chest";
+        let benchmarkSettingsLoaded = false;
         const chartRangeStorageKey = "workoutChartRange";
 
         const hasFirebaseConfig = Object.values(firebaseConfig).every((value) => !value.startsWith("YOUR_"));
@@ -635,6 +646,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         const db = getFirestore(app);
         const workoutCollection = collection(db, "workouts");
         const volumeWeeksCollection = collection(db, "volumeWeeks");
+        const benchmarkSettingsDoc = doc(db, "uiSettings", "benchmarks");
 	const targetVolume = collection(db, "targetVolumeJSON");
 	console.dir(targetVolume);
 
@@ -1006,6 +1018,37 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             return Math.floor(new Date(year, month - 1, day).getTime() / 1000);
         }
 
+        function loadBenchmarkSettings() {
+            onSnapshot(benchmarkSettingsDoc, (snapshot) => {
+                const startDate = snapshot.exists() ? snapshot.data().startDate : null;
+                if (startDate) {
+                    benchmarkStartDate.value = startDate;
+                } else if (!benchmarkStartDate.value) {
+                    benchmarkStartDate.value = "2026-05-12";
+                }
+                benchmarkSettingsLoaded = true;
+                if (activeView === "benchmarks") {
+                    renderBenchmarks(latestEntries);
+                }
+            }, (error) => {
+                console.error("Error loading benchmark settings: ", error);
+                benchmarkSettingsLoaded = true;
+            });
+        }
+
+        async function saveBenchmarkStartDate() {
+            if (!benchmarkStartDate.value) return;
+            try {
+                await setDoc(benchmarkSettingsDoc, {
+                    startDate: benchmarkStartDate.value,
+                    updatedAt: Date.now()
+                }, { merge: true });
+            } catch (error) {
+                console.error("Error saving benchmark settings: ", error);
+                alert("Failed to save benchmark start date. Check database rules.");
+            }
+        }
+
         function getLinearFit(points) {
             if (points.length < 2) return null;
 
@@ -1097,549 +1140,33 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         }
 
         function renderNext(entries) {
-	   // 1. Changed from an Array to a Set for O(1) lookups
-	//  "Clown Curl"
-const trackingSet = new Set(["Upright Row - barbell", "Shrugs", "Pull ups", "Chin ups", "Overhead tricep extention", "Push ups", "Squat - bulgarian", "Lunge - reverse", "Bench Press", "Shoulder Hammer Press", "Lying Reverse Fly", "Reverse Dumbbell Fly", "Leg Raises", "Bicep Curl", "Barbell Row", "Chest Fly Bench", "Lying Side Raise", "Deadlif - Romanian", "Barbell Bicep Curl", "Side Laterals", "Bath dips", "Hip Thrust", "Calf Raises, single", "Military Press", "Skull Crushers", "Step Up", "Squat", "Deadlift" ]); 
-
-// 2. Optimized the reducer to only process tracked exercises
-const exerciseHistory = entries.reduce((history, entry) => { 
-  const exercise = getExerciseLabel(entry.exercise); 
-  
-  if (!trackingSet.has(exercise)) return history; // ◄ ADD THIS LINE (Saves memory/time)
-
-  if (!history.has(exercise)) { 
-    history.set(exercise, { latestTimestamp: null, weights: new Set() }); 
-  } 
-  const exerciseData = history.get(exercise); 
-  if (!exerciseData.latestTimestamp || entry.timestamp > exerciseData.latestTimestamp) { 
-    exerciseData.latestTimestamp = entry.timestamp; 
-  } 
-  if (Number.isFinite(entry.weight)) { 
-    exerciseData.weights.add(entry.weight); 
-  } 
-  return history; 
-}, new Map()); 
-
-const rows = getAllExerciseLabels()
-  .filter((exercise) => trackingSet.has(exercise)) // ◄ ADD THIS LINE (Uses Set lookup)
-  .map((exercise) => { 
-    const history = exerciseHistory.get(exercise); 
-    return { 
-      exercise, 
-      timestamp: history?.latestTimestamp || null, 
-      weights: history ? Array.from(history.weights) : [] 
-    }; 
-  }) 
-  .sort((a, b) => { 
-    if (!a.timestamp && !b.timestamp) { 
-      return a.exercise.localeCompare(b.exercise); 
-    } 
-    if (!a.timestamp) return -1; 
-    if (!b.timestamp) return 1; 
-    return a.timestamp - b.timestamp; 
-  });
-
-
-            const bodyRows = rows.map((row) => `
-                <tr>
-                    <td>${row.exercise}</td>
-                    <td>${getDaysSince(row.timestamp)}</td>
-                    <td>${formatWeightList(row.weights)}</td>
-                </tr>
-            `).join("");
-
-            nextTable.innerHTML = `
-                <table class="next-table">
-                    <thead>
-                        <tr>
-                            <th>Exercise</th>
-                            <th>Days since last done</th>
-                            <th>Weights</th>
-                        </tr>
-                    </thead>
-                    <tbody>${bodyRows}</tbody>
-                </table>
-            `;
+            const rows = buildNextRows(entries, {
+                getAllExerciseLabels,
+                getExerciseLabel
+            });
+            renderNextTable(nextTable, rows, {
+                getDaysSince,
+                formatWeightList
+            });
         }
-
-function computeSlope(points) {
-    if (!points || points.length < 2) return 0;
-
-    // normalize time so slope is stable
-    const t0 = points[0].x;
-
-    const norm = points.map(p => ({
-        x: (p.x - t0) / 86400, // convert seconds → days
-        y: p.y
-    }));
-
-    let sumX = 0;
-    let sumY = 0;
-    let sumXY = 0;
-    let sumX2 = 0;
-
-    for (const p of norm) {
-        sumX += p.x;
-        sumY += p.y;
-        sumXY += p.x * p.y;
-        sumX2 += p.x * p.x;
-    }
-
-    const n = norm.length;
-    const denom = n * sumX2 - sumX * sumX;
-
-    if (denom === 0) return 0;
-
-    return (n * sumXY - sumX * sumY) / denom;
-}
-
-function computeBenchmarkStats(points, startTimestamp, endTimestamp) {
-    if (points.length < 2) return null;
-
-    const start = getNearest(points, startTimestamp);
-    const end = getNearest(points, endTimestamp);
-
-    const days = (endTimestamp - startTimestamp) / 86400;
-
-    if (days <= 0) return null;
-
-    // slope-based trend (stable version)
-    const slope = computeSlope(points);
-
-    const deltaLbs = slope * days;
-
-    const safeStart = Math.max(start.y, 50);
-
-    const percent = (deltaLbs / safeStart) * 100;
-
-    const deltaLbs30 = deltaLbs * (30 / days);
-
-    const percent30 = percent * (30 / days);
-
-    return {
-        deltaLbs,
-        percent,
-        deltaLbs30,
-        percent30
-    };
-}
-
-function getNearest(points, timestamp) {
-    let best = points[0];
-
-    for (const p of points) {
-        if (p.x <= timestamp) best = p;
-        else break;
-    }
-
-    return best;
-}
-
-function getAlpha(exercise) {
-    if (exercise.includes("Deadlift") || exercise.includes("Squat")) return 0.15;
-    if (exercise.includes("Bench") || exercise.includes("Press")) return 0.25;
-    return 0.35; // isolation lifts
-}
-
 
 function renderBenchmarks(entries, startTimestamp) {
-
-    startTimestamp = startTimestamp ?? getBenchmarkStartTimestamp();
-		const summaryRows = [];0
-            const now = Math.floor(Date.now() / 1000);
-            const endTimestamp = Math.max(now, startTimestamp + (7 * 24 * 60 * 60));
-
-            benchmarkChartsByKey.forEach((chart) => chart.destroy());
-            benchmarkChartsByKey.clear();
-            benchmarkGrid.innerHTML = "";
-
-const tableContainer = document.createElement("div");
-const chartsContainer = document.createElement("div");
-
-benchmarkGrid.appendChild(tableContainer);
-benchmarkGrid.appendChild(chartsContainer);
-
-            benchmarkExercises.forEach((benchmark) => {
-const exerciseEntries = entries
-    .filter((entry) => getExerciseLabel(entry.exercise) === benchmark.name)
-    .filter((entry) => entry.weight >= 0 && entry.reps > 0 && entry.timestamp);
-
-const rawPoints = exerciseEntries
-    .map((entry) => ({
-        x: entry.timestamp,
-        y: getEstimatedOneRepMax(
-            getBenchmarkLiftWeight(entry),
-            entry.reps
-        )
-    }))
-    .filter((p) => Number.isFinite(p.y) && p.y > 0)
-    .sort((a, b) => a.x - b.x);
-
-const byDay = new Map();
-
-for (const p of rawPoints) {
-    const day = Math.floor(p.x / 86400);
-
-    if (!byDay.has(day)) {
-        byDay.set(day, { x: p.x, y: p.y });
-    } else {
-        const existing = byDay.get(day);
-        existing.y = Math.max(existing.y, p.y);
-    }
-}
-
-const dailyPoints = Array.from(byDay.values())
-    .sort((a, b) => a.x - b.x);
-
-function exponentialSmooth(points, alpha = 0.25) {
-    if (points.length === 0) return [];
-
-    const sorted = [...points].sort((a, b) => a.x - b.x);
-
-    let smoothed = [];
-    let prev = sorted[0].y;
-
-    smoothed.push({
-        x: sorted[0].x,
-        y: prev
+    const benchmarkStart = startTimestamp ?? getBenchmarkStartTimestamp();
+    const benchmarkState = buildBenchmarkState(entries, {
+        benchmarkExercises,
+        startTimestamp: benchmarkStart,
+        nowTimestamp: Math.floor(Date.now() / 1000)
+    }, {
+        getBenchmarkLiftWeight,
+        getExerciseLabel,
+        getEstimatedOneRepMax,
+        getLinearFit
     });
 
-    for (let i = 1; i < sorted.length; i++) {
-        const current = sorted[i].y;
-        const value = alpha * current + (1 - alpha) * prev;
-
-        smoothed.push({
-            x: sorted[i].x,
-            y: value
-        });
-
-        prev = value;
-    }
-
-    return smoothed;
-}
-
-
-
-const filteredDailyPoints = dailyPoints.filter(
-    (p) => p.x >= startTimestamp
-);
-
-const smoothPoints = exponentialSmooth(
-    filteredDailyPoints,
-    getAlpha(benchmark.name)
-);
-
-const visiblePoints = smoothPoints;
-
-                const panel = document.createElement("div");
-                panel.className = "chart-panel";
-		panel.id = "jump_" + benchmark.name.toLowerCase().replace(' ', '');
-
-                const title = document.createElement("h3");
-                title.textContent = benchmark.name;
-
-                const canvasWrap = document.createElement("div");
-                canvasWrap.className = "chart-canvas-wrap";
-
-                const canvas = document.createElement("canvas");
-                canvasWrap.appendChild(canvas);
-                panel.appendChild(title);
-
-                if (visiblePoints.length === 0) {
-                    const emptyMessage = document.createElement("p");
-                    emptyMessage.textContent = "No benchmark entries found.";
-                    panel.appendChild(emptyMessage);
-                    chartsContainer.appendChild(panel);//benchmarkGrid.appendChild(panel);
-                    return;
-                }
-
-                panel.appendChild(canvasWrap);
-                chartsContainer.appendChild(panel);
-
-                const lastPoint = visiblePoints[visiblePoints.length - 1];
-                const chartStart = startTimestamp;
-                const chartEnd = Math.max(endTimestamp, lastPoint.x);
-
-const stats = computeWeightedBenchmarkStats(
-    exerciseEntries,
-    benchmark.name,
-    startTimestamp,
-    chartEnd
-);
-
-function computeWeightedBenchmarkStats(
-    exerciseEntries,
-    exerciseName,
-    startTimestamp,
-    endTimestamp
-) {
-    const groups = new Map();
-
-    exerciseEntries.forEach((entry) => {
-
-        const weight = getBenchmarkLiftWeight(entry);
-
-        if (!groups.has(weight))
-            groups.set(weight, []);
-
-        groups.get(weight).push({
-            x: entry.timestamp,
-            y: getEstimatedOneRepMax(weight, entry.reps)
-        });
-    });
-
-    let totalWeight = 0;
-
-    let deltaLbs = 0;
-    let percent = 0;
-    let deltaLbs30 = 0;
-    let percent30 = 0;
-
-    for (const points of groups.values()) {
-
-        if (points.length < 2)
-            continue;
-
-        points.sort((a, b) => a.x - b.x);
-
-// Keep only the best result for each day
-const byDay = new Map();
-
-for (const p of points) {
-    const day = Math.floor(p.x / 86400);
-
-    if (!byDay.has(day)) {
-        byDay.set(day, { ...p });
-    } else if (p.y > byDay.get(day).y) {
-        byDay.get(day).y = p.y;
-    }
-}
-
-const dailyPoints = Array.from(byDay.values())
-    .sort((a, b) => a.x - b.x);
-
-const filteredPoints = dailyPoints.filter(
-    p => p.x >= startTimestamp
-);
-
-const smoothPoints = exponentialSmooth(
-    filteredPoints,
-    getAlpha(exerciseName)
-);
-
-if (smoothPoints.length < 2)
-    continue;
-
-const stats = computeBenchmarkStats(
-    smoothPoints,
-    startTimestamp,
-    endTimestamp
-);
-
-if (!stats)
-    continue;
-
-const fit = getLinearFit(smoothPoints);
-
-if (!fit)
-    continue;
-        //----------------------------------------------------
-        // Calculate R²
-        //----------------------------------------------------
-
-        const mean =
-    smoothPoints.reduce((sum, p) => sum + p.y, 0) / smoothPoints.length;
-
-        let ssTot = 0;
-        let ssRes = 0;
-
-        for (const p of smoothPoints) {
-
-            const predicted = fit.predict(p.x);
-
-            ssTot += (p.y - mean) ** 2;
-            ssRes += (p.y - predicted) ** 2;
-        }
-
-        const r2 =
-            ssTot === 0
-                ? 1
-                : Math.max(0, 1 - ssRes / ssTot);
-
-        //----------------------------------------------------
-        // Weight = R² × number of points
-        //----------------------------------------------------
-
-        const weight = r2 * smoothPoints.length;
-
-        totalWeight += weight;
-
-        deltaLbs += stats.deltaLbs * weight;
-        percent += stats.percent * weight;
-        deltaLbs30 += stats.deltaLbs30 * weight;
-        percent30 += stats.percent30 * weight;
-    }
-
-    if (totalWeight === 0)
-        return null;
-
-    return {
-        deltaLbs: deltaLbs / totalWeight,
-        percent: percent / totalWeight,
-        deltaLbs30: deltaLbs30 / totalWeight,
-        percent30: percent30 / totalWeight
-    };
-}
-
-if (stats) {
-    summaryRows.push({
-        name: benchmark.name,
-        ...stats
+    renderBenchmarksView(benchmarkGrid, benchmarkChartsByKey, benchmarkState, {
+        getDateLabel
     });
 }
-
-const fit = visiblePoints.length >= 2
-    ? getLinearFit(visiblePoints)
-    : null;
-
-const firstPoint = visiblePoints[0];
-
-                const yourTrendPoints = fit
-                    ? [
-                        { x: chartStart, y: fit.predict(chartStart) },
-                        { x: chartEnd, y: fit.predict(chartEnd) }
-                    ]
-                    : [];
-const typicalStartWeight = fit
-    ? fit.predict(chartStart)
-    : firstPoint.y;
-
-                const typicalEndWeight = typicalStartWeight + (((chartEnd - chartStart) / (7 * 24 * 60 * 60)) * benchmark.weeklyGain);
-
-                const typicalPoints = [
-                    { x: startTimestamp, y: typicalStartWeight },
-                    { x: chartEnd, y: typicalEndWeight }
-                ];
-                const plottedYValues = [...visiblePoints, ...yourTrendPoints, ...typicalPoints]
-                    .map((point) => point.y)
-                    .filter((value) => Number.isFinite(value));
-                const lowestY = Math.min(...plottedYValues);
-                const highestY = Math.max(...plottedYValues);
-                const yPadding = Math.max((highestY - lowestY) * 0.12, highestY * 0.03, 5);
-                const yMin = Math.max(0, Math.floor((lowestY - yPadding) / 5) * 5);
-
-                const chart = new Chart(canvas, {
-                    type: "line",
-                    data: {
-                        datasets: [
-                            {
-                                label: "Estimated 6RM",
-                                data: visiblePoints,
-                                borderColor: "#007bff",
-                                backgroundColor: "#007bff",
-                                showLine: false,
-                                pointRadius: 4
-                            },
-                            {
-                                label: "Your best-fit trend",
-                                data: yourTrendPoints,
-                                borderColor: "#28a745",
-                                backgroundColor: "#28a745",
-                                pointRadius: 0,
-                                tension: 0
-                            },
-                            {
-                                label: "Typical lifter",
-                                data: typicalPoints,
-                                borderColor: "#dc3545",
-                                backgroundColor: "#dc3545",
-                                borderDash: [6, 5],
-                                pointRadius: 0,
-                                tension: 0
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    title: (items) => getDateLabel(items[0].parsed.x),
-                                    label: (item) => `${item.dataset.label}: ${item.parsed.y.toFixed(1)} lbs`
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                type: "linear",
-                                min: chartStart,
-                                max: chartEnd,
-                                ticks: {
-                                    callback: (value) => getDateLabel(value),
-                                    maxTicksLimit: 8
-                                },
-                                title: {
-                                    display: true,
-                                    text: "Date"
-                                }
-                            },
-                            y: {
-                                min: yMin,
-                                title: {
-                                    display: true,
-                                    text: "Lifting Weight"
-                                }
-                            }
-                        }
-                    }
-                });
-
-                benchmarkChartsByKey.set(benchmark.name, chart);
-            });
-
-		//test888
-		summaryRows.sort((a, b) => b.percent30 - a.percent30);
-
-const summaryTable = document.createElement("table");
-summaryTable.className = "benchmark-summary-table";
-
-summaryTable.innerHTML = `
-<thead>
-<tr>
-  <th>Exercise</th>
-  <th>Lbs Δ</th>
-  <th>% Δ</th>
-  <th>Lbs / 30d</th>
-  <th>% / 30d</th>
-</tr>
-</thead>
-`;
-
-const tbody = document.createElement("tbody");
-
-summaryRows.forEach((row) => {
-    const tr = document.createElement("tr");
-    row.jumpto = "jump_" + row.name.toLowerCase().replace(' ', '');
-
-    tr.innerHTML = `
-        <td><a href="#${row.jumpto}">${row.name}</a></td>
-        <td>${row.deltaLbs.toFixed(1)}</td>
-        <td>${row.percent.toFixed(1)}%</td>
-        <td>${row.deltaLbs30.toFixed(2)}</td>
-        <td>${row.percent30.toFixed(1)}%</td>
-    `;
-
-    tbody.appendChild(tr);
-});
-
-summaryTable.appendChild(tbody);
-tableContainer.appendChild(summaryTable);
-        }
 
         function getProgressTargetValue(target) {
             if (Array.isArray(target)) {
@@ -1692,83 +1219,14 @@ tableContainer.appendChild(summaryTable);
         }
 
         function renderProgress(entries) {
-            const progressRows = progressExercises.map((progressExercise) => {
-                const estimatedWeight = getBestProgressEstimate(entries, progressExercise);
-                const months = estimatedWeight === null
-                    ? null
-                    : getProgressMonthsForWeight(estimatedWeight, progressExercise.targets, progressExercise.targetReps);
-                return {
-                    label: progressExercise.label,
-                    targetReps: progressExercise.targetReps,
-                    estimatedWeight,
-                    months
-                };
+            const progressState = buildProgressRows(entries, {
+                progressExercises,
+                progressReferenceMonths
+            }, {
+                getExerciseLabel,
+                getEstimatedWeightForReps
             });
-            const validMonths = progressRows
-                .map((row) => row.months)
-                .filter((months) => Number.isFinite(months));
-            const maxMonth = validMonths.length
-                ? Math.max(2, Math.ceil(Math.max(...validMonths) / 2) * 2)
-                : 24;
-
-            if (progressChart) {
-                progressChart.destroy();
-            }
-
-            progressChart = new Chart(progressChartCanvas, {
-                type: "bar",
-                data: {
-                    labels: progressRows.map((row) => row.label),
-                    datasets: [
-                        {
-                            label: "Progress in months",
-                            data: progressRows.map((row) => Number.isFinite(row.months) ? row.months : 0),
-                            backgroundColor: progressRows.map((row) => Number.isFinite(row.months) ? "#007bff" : "#adb5bd"),
-                            borderColor: progressRows.map((row) => Number.isFinite(row.months) ? "#0056b3" : "#868e96"),
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    indexAxis: "y",
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: (item) => {
-                                    const row = progressRows[item.dataIndex];
-                                    if (!Number.isFinite(row.months)) {
-                                        return "No matching entries";
-                                    }
-                                    return `${row.months.toFixed(1)} months from ${row.estimatedWeight.toFixed(1)} lbs x${row.targetReps}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            min: 0,
-                            max: maxMonth,
-                            ticks: {
-                                callback: (value) => `${value}m`
-                            },
-                            title: {
-                                display: true,
-                                text: "Progress"
-                            }
-                        },
-                        y: {
-                            ticks: {
-                                autoSkip: false
-                            }
-                        }
-                    }
-                }
-            });
+            progressChart = renderProgressChart(progressChartCanvas, progressState, progressChart);
         }
 
         function renderAnalysis(entries) {
@@ -2260,7 +1718,11 @@ workouts.forEach((workout, workoutIndex) => {
                         progressChart.destroy();
                         progressChart = null;
                     }
-                    renderBenchmarks(latestEntries);
+                    if (benchmarkSettingsLoaded) {
+                        renderBenchmarks(latestEntries);
+                    } else {
+                        benchmarkGrid.innerHTML = "Loading benchmarks...";
+                    }
 //renderBenchmarks(latestEntries, getBenchmarkStartTimestamp());
                 } else if (view === "progress") {
                     benchmarkChartsByKey.forEach((chart) => chart.destroy());
@@ -2404,6 +1866,7 @@ workouts.forEach((workout, workoutIndex) => {
         setDefaultChartEndDate();
         restoreChartRange();
         benchmarkStartDate.value = "2026-05-12";
+        loadBenchmarkSettings();
 
         chartRange.addEventListener("change", () => {
             localStorage.setItem(chartRangeStorageKey, chartRange.value);
@@ -2414,7 +1877,8 @@ workouts.forEach((workout, workoutIndex) => {
             renderCharts(latestEntries);
         });
 
-        benchmarkStartDate.addEventListener("change", (e) => {
+        benchmarkStartDate.addEventListener("change", async (e) => {
+            await saveBenchmarkStartDate();
             if (activeView === "benchmarks") {
                 //renderBenchmarks(latestEntries);
 
