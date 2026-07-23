@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workout Tracker</title>
     <style>
+.leftMAV {
+padding: 0 0 0 30px;
+}
 table.targetVolumeInputs {
 	padding: 20px 0 0 20px;
 }
@@ -489,6 +492,7 @@ padding: 0 0 0 20px;
         <tr>
             <th>Exercise</th>
             <th>Sets Per Week</th>
+		<th>MAV</th>
         </tr>
     <tbody id="targetVolumeTable"></tbody>
 </table>
@@ -734,32 +738,32 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         ];
         const volumeSections = {
             "Delts, Core": [
-                ["🏋️", "Front Delt", 2],
-                ["↔️", "Side Delt", 4],
-                ["🔄", "Rear Delt", 3],
-                ["🐉", "Core", 3]
+                ["🏋️", "Front Delt", 2, 9],
+                ["↔️", "Side Delt", 4, 19],
+                ["🔄", "Rear Delt", 3, 15],
+                ["🐉", "Core", 3, 9]
             ],
             "Chest, Arms": [
-                ["💪", "Biceps", 2],
-                ["🦾", "Triceps", 2],
-                ["🦋", "Flys", 2],
-                ["💪", "Push Type", 3]
+                ["💪", "Biceps", 2, 16],
+                ["🦾", "Triceps", 2, 16],
+                ["🦋", "Flys", 2, 8],
+                ["💪", "Push Type", 3, 8]
             ],
             "Back": [
-                ["⬇️", "Vertical Pull", 2],
-                ["↔️", "Horizontal Pull", 3],
-		["🤷", "Shrugs", 0],
+                ["⬇️", "Vertical Pull", 2, 9],
+                ["↔️", "Horizontal Pull", 3, 9],
+		["🤷", "Shrugs", 0, 10],
                 ["💧", "Fast < 1200", 2]
             ],
             "Legs": [
-                ["🏋️", "Deadlifts, RDL", 3],
-                ["🍑", "Hip Thrust", 2],
-                ["⬆️", "Squats", 3],
-                ["🦵", "Bulgarian", 2],
-                ["📦", "Step Up", 1],
-                ["🏃", "Lunge", 1],
-                ["🦯", "Nordic", 2],
-                ["🐄", "Calves", 4]
+                ["🏋️", "Deadlifts, RDL", 3, 6],
+                ["🍑", "Hip Thrust", 2, 6],
+                ["⬆️", "Squats", 3, 8],
+                ["🦵", "Bulgarian", 2, 6],
+                ["📦", "Step Up", 1, 6],
+                ["🏃", "Lunge", 1, 6],
+                ["🦯", "Nordic", 2, 9],
+                ["🐄", "Calves", 4, 16]
             ]
         };
         const volumePlannerItems = [
@@ -1010,7 +1014,6 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
 		exercise === "Chin ups" || exercise === "Pull ups" ||
 		exercise === "Bath dips" ) {
                 var ret = entry.weight + squatBodyweightOffset;
-                console.log('ex=' + exercise + '  entry.weight + squatBodyweightOffset=' + ret);
                 return ret;
             }
             return entry.weight;
@@ -1384,7 +1387,6 @@ const values = Object.fromEntries(
     .map(input => [input.id, input.value === "" ? 0 : Number(input.value)])
 );
 
-console.log(values);
 		return values;
 	}
 
@@ -2329,13 +2331,15 @@ var state  = targetVolumeData;
 Object.entries(volumeSections).forEach(([sectionName, exercises]) => {
   
   // Loop through each exercise array and destructure the values
-  exercises.forEach(([emoji, exerciseName, sets]) => {
+  exercises.forEach(([emoji, exerciseName, sets, mav]) => {
         const tr = document.createElement("tr");
 
         const tdName = document.createElement("td");
         tdName.textContent = exerciseName;
 
         const tdInput = document.createElement("td");
+	var tdMAV = document.createElement("td");
+	tdMAV.innerHTML = '<div class="leftMAV">' + mav + '</div>';
 
         const input = document.createElement("input");
         input.type = "number";
@@ -2371,6 +2375,7 @@ Object.entries(volumeSections).forEach(([sectionName, exercises]) => {
 
         tr.appendChild(tdName);
         tr.appendChild(tdInput);
+	tr.appendChild(tdMAV);
 
         targetVolumeTableBody.appendChild(tr);
   });
