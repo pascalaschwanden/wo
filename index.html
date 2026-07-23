@@ -1377,7 +1377,7 @@ function renderBenchmarks(entries, startTimestamp) {
 
 const values = Object.fromEntries(
   [...document.querySelectorAll('#targetVolumeTable input[type="number"]')]
-    .map(input => [input.id, Number(input.value)])
+    .map(input => [input.id, input.value === "" ? 0 : Number(input.value)])
 );
 
 console.log(values);
@@ -2232,13 +2232,17 @@ const tableBody = document.getElementById("exerciseTable");
 const targetVolumeTableBody = document.getElementById("targetVolumeTable");
 var targetVolumeData = {};
 
+function isEditingTargetVolume() {
+    return targetVolumeTableBody && targetVolumeTableBody.contains(document.activeElement);
+}
+
 function loadTargetVolumeState() {
 	const targetDocRef = doc(db, "targetVolumeJSON", "global");
             unsubscribeLoadTarget = onSnapshot(targetDocRef, (snapshot) => {
                 targetVolumeData = snapshot.exists() ? snapshot.data().targets : {};
                 targetVolumeLoaded = true;
 console.dir(targetVolumeData);
-                if (activeView === "workout") {
+                if (activeView === "workout" && !isEditingTargetVolume()) {
                     renderTargetVolumeTable();
                 }
                 if (activeView === "volume") {
@@ -2337,11 +2341,26 @@ Object.entries(volumeSections).forEach(([sectionName, exercises]) => {
 
 	//var norm = exerciseName.replaceAll(' ', '_');
 	var val = getVolumeTarg(exerciseName);
-        input.value = val || 0;
+        input.value = val ?? 0;
 
         input.addEventListener("input", () => {
-		saveTargetVolume();
-		setTimeout(calculate, 100);
+            targetVolumeData[input.id] = input.value === "" ? 0 : Number(input.value);
+            calculate();
+        });
+
+        input.addEventListener("change", () => {
+            if (input.value === "") {
+                input.value = "0";
+            }
+            targetVolumeData[input.id] = Number(input.value);
+            saveTargetVolume();
+            calculate();
+        });
+
+        input.addEventListener("blur", () => {
+            if (input.value === "") {
+                input.value = "0";
+            }
         });
 
         tdInput.appendChild(input);
