@@ -85,6 +85,10 @@ table.mope .badge {
         .view-tab, .chart-tab { background-color: #e9ecef; color: #222; border: 1px solid #ccc; }
         .view-tab.active, .chart-tab.active { background-color: #007bff; color: white; border-color: #007bff; }
         .chart-view[hidden], .analysis-view[hidden], .next-view[hidden], .benchmarks-view[hidden], .progress-view[hidden] { display: none; }
+        .chart-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+        .chart-heading-row h2 { margin: 0; }
+        .chart-gym-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; white-space: nowrap; cursor: pointer; }
+        .chart-gym-toggle input { inline-size: 18px; block-size: 18px; cursor: pointer; }
         .chart-range { display: flex; gap: 10px; margin-bottom: 20px; }
         .chart-range select, .chart-range input { flex: 1 1 0; min-width: 0; width: 50%; }
         .chart-grid { display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; }
@@ -413,7 +417,13 @@ padding: 0 0 0 20px;
     </div>
 
     <section id="chartsView" class="chart-view">
-        <h2>Charts</h2>
+        <div class="chart-heading-row">
+            <h2>Charts</h2>
+            <label class="chart-gym-toggle" title="Show machine and cable exercises in Charts">
+                <input type="checkbox" id="chartGymToggle">
+                <span>Gym</span>
+            </label>
+        </div>
         <div class="chart-range">
             <select id="chartRange" aria-label="Chart time range">
                 <option value="2w" selected>2 weeks</option>
@@ -623,6 +633,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         const chartTabs = document.getElementById("chartTabs");
         const chartRange = document.getElementById("chartRange");
         const chartEndDate = document.getElementById("chartEndDate");
+        const chartGymToggle = document.getElementById("chartGymToggle");
         const chartGrid = document.getElementById("chartGrid");
         const analysisTable = document.getElementById("analysisTable");
         const nextTable = document.getElementById("nextTable");
@@ -640,6 +651,8 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         let activeChartCategory = "Chest";
         let benchmarkSettingsLoaded = false;
         const chartRangeStorageKey = "workoutChartRange";
+        const chartGymToggleStorageKey = "workoutChartShowGymExercises";
+        let showGymCharts = localStorage.getItem(chartGymToggleStorageKey) === "true";
 
         const hasFirebaseConfig = Object.values(firebaseConfig).every((value) => !value.startsWith("YOUR_"));
 
@@ -708,6 +721,20 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
 	    "Face Pull Resistance Band": "Shoulder",
             "Dumbbell Upright Row - Elbow": "Shoulder"
         };
+
+        const gymOnlyChartExercises = new Set([
+            "cable face pulls",
+            "calf extension",
+            "high row",
+            "lat pull-down",
+            "leg curl",
+            "leg extension",
+            "low horizontal row",
+            "seated hip abduction",
+            "seated hip adduction",
+            "shoulder hammer press",
+            "tricep pull-down"
+        ]);
 
         const bodyweightExercises = new Set(["Bath dips", "Chin ups", "Pull ups", "Push ups", "Calf Raises, single"]);
         const squatBodyweightOffset = 144;
@@ -1749,9 +1776,18 @@ workouts.forEach((workout, workoutIndex) => {
             }
         }
 
+        function getChartExerciseKey(exercise) {
+            return getExerciseLabel(exercise).trim().toLowerCase();
+        }
+
+        function isHomeChartExercise(exercise) {
+            return !gymOnlyChartExercises.has(getChartExerciseKey(exercise));
+        }
+
         function renderCharts(entries) {
             const groupedEntries = entries
                 .filter((entry) => exerciseCategories[entry.exercise] === activeChartCategory)
+                .filter((entry) => showGymCharts || isHomeChartExercise(entry.exercise))
                 .reduce((groups, entry) => {
                     const exercise = getExerciseLabel(entry.exercise);
                     if (!groups.has(exercise)) {
@@ -1775,7 +1811,8 @@ workouts.forEach((workout, workoutIndex) => {
             chartGrid.innerHTML = "";
 
             if (groupedEntries.size === 0) {
-                chartGrid.innerHTML = `<p>No ${activeChartCategory.toLowerCase()} exercise entries found.</p>`;
+                const locationLabel = showGymCharts ? "" : " home";
+                chartGrid.innerHTML = `<p>No ${activeChartCategory.toLowerCase()}${locationLabel} exercise entries found.</p>`;
                 return;
             }
 
@@ -1873,6 +1910,14 @@ workouts.forEach((workout, workoutIndex) => {
         restoreChartRange();
         benchmarkStartDate.value = "2026-05-12";
         loadBenchmarkSettings();
+        if (chartGymToggle) {
+            chartGymToggle.checked = showGymCharts;
+            chartGymToggle.addEventListener("change", () => {
+                showGymCharts = chartGymToggle.checked;
+                localStorage.setItem(chartGymToggleStorageKey, String(showGymCharts));
+                renderCharts(latestEntries);
+            });
+        }
 
         chartRange.addEventListener("change", () => {
             localStorage.setItem(chartRangeStorageKey, chartRange.value);
