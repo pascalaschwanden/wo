@@ -761,6 +761,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { name: "Calf Raises, single", weeklyGain: 1.5},
             { name: "Bath dips", weeklyGain: 0.5},
             { name: "Chin ups", weeklyGain: 0.5},
+            { name: "Push ups", weeklyGain: 1},
             { name: "Pull ups", weeklyGain: 0.5}
         ];
         const volumeSections = {
@@ -929,6 +930,9 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             if (exercise === "deadlift") return "Deadlift";
             if (exercise === "Double dumbbell rows") return "Double Dumbbell Row";
             if (exercise === "Max pull ups") return "Pull ups";
+            if (exercise === "Push Ups") return "Push ups";
+            if (exercise === "Pushups") return "Push ups";
+            if (exercise === "Push-ups") return "Push ups";
             return exercise;
         }
 
@@ -1039,6 +1043,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             if (exercise.indexOf("Squat") > -1 ||
 		exercise === "Calf Raises, single" ||
 		exercise === "Chin ups" || exercise === "Pull ups" ||
+		exercise === "Push ups" ||
 		exercise === "Bath dips" ) {
                 var ret = entry.weight + squatBodyweightOffset;
                 return ret;
