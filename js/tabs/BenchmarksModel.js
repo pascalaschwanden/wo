@@ -258,15 +258,15 @@ export function buildBenchmarkState(entries, config, helpers) {
             });
         }
 
-        const fit = visiblePoints.length >= 2 ? getLinearFit(visiblePoints) : null;
         const firstPoint = visiblePoints[0];
-        const yourTrendPoints = getWeightedTrendPoints(
-            exerciseEntries,
-            benchmark.name,
-            chartStart,
-            chartEnd,
-            helpers
-        );
+        const lastVisiblePoint = visiblePoints[visiblePoints.length - 1];
+        const fit = visiblePoints.length >= 2 ? getLinearFit(visiblePoints) : null;
+        const yourTrendPoints = fit
+            ? [
+                { x: firstPoint.x, y: fit.predict(firstPoint.x) },
+                { x: lastVisiblePoint.x, y: fit.predict(lastVisiblePoint.x) }
+            ]
+            : [];
         const typicalStartWeight = yourTrendPoints.length > 0
             ? yourTrendPoints[0].y
             : (fit ? fit.predict(chartStart) : firstPoint.y);
