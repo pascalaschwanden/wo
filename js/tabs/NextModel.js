@@ -2,7 +2,8 @@ export function buildNextRows(entries, helpers) {
     const { getAllExerciseLabels, getExerciseLabel } = helpers;
     const trackingSet = new Set([
         "Upright Row - barbell", "Shrugs", "Pull ups", "Chin ups",
-        "Overhead tricep extention", "Push ups", "Squat - bulgarian",
+        //"Overhead tricep extention", 
+	"Push ups", "Squat - bulgarian",
         "Lunge - reverse", "Bench Press", "Shoulder Hammer Press",
         "Lying Reverse Fly", "Reverse Dumbbell Fly", "Leg Raises",
         "Bicep Curl", "Barbell Row", "Chest Fly Bench", "Lying Side Raise",
