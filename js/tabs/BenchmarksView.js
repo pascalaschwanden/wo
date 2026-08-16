@@ -65,14 +65,6 @@ function renderBenchmarkPanel(chartsContainer, chartState, chartsByKey, helpers)
         data: {
             datasets: [
                 {
-                    label: "Estimated 6RM",
-                    data: chartState.visiblePoints,
-                    borderColor: "#007bff",
-                    backgroundColor: "#007bff",
-                    showLine: false,
-                    pointRadius: 4
-                },
-                {
                     label: "Your best-fit trend",
                     data: chartState.yourTrendPoints,
                     borderColor: "#28a745",
@@ -88,6 +80,16 @@ function renderBenchmarkPanel(chartsContainer, chartState, chartsByKey, helpers)
                     borderDash: [6, 5],
                     pointRadius: 0,
                     tension: 0
+                },
+                {
+                    label: "Estimated 6RM",
+                    data: chartState.visiblePoints,
+                    borderColor: "#007bff",
+                    backgroundColor: "#007bff",
+                    pointBorderColor: "#ffffff",
+                    pointBorderWidth: 2,
+                    showLine: false,
+                    pointRadius: 5
                 }
             ]
         },
