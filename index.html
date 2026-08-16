@@ -337,6 +337,18 @@ table.myInputs {
     font-size: 15px;
 	line-height: 24px;
 }
+.volume-view .weekly-sets-chart {
+    border-top: 1px solid #DDDDDD;
+    margin-top: 4px;
+    padding: 18px 20px 24px;
+}
+.volume-view .weekly-sets-chart h3 {
+    font-size: 16px;
+    margin: 0 0 12px;
+}
+.volume-view .weekly-sets-chart-canvas {
+    height: 280px;
+}
 #workoutForm, #viewTabs, h2 {
 	padding: 0 20px;
 }
@@ -646,6 +658,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         const chartsByKey = new Map();
         const benchmarkChartsByKey = new Map();
         let progressChart = null;
+        let volumeWeeklySetsChart = null;
         let latestEntries = [];
         let activeView = "charts";
         let activeChartCategory = "Chest";
@@ -816,11 +829,13 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { section: "Legs", label: "Calves", type: "extra", exercises: ["Calf Raises"] }
         ];
         let volumeCounters = {};
+        let volumeWeekHistory = [];
         let volumePlannerSettings = { upper: 3, lower: 3, other: 2 };
         let unsubscribeVolumeWeek = null;
 	let unsubscribeLoadTarget = null;
         let activeVolumeWeekKey = null;
         let volumeWeekLoaded = false;
+        let volumeWeekHistoryLoaded = false;
         let targetVolumeLoaded = false;
 
         const progressReferenceMonths = [0, 2, 4, 6, 8, 10, 12, 18, 24];
@@ -1622,6 +1637,162 @@ workouts.forEach((workout, workoutIndex) => {
             });
         }
 
+        function getVolumeCounterType(sectionName, label) {
+            const plannerItem = volumePlannerItems.find((item) => item.section === sectionName && item.label === label);
+            if (plannerItem?.type === "upper") return "upper";
+            return "lowerOther";
+        }
+
+        function getVolumeCounterTypes() {
+            const counterTypes = new Map();
+            for (const [sectionName, exercises] of Object.entries(volumeSections)) {
+                exercises.forEach(([, label]) => {
+                    counterTypes.set(
+                        getVolumeCounterKey(sectionName, label),
+                        getVolumeCounterType(sectionName, label)
+                    );
+                });
+            }
+            return counterTypes;
+        }
+
+        function parseVolumeWeekDate(weekKey) {
+            const [year, month, day] = weekKey.split("-").map(Number);
+            if (!year || !month || !day) return null;
+            return new Date(year, month - 1, day);
+        }
+
+        function buildWeeklySetTotals(weekHistory) {
+            const validWeeks = weekHistory
+                .map((week) => ({
+                    ...week,
+                    date: parseVolumeWeekDate(week.id)
+                }))
+                .filter((week) => week.date)
+                .sort((a, b) => a.date - b.date);
+
+            if (validWeeks.length === 0) return [];
+
+            const firstWeek = getVolumeWeekStartDate(validWeeks[0].date);
+            const lastWeek = getVolumeWeekStartDate(validWeeks[validWeeks.length - 1].date);
+            const weeks = [];
+            const totalsByWeek = new Map();
+            const counterTypes = getVolumeCounterTypes();
+
+            for (const cursor = new Date(firstWeek); cursor <= lastWeek; cursor.setDate(cursor.getDate() + 7)) {
+                const weekDate = new Date(cursor);
+                const weekKey = getDateInputValue(weekDate);
+                weeks.push({ key: weekKey, timestamp: Math.floor(weekDate.getTime() / 1000) });
+                totalsByWeek.set(weekKey, { upper: 0, lowerOther: 0 });
+            }
+
+            validWeeks.forEach((week) => {
+                const weekKey = getDateInputValue(getVolumeWeekStartDate(week.date));
+                const totals = totalsByWeek.get(weekKey);
+                if (!totals) return;
+                Object.entries(week.counters || {}).forEach(([counterKey, value]) => {
+                    const counterType = counterTypes.get(counterKey) || "lowerOther";
+                    totals[counterType] += Number(value) || 0;
+                });
+            });
+
+            return weeks.map((week) => ({
+                ...week,
+                ...totalsByWeek.get(week.key)
+            }));
+        }
+
+        function renderWeeklySetsChart(app) {
+            if (volumeWeeklySetsChart) {
+                volumeWeeklySetsChart.destroy();
+                volumeWeeklySetsChart = null;
+            }
+
+            const section = document.createElement("div");
+            section.className = "weekly-sets-chart";
+            section.innerHTML = `
+                <h3>Weekly Set Totals</h3>
+                <div class="weekly-sets-chart-canvas"><canvas></canvas></div>
+            `;
+            app.appendChild(section);
+
+            const canvas = section.querySelector("canvas");
+            if (!volumeWeekHistoryLoaded) {
+                section.innerHTML = "<h3>Weekly Set Totals</h3><p>Loading weekly set counts...</p>";
+                return;
+            }
+
+            const weeklyTotals = buildWeeklySetTotals(volumeWeekHistory);
+
+            if (weeklyTotals.length === 0) {
+                section.innerHTML = "<h3>Weekly Set Totals</h3><p>No weekly set counts found.</p>";
+                return;
+            }
+
+            const chartStart = weeklyTotals[0].timestamp;
+            const chartEnd = weeklyTotals.length > 1
+                ? weeklyTotals[weeklyTotals.length - 1].timestamp
+                : weeklyTotals[0].timestamp + (7 * 24 * 60 * 60);
+
+            volumeWeeklySetsChart = new Chart(canvas, {
+                type: "line",
+                data: {
+                    datasets: [
+                        {
+                            label: "Upper body",
+                            data: weeklyTotals.map((week) => ({ x: week.timestamp, y: week.upper })),
+                            borderColor: "#007bff",
+                            backgroundColor: "#007bff",
+                            tension: 0.2
+                        },
+                        {
+                            label: "Lower body + other",
+                            data: weeklyTotals.map((week) => ({ x: week.timestamp, y: week.lowerOther })),
+                            borderColor: "#28a745",
+                            backgroundColor: "#28a745",
+                            tension: 0.2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => `Week of ${getDateLabel(items[0].parsed.x)}`,
+                                label: (item) => `${item.dataset.label}: ${item.parsed.y} sets`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: "linear",
+                            min: chartStart,
+                            max: chartEnd,
+                            ticks: {
+                                callback: (value) => getDateLabel(value),
+                                maxTicksLimit: 10
+                            },
+                            title: {
+                                display: true,
+                                text: "Week"
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 },
+                            title: {
+                                display: true,
+                                text: "Sets"
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
  	function getVolumeTarg( label ) {
 		var label_un = label.replaceAll(" ", "_");
 		return targetVolumeData[ label_un ];
@@ -1677,6 +1848,7 @@ workouts.forEach((workout, workoutIndex) => {
                 app.appendChild(section);
             }
             renderVolumePlanner(app);
+            renderWeeklySetsChart(app);
 	}
 
         function listenToCurrentVolumeWeek() {
@@ -1709,6 +1881,29 @@ workouts.forEach((workout, workoutIndex) => {
             });
         }
 
+        function listenToVolumeWeekHistory() {
+            onSnapshot(volumeWeeksCollection, (snapshot) => {
+                volumeWeekHistory = [];
+                snapshot.forEach((snapshotDoc) => {
+                    const data = snapshotDoc.data();
+                    volumeWeekHistory.push({
+                        id: snapshotDoc.id,
+                        counters: data.counters || {}
+                    });
+                });
+                volumeWeekHistoryLoaded = true;
+                if (activeView === "volume") {
+                    renderVolumeWhenReady();
+                }
+            }, (error) => {
+                console.error("Error loading weekly set history: ", error);
+                volumeWeekHistoryLoaded = true;
+                if (activeView === "volume") {
+                    renderVolumeWhenReady();
+                }
+            });
+        }
+
         function setActiveView(view) {
             activeView = view;
             chartsView.hidden = view !== "charts";
@@ -1730,6 +1925,10 @@ workouts.forEach((workout, workoutIndex) => {
                     progressChart.destroy();
                     progressChart = null;
                 }
+                if (volumeWeeklySetsChart) {
+                    volumeWeeklySetsChart.destroy();
+                    volumeWeeklySetsChart = null;
+                }
                 renderCharts(latestEntries);
             } else {
                 chartsByKey.forEach((chart) => chart.destroy());
@@ -1750,11 +1949,19 @@ workouts.forEach((workout, workoutIndex) => {
                         progressChart.destroy();
                         progressChart = null;
                     }
+                    if (volumeWeeklySetsChart) {
+                        volumeWeeklySetsChart.destroy();
+                        volumeWeeklySetsChart = null;
+                    }
                     renderAnalysis(latestEntries);
                 } else if (view === "benchmarks") {
                     if (progressChart) {
                         progressChart.destroy();
                         progressChart = null;
+                    }
+                    if (volumeWeeklySetsChart) {
+                        volumeWeeklySetsChart.destroy();
+                        volumeWeeklySetsChart = null;
                     }
                     if (benchmarkSettingsLoaded) {
                         renderBenchmarks(latestEntries);
@@ -1765,8 +1972,16 @@ workouts.forEach((workout, workoutIndex) => {
                 } else if (view === "progress") {
                     benchmarkChartsByKey.forEach((chart) => chart.destroy());
                     benchmarkChartsByKey.clear();
+                    if (volumeWeeklySetsChart) {
+                        volumeWeeklySetsChart.destroy();
+                        volumeWeeklySetsChart = null;
+                    }
                     renderProgress(latestEntries);
 		} else if (view === "workout") {
+                    if (volumeWeeklySetsChart) {
+                        volumeWeeklySetsChart.destroy();
+                        volumeWeeklySetsChart = null;
+                    }
 			renderTargetVolumeTable();
 			calculate();
                 } else {
@@ -1775,6 +1990,10 @@ workouts.forEach((workout, workoutIndex) => {
                     if (progressChart) {
                         progressChart.destroy();
                         progressChart = null;
+                    }
+                    if (volumeWeeklySetsChart) {
+                        volumeWeeklySetsChart.destroy();
+                        volumeWeeklySetsChart = null;
                     }
                     renderNext(latestEntries);
                 }
@@ -2090,6 +2309,8 @@ const newTimestamp = Math.floor(
         });
 
         // Real-time listener to fetch and display data
+        listenToVolumeWeekHistory();
+
         const q = query(workoutCollection, orderBy("timestamp", "desc"));
         onSnapshot(q, (snapshot) => {
             const entries = [];
