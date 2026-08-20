@@ -76,7 +76,9 @@ table.mope .badge {
 
 
         body { font-family: Arial, sans-serif; max-width: 500px; margin: 40px auto; padding: 0 0; }
-
+.progress-chart-container {
+    height: 500px;
+}
         form { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
         input, select, button { padding: 10px; font-size: 16px; }
         button { background-color: #007bff; color: white; border: none; cursor: pointer; }
@@ -403,6 +405,7 @@ padding: 0 0 0 20px;
             <option value="Shoulder Press">Shoulder Press</option>
 		<option value="Shrugs">Shrugs</option>
             <option value="Side Laterals">Side Laterals</option>
+            <option value="Sit ups">Sit ups</option>
             <option value="Skull Crushers">Skull Crushers</option>
             <option value="Squat">Squat</option>
             <option value="Squat - front">Squat - front</option>
@@ -528,6 +531,7 @@ padding: 0 0 0 20px;
 
 	<tr><td>Upper body sets</td>	<td><div class='totals0'></div></td></tr>
 	<tr><td>Lower body sets</td>	<td><div class='totals1'></div></td></tr>
+	<tr><td>Other sets</td>		<td><div class='totalsOther'></div></td></tr>
 	<tr><td>Total Sets</td>		<td><div class='totals2'></div></td></tr>
 	<tr><td>Workout time (hrs)</td>	<td><div class='totals3'></div></td></tr>
 </table>
@@ -713,6 +717,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             "Upright Row - barbell": "Shoulder",
             "Cable Face Pulls": "Shoulder",
 	    "Lunge - reverse": "Legs",
+	    "Sit ups": "Back",
             "Squat": "Legs",
             "Squat - front": "Legs",
 		"Shrugs": "Back",
@@ -829,7 +834,8 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { section: "Legs", label: "Step Up", type: "lower", exercises: ["Step Up"] },
             { section: "Legs", label: "Lunge", type: "lower", exercises: [ "Lunge - reverse"] },
             { section: "Legs", label: "Nordic", type: "lower", exercises: ["Nordic Curl"] },
-            { section: "Legs", label: "Calves", type: "extra", exercises: ["Calf Raises"] }
+            { section: "Legs", label: "Calves", type: "lower", exercises: ["Calf Raises"] },
+            { section: "Other", label: "Cardio 10m", type: "extra", exercises: ["Cardio 10m"] }
         ];
         let volumeCounters = {};
         let volumeWeekHistory = [];
@@ -904,6 +910,36 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
                 matches: ["Calf Raises, single"],
                 targetReps: 12,
                 targets: [0, [7.5, 15.0], [15.0, 22.5], [22.5, 28.8], [28.8, 36.0], [36.0, 43.2], [43.2, 57.6], [57.6, 72.0], [72.0, 86.4]]
+            },
+            {
+                label: "Calves No weight",
+                matches: ["Calf Raises, single"],
+                targetReps: [12, 18, 22, 25, 28, 30, 32, 36, 40]
+	    },
+            {
+                label: "Leg Raises",
+                matches: ["Leg Raises"],
+                targetReps: [10, 18, 25, 30, 35, 40, 45, 50, 60]
+	    },
+            {
+                label: "Sit ups",
+                matches: ["Sit ups"],
+                targetReps: [20, 32, 45, 55, 65, 75, 85, 95, 100]
+	    },
+            {
+                label: "Pull ups",
+                matches: ["Pull ups"],
+                targetReps: [0, 3, 5, 8, 10, 12, 14, 16, 18]
+	},
+            {
+                label: "Chin ups",
+                matches: ["Chin ups"],
+                targetReps: [0, 4, 7, 10, 12, 14, 16, 19, 21]
+            },
+            {
+                label: "Push ups",
+                matches: ["Push ups"],
+                targetReps: [12, 20, 28, 35, 40, 45, 50, 60, 70]
             },
             {
                 label: "Bench Press",
@@ -2694,11 +2730,13 @@ adductors: 0,
 
 	var upper_count = countAllSets( upp );
 	var lower_count = countAllSets( exc0 );
+	var other_count = countAllSets( exc1 );
 	var all_count   = countAllSets( alls );
 	var hours 	= all_count * 5 / 60;
 
 	document.querySelector('.totals0').textContent = upper_count;
 	document.querySelector('.totals1').textContent = lower_count;
+	document.querySelector('.totalsOther').textContent = other_count;
 	document.querySelector('.totals2').textContent = all_count;
 	document.querySelector('.totals3').textContent = hours.toFixed(1);
 

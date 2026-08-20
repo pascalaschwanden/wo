@@ -1,5 +1,9 @@
 export function renderProgressChart(canvas, state, currentChart) {
     const { rows, maxMonth } = state;
+
+const chartHeight = Math.max(300, rows.length * 45);
+    canvas.parentElement.style.height = `${chartHeight}px`;
+
     if (currentChart) {
         currentChart.destroy();
     }

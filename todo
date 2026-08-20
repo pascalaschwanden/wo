@@ -1,3 +1,9 @@
+- could you fix my push ups, calf raises no weight, chin ups and pull ups on the progress tab?  notice that there is no weight listed for those but  they are based on rep counts rather than added weight and thus probably need another implementation.  make it so that it's data driven: if no "targets" (target weights) are given then it should go by reps
+
+- add weekly volumes to the backup, make it so it doesn't use too much space, fairly compact json
+
+
+
 
 - toggle to only show home charts vs all charts.
 - clean up model for benchmarks, lots of extaneous code
