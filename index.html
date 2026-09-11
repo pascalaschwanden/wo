@@ -1896,6 +1896,12 @@ workouts.forEach((workout, workoutIndex) => {
                         setVolumeButtonState(btn, count, greenMin);
                         await saveVolumeCounters();
                         renderVolumeWhenReady();
+
+			if( !window.hasSaved ) {
+
+				document.querySelector('#backupButton')?.click();
+				window.hasSaved = 1;
+			}
                     });
 
                     grid.appendChild(btn);
