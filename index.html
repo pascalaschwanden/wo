@@ -548,6 +548,14 @@ padding: 0 0 0 20px;
         <tr><td>Calves</td><td id="calvesWorkout">0</td></tr>
 <tr><td>Adductors</td><td id="adductorsWorkout">0</td></tr>
 <tr><td>Abductors</td><td id="abductorsWorkout">0</td></tr>
+<tr><td>Biceps</td><td id="bicepsWorkout">0</td></tr>
+<tr><td>Triceps</td><td id="tricepsWorkout">0</td></tr>
+<tr><td>Back</td><td id="backWorkout">0</td></tr>
+<tr><td>Chest</td><td id="chestWorkout">0</td></tr>
+<tr><td>Front Delts</td><td id="frontDeltsWorkout">0</td></tr>
+<tr><td>Side Delts</td><td id="sideDeltsWorkout">0</td></tr>
+<tr><td>Rear Delts</td><td id="rearDeltsWorkout">0</td></tr>
+<tr><td>Core</td><td id="coreWorkout">0</td></tr>
     </table>
 
 </div>
@@ -2433,6 +2441,229 @@ Contribution factors per set.
 Adjust however you prefer.
 */
 const contributions = {
+    "Bench Press": {
+        chest: 1.0,
+        triceps: 0.5,
+        frontDelts: 0.5
+    },
+
+    "Push ups": {
+        chest: 1.0,
+        triceps: 0.5,
+        frontDelts: 0.5,
+        core: 0.25
+    },
+
+    "Chest Fly Bench": {
+        chest: 1.0,
+        frontDelts: 0.25
+    },
+
+    "Chest Flys": {
+        chest: 1.0,
+        frontDelts: 0.25
+    },
+
+    "Dumbbell PUllover": {
+        chest: 0.5,
+        back: 0.75,
+        triceps: 0.25
+    },
+
+    "Barbell Row": {
+        back: 1.0,
+        biceps: 0.5,
+        rearDelts: 0.5
+    },
+
+    "Double Dumbbell Row": {
+        back: 1.0,
+        biceps: 0.5,
+        rearDelts: 0.5
+    },
+
+    "Low horizontal Row": {
+        back: 1.0,
+        biceps: 0.5,
+        rearDelts: 0.5
+    },
+
+    "High Row": {
+        back: 1.0,
+        biceps: 0.5,
+        rearDelts: 0.5
+    },
+
+    "Rows": {
+        back: 1.0,
+        biceps: 0.5,
+        rearDelts: 0.5
+    },
+
+    "Lat Pull-down": {
+        back: 1.0,
+        biceps: 0.5,
+        rearDelts: 0.25
+    },
+
+    "Pull ups": {
+        back: 1.0,
+        biceps: 0.5,
+        rearDelts: 0.25,
+        core: 0.25
+    },
+
+    "Pull Ups": {
+        back: 1.0,
+        biceps: 0.5,
+        rearDelts: 0.25,
+        core: 0.25
+    },
+
+    "Chin ups": {
+        back: 1.0,
+        biceps: 0.75,
+        rearDelts: 0.25,
+        core: 0.25
+    },
+
+    "Chin Ups": {
+        back: 1.0,
+        biceps: 0.75,
+        rearDelts: 0.25,
+        core: 0.25
+    },
+
+    "Shrugs": {
+        back: 1.0
+    },
+
+    "Barbell Bicep Curl": {
+        biceps: 1.0
+    },
+
+    "Bicep Curl": {
+        biceps: 1.0
+    },
+
+    "Bicep Curls": {
+        biceps: 1.0
+    },
+
+    "Barbell Bicep Curls": {
+        biceps: 1.0
+    },
+
+    "Clown Curl": {
+        biceps: 1.0
+    },
+
+    "Skull Crushers": {
+        triceps: 1.0
+    },
+
+    "Overhead tricep extention": {
+        triceps: 1.0
+    },
+
+    "Tricep Pull-down": {
+        triceps: 1.0
+    },
+
+    "Bath dips": {
+        triceps: 1.0,
+        chest: 0.5,
+        frontDelts: 0.25
+    },
+
+    "Bath Dips": {
+        triceps: 1.0,
+        chest: 0.5,
+        frontDelts: 0.25
+    },
+
+    "Military Press": {
+        frontDelts: 1.0,
+        sideDelts: 0.5,
+        triceps: 0.5
+    },
+
+    "Shoulder Press": {
+        frontDelts: 1.0,
+        sideDelts: 0.5,
+        triceps: 0.5
+    },
+
+    "Shoulder Hammer Press": {
+        frontDelts: 1.0,
+        sideDelts: 0.5,
+        triceps: 0.5
+    },
+
+    "Side Laterals": {
+        sideDelts: 1.0
+    },
+
+    "Lying Side Raise": {
+        sideDelts: 1.0
+    },
+
+    "Dumbbell Upright Row": {
+        sideDelts: 0.75,
+        frontDelts: 0.25,
+        back: 0.25
+    },
+
+    "Dumbbell Upright Row - Elbow": {
+        sideDelts: 0.75,
+        frontDelts: 0.25,
+        back: 0.25
+    },
+
+    "Upright Row - barbell": {
+        sideDelts: 0.75,
+        frontDelts: 0.25,
+        back: 0.25
+    },
+
+    "Cable Face Pulls": {
+        rearDelts: 1.0,
+        back: 0.5
+    },
+
+    "Face Pull Resistance Band": {
+        rearDelts: 1.0,
+        back: 0.5
+    },
+
+    "Reverse Dumbbell Fly": {
+        rearDelts: 1.0,
+        back: 0.25
+    },
+
+    "Lying Reverse Fly": {
+        rearDelts: 1.0,
+        back: 0.25
+    },
+
+    "Reverse Fly": {
+        rearDelts: 1.0,
+        back: 0.25
+    },
+
+    "Leg Raises": {
+        core: 1.0
+    },
+
+    "Roll Out Wheel": {
+        core: 1.0,
+        frontDelts: 0.25
+    },
+
+    "Sit ups": {
+        core: 1.0
+    },
+
     "Squat": {
         quads: 1.0,
         hamstrings: 0.5,
@@ -2729,22 +2960,32 @@ function countAllSets(data) {
   }, 0);
 }
 
+const bodyPartTotals = [
+    { key: "glutes", elementId: "glutesWorkout" },
+    { key: "hamstrings", elementId: "hamstringsWorkout" },
+    { key: "quads", elementId: "quadsWorkout" },
+    { key: "calves", elementId: "calvesWorkout" },
+    { key: "adductors", elementId: "adductorsWorkout" },
+    { key: "abductors", elementId: "abductorsWorkout" },
+    { key: "biceps", elementId: "bicepsWorkout" },
+    { key: "triceps", elementId: "tricepsWorkout" },
+    { key: "back", elementId: "backWorkout" },
+    { key: "chest", elementId: "chestWorkout" },
+    { key: "frontDelts", elementId: "frontDeltsWorkout" },
+    { key: "sideDelts", elementId: "sideDeltsWorkout" },
+    { key: "rearDelts", elementId: "rearDeltsWorkout" },
+    { key: "core", elementId: "coreWorkout" }
+];
+
 function calculate() {
-    let totals = {
-        glutes: 0,
-        hamstrings: 0,
-        quads: 0,
-        calves: 0,
-adductors: 0,
-    abductors: 0
-    };
+    const totals = Object.fromEntries(bodyPartTotals.map((bodyPart) => [bodyPart.key, 0]));
 
 	//  exercises
 	var upp = getPlannerWorkouts("upper");
 	var exc0 = getPlannerWorkouts("lower");
 	var exc1 = getPlannerWorkouts("extra");
 
-	var exc = exc0.concat(exc1);
+	var exc = exc0.concat(exc1).concat(upp);
 	var alls = exc0.concat(exc1).concat(upp);
 
 	var upper_count = countAllSets( upp );
@@ -2759,8 +3000,6 @@ adductors: 0,
 	document.querySelector('.totals2').textContent = all_count;
 	document.querySelector('.totals3').textContent = hours.toFixed(1);
 
-	console.dir( exc );
-
     exc.forEach(exerciseIs => {
 
 	exerciseIs.items.forEach( exercise => {
@@ -2774,29 +3013,16 @@ adductors: 0,
 	 
           var exc_cont = contributions[exercise.exercise];
 
-          totals.glutes += sets * exc_cont.glutes;
-          totals.hamstrings += sets * exc_cont.hamstrings;
-          totals.quads += sets * exc_cont.quads;
-          totals.calves += sets * exc_cont.calves;
-	  totals.adductors += sets * exc_cont.adductors;
-	  totals.abductors += sets * exc_cont.abductors;
+          bodyPartTotals.forEach((bodyPart) => {
+              totals[bodyPart.key] += sets * (exc_cont[bodyPart.key] || 0);
+          });
 	}
 	});
     });
 
-    document.getElementById("glutesWorkout").textContent =
-        totals.glutes.toFixed(1);
-    document.getElementById("hamstringsWorkout").textContent =
-        totals.hamstrings.toFixed(1);
-    document.getElementById("quadsWorkout").textContent =
-        totals.quads.toFixed(1);
-    document.getElementById("calvesWorkout").textContent =
-        totals.calves.toFixed(1);
-document.getElementById("adductorsWorkout").textContent =
-    totals.adductors.toFixed(1);
-
-document.getElementById("abductorsWorkout").textContent =
-    totals.abductors.toFixed(1);
+    bodyPartTotals.forEach((bodyPart) => {
+        document.getElementById(bodyPart.elementId).textContent = totals[bodyPart.key].toFixed(1);
+    });
 
 }
 
