@@ -1,15 +1,11 @@
 
-
-- add "hip abduction leg raise" and "hip adduction leg raise" as excercises and make sure you add it to the body part counts on the workout tab.  also add "hip add/abd" to the target volumes and then add an "hip add/abd" icon to the Legs section of the volume tab.  add a new excercise  "Copenhagen side plank" and it should also be added to workout tab and counted in the body part counts like any other excercise on the workouts tab target volume.
-
-- add weekly volumes to the backup, make it so it doesn't use too much space, fairly compact json
-
 - for progress tab: make upper body chart bars green, sit ups, core excercises and leg raises purple, and keep lower body blue
 
+- add weekly volumes to the backup, make backup so it doesn't use too much space, very compact but still human readable and recoverable
 
 - for charts, on the legend, do not show colors for weights that don't show up in the chart.  i don't want each legend to get too crowded with weights that are not shown in each individual chart.
 
-- make it so the backup downloaded is smaller but keep it human readable.  also make it so that it can still be recovered if need be.
+- fix abduction body part fractional count
 
 
 

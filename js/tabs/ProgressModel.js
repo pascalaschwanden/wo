@@ -107,6 +107,7 @@ export function buildProgressRows(entries, config, helpers) {
         return {
             label: progressExercise.label,
             targetReps: progressExercise.targetReps,
+            progressGroup: progressExercise.progressGroup || "lower",
             metric: isWeightBased ? "weight" : "reps",
             value: progressValue,
             estimatedWeight: isWeightBased ? progressValue : null,

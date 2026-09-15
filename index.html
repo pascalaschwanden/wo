@@ -372,8 +372,10 @@ padding: 0 0 0 20px;
             <option value="Bench Press">Bench Press</option>
             <option value="Bicep Curl">Bicep Curl</option>
             <option value="Clown Curl">Clown Curl</option>
+            <option value="Copenhagen Plank - Dynamic">Copenhagen Plank - Dynamic</option>
             <option value="Cable Face Pulls">Cable Face Pulls</option>
             <option value="Calf Raises, single">Calf Raises, single</option>
+            <option value="Seated Calf Raises, single">Seated Calf Raises, single</option>
             <option value="Calf Extension">Calf Extension</option>
 	    <option value="Chest Fly Bench">Chest Fly Bench</option>
             <option value="Chin ups">Chin ups</option>
@@ -405,6 +407,7 @@ padding: 0 0 0 20px;
             <option value="Shoulder Press">Shoulder Press</option>
 		<option value="Shrugs">Shrugs</option>
             <option value="Side Laterals">Side Laterals</option>
+            <option value="Side-Lying Hip Adduction">Side-Lying Hip Adduction</option>
             <option value="Sit ups">Sit ups</option>
             <option value="Skull Crushers">Skull Crushers</option>
             <option value="Squat">Squat</option>
@@ -413,6 +416,7 @@ padding: 0 0 0 20px;
             <option value="Squat - cossack">Squat - cossack</option>
             <option value="Squat - wide-stance">Squat - wide-stance</option>
             <option value="Step Up">Step Up</option>
+            <option value="Standing Leg Side Raise">Standing Leg Side Raise</option>
 	    <option value="Tricep Pull-down">Tricep Pull-down</option>
 	    <option value="Upright Row - barbell">Upright Row - barbell</option>
         </select>
@@ -738,6 +742,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             "Deadlift": "Legs",
             "Deadlift - Romanian": "Legs",
             "Calf Raises, single": "Legs",
+            "Seated Calf Raises, single": "Legs",
             "Calf Extension": "Legs",
             "Leg extension": "Legs",
             "Leg Curl": "Legs",
@@ -745,7 +750,10 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
 	    "Lying Reverse Fly": "Shoulder",
 	    "Lying Side Raise": "Shoulder",
 	    "Face Pull Resistance Band": "Shoulder",
-            "Dumbbell Upright Row - Elbow": "Shoulder"
+            "Dumbbell Upright Row - Elbow": "Shoulder",
+            "Standing Leg Side Raise": "Legs",
+            "Copenhagen Plank - Dynamic": "Legs",
+            "Side-Lying Hip Adduction": "Legs"
         };
 
         const gymOnlyChartExercises = new Set([
@@ -762,7 +770,8 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             "tricep pull-down"
         ]);
 
-        const bodyweightExercises = new Set(["Bath dips", "Chin ups", "Pull ups", "Push ups", "Calf Raises, single"]);
+        const bodyweightExercises = new Set(["Bath dips", "Chin ups", "Pull ups", "Push ups",
+            "Seated Calf Raises, single", "Calf Raises, single"]);
         const squatBodyweightOffset = 144;
         const benchmarkExercises = [
             { name: "Bench Press", weeklyGain: 1.1 },
@@ -785,6 +794,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { name: "Deadlift", weeklyGain: 5 },
             { name: "Deadlift - Romanian", weeklyGain: 5 },
             { name: "Calf Raises, single", weeklyGain: 1.5},
+            { name: "Seated Calf Raises, single", weeklyGain: 0.75},
             { name: "Bath dips", weeklyGain: 0.5},
             { name: "Chin ups", weeklyGain: 0.5},
             { name: "Push ups", weeklyGain: 1},
@@ -817,7 +827,8 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
                 ["📦", "Step Up", 1, 6],
                 ["🏃", "Lunge", 1, 6],
                 ["🦯", "Nordic", 2, 9],
-                ["🐄", "Calves", 4, 16]
+                ["🐄", "Calves", 4, 16],
+                ["🦵", "Hip Abd/Add", 2, 6]
             ]
         };
         volumeSections.Other = [
@@ -837,13 +848,14 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { section: "Back", label: "Pullovers", type: "upper", exercises: ["Pullovers", "Dumbbell PUllover"] },
 	    { section: "Back", label: "Shrugs", type: "upper", exercises: ["Shrugs"] },
             { section: "Legs", label: "Deadlifts, RDL", type: "lower", exercises: ["Deadlift", "Deadlift - Romanian"] },
+            { section: "Legs", label: "Hip Abd/Add", type: "lower", exercises: ["Standing Leg Side Raise", "Copenhagen Plank - Dynamic", "Side-Lying Hip Adduction"]},
             { section: "Legs", label: "Hip Thrust", type: "lower", exercises: ["Hip Thrust"] },
             { section: "Legs", label: "Squats", type: "lower", exercises: ["Squat"] },
             { section: "Legs", label: "Bulgarian", type: "lower", exercises: ["Bulgarian Split Squat"] },
             { section: "Legs", label: "Step Up", type: "lower", exercises: ["Step Up"] },
             { section: "Legs", label: "Lunge", type: "lower", exercises: [ "Lunge - reverse"] },
             { section: "Legs", label: "Nordic", type: "lower", exercises: ["Nordic Curl"] },
-            { section: "Legs", label: "Calves", type: "lower", exercises: ["Calf Raises"] },
+            { section: "Legs", label: "Calves", type: "lower", exercises: ["Calf Raises", "Seated Calf Raises"] },
             { section: "Other", label: "Cardio 10m", type: "extra", exercises: ["Cardio 10m"] }
         ];
         let volumeCounters = {};
@@ -861,6 +873,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             {
                 label: "Squat",
                 matches: ["Squat"],
+                progressGroup: "lower",
                 targetReps: 6,
                 targets: [45, 
 	[75, 105],  //  2 months
@@ -875,6 +888,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             {
                 label: "Deadlift",
                 matches: ["Deadlift"],
+                progressGroup: "lower",
                 targetReps: 6,
                 targets: [
     [115, 135],   // 0 months
@@ -891,6 +905,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             {
                 label: "Deadlift - Romanian",
                 matches: ["Deadlift - Romanian"],
+                progressGroup: "lower",
                 targetReps: 6,
                 targets: [
     [80, 100],    // 0 months
@@ -907,95 +922,112 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             {
                 label: "Hip Thrust",
                 matches: ["Hip Thrust"],
+                progressGroup: "lower",
                 targetReps: 8,
                 targets: [45, [75, 105], [105, 145], [135, 185], [165, 215], [185, 245], [205, 275], [245, 315], [275, 365]]
             },
             {
                 label: "Barbell Lunge",
                 matches: ["Lunge - reverse"],
+                progressGroup: "lower",
                 targetReps: 8,
                 targets: [20, [35, 45], [45, 65], [65, 95], [85, 115], [105, 135], [115, 150], [135, 175], [155, 195]]
             },
             {
                 label: "Bulgarian Split Squat",
                 matches: ["Squat - bulgarian"],
+                progressGroup: "lower",
                 targetReps: 8,
                 targets: [0, [22,36], [36,50], [50,65], [65,79], [79,94], [94,108], [108, 122], [122, 144]]
             },
             {
                 label: "Calves",
                 matches: ["Calf Raises, single"],
+                progressGroup: "lower",
                 targetReps: 12,
                 targets: [0, [7.5, 15.0], [15.0, 22.5], [22.5, 28.8], [28.8, 36.0], [36.0, 43.2], [43.2, 57.6], [57.6, 72.0], [72.0, 86.4]]
             },
             {
                 label: "Calves No weight",
                 matches: ["Calf Raises, single"],
+                progressGroup: "lower",
                 targetReps: [12, 18, 22, 25, 28, 30, 32, 36, 40]
 	    },
             {
                 label: "Leg Raises",
                 matches: ["Leg Raises"],
+                progressGroup: "core",
                 targetReps: [10, 18, 25, 30, 35, 40, 45, 50, 60]
 	    },
             {
                 label: "Sit ups",
                 matches: ["Sit ups"],
+                progressGroup: "core",
                 targetReps: [20, 32, 45, 55, 65, 75, 85, 95, 100]
 	    },
             {
                 label: "Pull ups",
                 matches: ["Pull ups"],
+                progressGroup: "upper",
                 targetReps: [0, 3, 5, 8, 10, 12, 14, 16, 18]
 	},
             {
                 label: "Chin ups",
                 matches: ["Chin ups"],
+                progressGroup: "upper",
                 targetReps: [0, 4, 7, 10, 12, 14, 16, 19, 21]
             },
             {
                 label: "Push ups",
                 matches: ["Push ups"],
+                progressGroup: "upper",
                 targetReps: [12, 20, 28, 35, 40, 45, 50, 60, 70]
             },
             {
                 label: "Bench Press",
                 matches: ["Bench Press"],
+                progressGroup: "upper",
                 targetReps: 6,
                 targets: [45, [65, 85], [85, 115], [105, 135], [115, 150], [125, 160], [135, 170], [155, 195], [175, 215]]
             },
             {
                 label: "Military Press",
                 matches: ["Military Press"],
+                progressGroup: "upper",
                 targetReps: 6,
                 targets: [30, [35, 45], [45, 65], [55, 80], [65, 90], [75, 100], [85, 110], [95, 120], [105, 135]]
             },
             {
                 label: "Barbell Row",
                 matches: ["Barbell Row"],
+                progressGroup: "upper",
                 targetReps: 6,
                 targets: [45, [45, 65], [65, 95], [85, 115], [105, 135], [115, 145], [125, 160], [145, 185], [165, 205]]
             },
             {
                 label: "Barbell Curl",
                 matches: ["Barbell Bicep Curl"],
+                progressGroup: "upper",
                 targetReps: 8,
                 targets: [20, [25, 35], [35, 45], [45, 60], [50, 70], [55, 75], [60, 80], [70, 90], [75, 105]]
             },
             {
                 label: "Skull Crushers",
                 matches: ["Skull Crushers", "Overhead tricep extention", "Tricep Pull-down"],
+                progressGroup: "upper",
                 targetReps: 8,
                 targets: [20, [25, 35], [35, 45], [45, 55], [50, 65], [55, 75], [60, 80], [65, 90], [75, 100]]
             },
             {
                 label: "Bath dips",
                 matches: ["Bath dips"],
+                progressGroup: "upper",
                 targetReps: [8, 15, 22, 30, 36, 42, 48, 55, 60]
             },
             {
                 label: "Lateral Raises",
                 matches: ["Side Laterals"],
+                progressGroup: "upper",
                 targetReps: 14,
                 targets: [5, [5, 10], [10, 12], [10, 15], [12, 18], [15, 20], [15, 22], [18, 25], [20, 30]]
             }
@@ -2751,7 +2783,31 @@ const contributions = {
         adductors: 0.5,
         abductors: 0.5
     },
+"Standing Leg Side Raise": {
+    quads: 0.0,
+    hamstrings: 0.0,
+    glutes: 0.3,
+    calves: 0.0,
+    adductors: 0.0,
+    abductors: 1.0
+},
 
+"Copenhagen Plank - Dynamic": {
+    quads: 0.1,
+    hamstrings: 0.1,
+    glutes: 0.2,
+    calves: 0.1,
+    adductors: 1.0,
+    abductors: 0.2
+},
+"Side-Lying Hip Adduction": {
+    quads: 0.0,
+    hamstrings: 0.0,
+    glutes: 0.0,
+    calves: 0.0,
+    adductors: 1.0,
+    abductors: 0.0
+},
     "Nordic Curl": {
         quads: 0.0,
         hamstrings: 1.0,
