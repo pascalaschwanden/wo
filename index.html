@@ -807,7 +807,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
                 ["⬇️", "Vertical Pull", 2, 9],
                 ["↔️", "Horizontal Pull", 3, 9],
 		["🤷", "Shrugs", 0, 10],
-                ["💧", "Fast < 1200", 2]
+                ["↙️", "Pullovers", 2, 8]
             ],
             "Legs": [
                 ["🏋️", "Deadlifts, RDL", 3, 6],
@@ -834,6 +834,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { section: "Chest, Arms", label: "Triceps", type: "upper", exercises: ["Skull Crushers", "Bath Dips", "Overhead tricep extention"] },
             { section: "Back", label: "Vertical Pull", type: "upper", exercises: ["Pull Ups", "Chin Ups"] },
             { section: "Back", label: "Horizontal Pull", type: "upper", exercises: ["Rows"] },
+            { section: "Back", label: "Pullovers", type: "upper", exercises: ["Pullovers", "Dumbbell PUllover"] },
 	    { section: "Back", label: "Shrugs", type: "upper", exercises: ["Shrugs"] },
             { section: "Legs", label: "Deadlifts, RDL", type: "lower", exercises: ["Deadlift", "Deadlift - Romanian"] },
             { section: "Legs", label: "Hip Thrust", type: "lower", exercises: ["Hip Thrust"] },
@@ -2465,6 +2466,12 @@ const contributions = {
     },
 
     "Dumbbell PUllover": {
+        chest: 0.5,
+        back: 0.75,
+        triceps: 0.25
+    },
+
+    "Pullovers": {
         chest: 0.5,
         back: 0.75,
         triceps: 0.25
