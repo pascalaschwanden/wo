@@ -1,12 +1,15 @@
-- fix my push ups, calf raises no weight, chin ups and pull ups on the progress tab?  notice that there is no weight listed for those but  they are based on rep counts rather than added weight and thus probably need another implementation.  make it so that it's data driven: if no "targets" (target weights) are given then it should go by reps
+- fix my push ups, calf raises no weight, chin ups and pull ups on the progress tab.  notice that there is no weight listed for those in the code because they based on body weight.  but  they are based on rep counts rather than added weight and thus probably need another implementation.  make it so that it's data driven: if no "targets" (target weights) are given in the code, then it should go by reps
 
+- on the workouts tab, where it shows set count per body part (glutes, hamstrings, quads, calves...), i want you add the other body parts: biceps, triceps, back, chest, front delts, side delts, rear delts and add data for all the upper body lifts so that the body part count can be counted correctly for those upper body parts.
+
+- add "hip abduction leg raise" and "hip adduction leg raise" as excercises and make sure you add it to the body part counts on the workout tab.  also add "hip add/abd" to the target volumes and then add an "hip add/abd" icon to the Legs section of the volume tab.  add a new excercise  "Copenhagen side plank" and it should also be added to workout tab and counted in the body part counts like any other excercise on the workouts tab target volume.
 
 - add weekly volumes to the backup, make it so it doesn't use too much space, fairly compact json
 
 - for progress tab: make upper body chart bars green, sit ups, core excercises and leg raises purple, and keep lower body blue
 
-- on the workouts tab, where it shows set count per body part (glutes, hamstrings, quads, calves...), i want you add the other body parts: biceps, triceps, back, chest, front delts, side delts, rear delts and add data for all the upper body lifts so that the body part count can be counted correctly for those upper body parts.
 
+- on the volume tab remove the "fast" icon.  and instead under back, i want you add "Pullovers" and there should be a matching Pullovers on the workout tab
 
 - for charts, on the legend, do not show colors for weights that don't show up in the chart.  i don't want each legend to get too crowded with weights that are not shown in each individual chart.
 

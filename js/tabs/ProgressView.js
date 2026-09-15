@@ -37,6 +37,9 @@ const chartHeight = Math.max(300, rows.length * 45);
                             if (!Number.isFinite(row.months)) {
                                 return "No matching entries";
                             }
+                            if (row.metric === "reps") {
+                                return `${row.months.toFixed(1)} months from ${row.estimatedReps.toFixed(0)} reps`;
+                            }
                             return `${row.months.toFixed(1)} months from ${row.estimatedWeight.toFixed(1)} lbs x${row.targetReps}`;
                         }
                     }
