@@ -1,3 +1,4 @@
+- For benchmarks tab look at the charts at the dots 6 RM being graphed and change that to 1 RM.  and make sure the dots are not being adjusted up or down to fit a curve, they should just reflect the calculated 1 RM for the given rep and weights.  also make sure you don't change the benchmarks Table values because those appear to be correct right now.
 
 - for progress tab: make upper body chart bars green, sit ups, core excercises and leg raises purple, and keep lower body blue
 
@@ -5,7 +6,7 @@
 
 - for charts, on the legend, do not show colors for weights that don't show up in the chart.  i don't want each legend to get too crowded with weights that are not shown in each individual chart.
 
-- fix abduction body part fractional count
+- fix abduction body part fractional count, check all others too.  i think it tries to map multiple excercises onto each category??
 
 
 

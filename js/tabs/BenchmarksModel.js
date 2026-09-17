@@ -26,15 +26,6 @@ function computeSlope(points) {
     return (n * sumXY - sumX * sumY) / denom;
 }
 
-function getNearest(points, timestamp) {
-    let best = points[0];
-    for (const point of points) {
-        if (point.x <= timestamp) best = point;
-        else break;
-    }
-    return best;
-}
-
 function computeBenchmarkStats(points) {
     if (points.length < 2) return null;
 
@@ -160,52 +151,6 @@ function computeWeightedBenchmarkStats(exerciseEntries, exerciseName, startTimes
         deltaLbs30: weightedObservedDays > 0 ? weightedDeltaLbs * (30 / weightedObservedDays) : 0,
         percent30: weightedObservedDays > 0 ? weightedPercent * (30 / weightedObservedDays) : 0
     };
-}
-
-function getWeightedTrendPoints(exerciseEntries, exerciseName, startTimestamp, endTimestamp, helpers) {
-    const { getBenchmarkLiftWeight, getEstimatedOneRepMax } = helpers;
-    const groups = new Map();
-
-    exerciseEntries.forEach((entry) => {
-        const weight = getBenchmarkLiftWeight(entry);
-        if (!groups.has(weight)) groups.set(weight, []);
-        groups.get(weight).push({
-            x: entry.timestamp,
-            y: getEstimatedOneRepMax(weight, entry.reps)
-        });
-    });
-
-    let totalWeight = 0;
-    let startX = 0;
-    let endX = 0;
-    let startY = 0;
-    let endY = 0;
-
-    for (const points of groups.values()) {
-        if (points.length < 2) continue;
-
-        const dailyPoints = bestPointPerDay(points.sort((a, b) => a.x - b.x));
-        const filteredPoints = dailyPoints.filter((point) => point.x >= startTimestamp && point.x <= endTimestamp);
-        if (filteredPoints.length < 2) continue;
-
-        const stats = computeBenchmarkStats(filteredPoints);
-        if (!stats) continue;
-
-        const groupWeight = filteredPoints.length;
-
-        totalWeight += groupWeight;
-        startX += stats.startTimestamp * groupWeight;
-        endX += stats.endTimestamp * groupWeight;
-        startY += stats.startValue * groupWeight;
-        endY += stats.endValue * groupWeight;
-    }
-
-    if (totalWeight === 0) return [];
-
-    return [
-        { x: startX / totalWeight, y: startY / totalWeight },
-        { x: endX / totalWeight, y: endY / totalWeight }
-    ];
 }
 
 export function buildBenchmarkState(entries, config, helpers) {
