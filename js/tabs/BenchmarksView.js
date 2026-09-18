@@ -82,7 +82,7 @@ function renderBenchmarkPanel(chartsContainer, chartState, chartsByKey, helpers)
                     tension: 0
                 },
                 {
-                    label: "Estimated 6RM",
+                    label: "Epley 1RM",
                     data: chartState.visiblePoints,
                     borderColor: "#007bff",
                     backgroundColor: "#007bff",

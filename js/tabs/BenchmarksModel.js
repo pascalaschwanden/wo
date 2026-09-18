@@ -1,4 +1,7 @@
 function computeSlope(points) {
+    var test = 0;
+    test = 34;
+
     if (!points || points.length < 2) return 0;
 
     const t0 = points[0].x;
@@ -75,10 +78,12 @@ function exponentialSmooth(points, alpha = 0.25) {
     for (let index = 1; index < sorted.length; index += 1) {
         const current = sorted[index].y;
         const value = alpha * current + (1 - alpha) * prev;
+
         smoothed.push({
             x: sorted[index].x,
             y: value
         });
+
         prev = value;
     }
 
@@ -90,6 +95,7 @@ function bestPointPerDay(points) {
 
     for (const point of points) {
         const day = Math.floor(point.x / 86400);
+
         if (!byDay.has(day)) {
             byDay.set(day, { ...point });
         } else if (point.y > byDay.get(day).y) {
@@ -100,13 +106,27 @@ function bestPointPerDay(points) {
     return Array.from(byDay.values()).sort((a, b) => a.x - b.x);
 }
 
-function computeWeightedBenchmarkStats(exerciseEntries, exerciseName, startTimestamp, endTimestamp, helpers) {
-    const { getBenchmarkLiftWeight, getEstimatedOneRepMax } = helpers;
+function computeWeightedBenchmarkStats(
+    exerciseEntries,
+    exerciseName,
+    startTimestamp,
+    endTimestamp,
+    helpers
+) {
+    const {
+        getBenchmarkLiftWeight,
+        getEstimatedOneRepMax
+    } = helpers;
+
     const groups = new Map();
 
     exerciseEntries.forEach((entry) => {
         const weight = getBenchmarkLiftWeight(entry);
-        if (!groups.has(weight)) groups.set(weight, []);
+
+        if (!groups.has(weight)) {
+            groups.set(weight, []);
+        }
+
         groups.get(weight).push({
             x: entry.timestamp,
             y: getEstimatedOneRepMax(weight, entry.reps)
@@ -124,11 +144,19 @@ function computeWeightedBenchmarkStats(exerciseEntries, exerciseName, startTimes
         if (points.length < 2) continue;
 
         points.sort((a, b) => a.x - b.x);
+
         const dailyPoints = bestPointPerDay(points);
-        const filteredPoints = dailyPoints.filter((point) => point.x >= startTimestamp && point.x <= endTimestamp);
+
+        const filteredPoints = dailyPoints.filter(
+            (point) =>
+                point.x >= startTimestamp &&
+                point.x <= endTimestamp
+        );
+
         if (filteredPoints.length < 2) continue;
 
         const stats = computeBenchmarkStats(filteredPoints);
+
         if (!stats) continue;
 
         const weight = filteredPoints.length;
@@ -148,46 +176,104 @@ function computeWeightedBenchmarkStats(exerciseEntries, exerciseName, startTimes
     return {
         deltaLbs: weightedDeltaLbs,
         percent: weightedPercent,
-        deltaLbs30: weightedObservedDays > 0 ? weightedDeltaLbs * (30 / weightedObservedDays) : 0,
-        percent30: weightedObservedDays > 0 ? weightedPercent * (30 / weightedObservedDays) : 0
+        deltaLbs30:
+            weightedObservedDays > 0
+                ? weightedDeltaLbs * (30 / weightedObservedDays)
+                : 0,
+        percent30:
+            weightedObservedDays > 0
+                ? weightedPercent * (30 / weightedObservedDays)
+                : 0
     };
 }
 
 export function buildBenchmarkState(entries, config, helpers) {
-    const { benchmarkExercises, startTimestamp, nowTimestamp } = config;
-    const { getBenchmarkLiftWeight, getExerciseLabel, getEstimatedOneRepMax, getLinearFit } = helpers;
-    const endTimestamp = Math.max(nowTimestamp, startTimestamp + (7 * 24 * 60 * 60));
+    const {
+        benchmarkExercises,
+        startTimestamp,
+        nowTimestamp
+    } = config;
+
+    const {
+        getBenchmarkLiftWeight,
+        getExerciseLabel,
+        getEstimatedOneRepMax,
+        getLinearFit
+    } = helpers;
+
+    const endTimestamp = Math.max(
+        nowTimestamp,
+        startTimestamp + (7 * 24 * 60 * 60)
+    );
+
     const summaryRows = [];
     const charts = [];
 
     benchmarkExercises.forEach((benchmark) => {
         const exerciseEntries = entries
-            .filter((entry) => getExerciseLabel(entry.exercise) === benchmark.name)
-            .filter((entry) => entry.weight >= 0 && entry.reps > 0 && entry.timestamp);
+            .filter(
+                (entry) =>
+                    getExerciseLabel(entry.exercise) === benchmark.name
+            )
+            .filter(
+                (entry) =>
+                    entry.weight >= 0 &&
+                    entry.reps > 0 &&
+                    entry.timestamp
+            );
 
+        // Calculate straight Epley 1RM for every exercise entry.
+        // No trending, smoothing, slope adjustment, or rounding here.
         const rawPoints = exerciseEntries
             .map((entry) => ({
                 x: entry.timestamp,
-                y: getEstimatedOneRepMax(getBenchmarkLiftWeight(entry), entry.reps)
+                y: getEstimatedOneRepMax(
+                    getBenchmarkLiftWeight(entry),
+                    entry.reps
+                )
             }))
-            .filter((point) => Number.isFinite(point.y) && point.y > 0)
+            .filter(
+                (point) =>
+                    Number.isFinite(point.y) &&
+                    point.y > 0
+            )
             .sort((a, b) => a.x - b.x);
 
+        // Keep only the best Epley 1RM for each day.
         const dailyPoints = bestPointPerDay(rawPoints);
-        const filteredDailyPoints = dailyPoints.filter((point) => point.x >= startTimestamp);
-        const visiblePoints = exponentialSmooth(filteredDailyPoints, getAlpha(benchmark.name));
+
+        const filteredDailyPoints = dailyPoints.filter(
+            (point) => point.x >= startTimestamp
+        );
+
+        // visiblePoints are now the actual Epley 1RM values.
+        // No exponential smoothing or any other modification.
+        const visiblePoints = filteredDailyPoints;
 
         if (visiblePoints.length === 0) {
             charts.push({
                 name: benchmark.name,
                 empty: true
             });
+
             return;
         }
 
-        const lastPoint = visiblePoints[visiblePoints.length - 1];
+        const lastPoint =
+            visiblePoints[visiblePoints.length - 1];
+
         const chartStart = startTimestamp;
-        const chartEnd = Math.max(endTimestamp, lastPoint.x);
+
+        const chartEnd = Math.max(
+            endTimestamp,
+            lastPoint.x
+        );
+
+        // IMPORTANT:
+        // These statistics remain unchanged from the original code.
+        // They still use computeSlope() and therefore retain the
+        // original trend-based calculation for deltaLbs, percent,
+        // deltaLbs30, and percent30.
         const stats = computeWeightedBenchmarkStats(
             exerciseEntries,
             benchmark.name,
@@ -204,30 +290,88 @@ export function buildBenchmarkState(entries, config, helpers) {
         }
 
         const firstPoint = visiblePoints[0];
-        const lastVisiblePoint = visiblePoints[visiblePoints.length - 1];
-        const fit = visiblePoints.length >= 2 ? getLinearFit(visiblePoints) : null;
+        const lastVisiblePoint =
+            visiblePoints[visiblePoints.length - 1];
+
+        // YOUR TREND POINTS:
+        // Keep the original linear-fit calculation exactly as before.
+        const fit =
+            visiblePoints.length >= 2
+                ? getLinearFit(visiblePoints)
+                : null;
+
         const yourTrendPoints = fit
             ? [
-                { x: firstPoint.x, y: fit.predict(firstPoint.x) },
-                { x: lastVisiblePoint.x, y: fit.predict(lastVisiblePoint.x) }
+                {
+                    x: firstPoint.x,
+                    y: fit.predict(firstPoint.x)
+                },
+                {
+                    x: lastVisiblePoint.x,
+                    y: fit.predict(lastVisiblePoint.x)
+                }
             ]
             : [];
-        const typicalStartWeight = yourTrendPoints.length > 0
-            ? yourTrendPoints[0].y
-            : (fit ? fit.predict(chartStart) : firstPoint.y);
-        const typicalStartTimestamp = yourTrendPoints.length > 0 ? yourTrendPoints[0].x : chartStart;
-        const typicalEndTimestamp = yourTrendPoints.length > 0 ? yourTrendPoints[1].x : chartEnd;
-        const typicalEndWeight = typicalStartWeight + (((typicalEndTimestamp - typicalStartTimestamp) / (7 * 24 * 60 * 60)) * benchmark.weeklyGain);
+
+        const typicalStartWeight =
+            yourTrendPoints.length > 0
+                ? yourTrendPoints[0].y
+                : (
+                    fit
+                        ? fit.predict(chartStart)
+                        : firstPoint.y
+                );
+
+        const typicalStartTimestamp =
+            yourTrendPoints.length > 0
+                ? yourTrendPoints[0].x
+                : chartStart;
+
+        const typicalEndTimestamp =
+            yourTrendPoints.length > 0
+                ? yourTrendPoints[1].x
+                : chartEnd;
+
+        const typicalEndWeight =
+            typicalStartWeight +
+            (
+                (
+                    typicalEndTimestamp -
+                    typicalStartTimestamp
+                ) /
+                (7 * 24 * 60 * 60)
+            ) *
+            benchmark.weeklyGain;
+
         const typicalPoints = [
-            { x: typicalStartTimestamp, y: typicalStartWeight },
-            { x: typicalEndTimestamp, y: typicalEndWeight }
+            {
+                x: typicalStartTimestamp,
+                y: typicalStartWeight
+            },
+            {
+                x: typicalEndTimestamp,
+                y: typicalEndWeight
+            }
         ];
-        const plottedYValues = [...visiblePoints, ...yourTrendPoints, ...typicalPoints]
+
+        const plottedYValues = [
+            ...visiblePoints,
+            ...yourTrendPoints,
+            ...typicalPoints
+        ]
             .map((point) => point.y)
-            .filter((value) => Number.isFinite(value));
+            .filter(
+                (value) => Number.isFinite(value)
+            );
+
         const lowestY = Math.min(...plottedYValues);
         const highestY = Math.max(...plottedYValues);
-        const yPadding = Math.max((highestY - lowestY) * 0.12, highestY * 0.03, 5);
+
+        const yPadding = Math.max(
+            (highestY - lowestY) * 0.12,
+            highestY * 0.03,
+            5
+        );
 
         charts.push({
             name: benchmark.name,
@@ -237,11 +381,18 @@ export function buildBenchmarkState(entries, config, helpers) {
             typicalPoints,
             chartStart,
             chartEnd,
-            yMin: Math.max(0, Math.floor((lowestY - yPadding) / 5) * 5)
+            yMin: Math.max(
+                0,
+                Math.floor(
+                    (lowestY - yPadding) / 5
+                ) * 5
+            )
         });
     });
 
-    summaryRows.sort((a, b) => b.percent30 - a.percent30);
+    summaryRows.sort(
+        (a, b) => b.percent30 - a.percent30
+    );
 
     return {
         summaryRows,
