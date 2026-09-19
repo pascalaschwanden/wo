@@ -522,7 +522,7 @@ padding: 0 0 0 20px;
         <tr>
             <th>Exercise</th>
             <th>Sets Per Week</th>
-		<th>MAV</th>
+		<th></th>
         </tr>
     <tbody id="targetVolumeTable"></tbody>
 </table>
@@ -1743,6 +1743,7 @@ workouts.forEach((workout, workoutIndex) => {
             if (sectionName === "Other" && label === "Cardio 10m") return "cardio";
             const plannerItem = volumePlannerItems.find((item) => item.section === sectionName && item.label === label);
             if (plannerItem?.type === "upper") return "upper";
+            if (plannerItem?.type === "lower") return "lower";
             return "lowerOther";
         }
 
@@ -1786,7 +1787,7 @@ workouts.forEach((workout, workoutIndex) => {
                 const weekDate = new Date(cursor);
                 const weekKey = getDateInputValue(weekDate);
                 weeks.push({ key: weekKey, timestamp: Math.floor(weekDate.getTime() / 1000) });
-                totalsByWeek.set(weekKey, { upper: 0, lowerOther: 0, cardio: 0 });
+                totalsByWeek.set(weekKey, { upper: 0, lowerOther: 0, lower: 0, cardio: 0 });
             }
 
             validWeeks.forEach((week) => {
@@ -1849,8 +1850,8 @@ workouts.forEach((workout, workoutIndex) => {
                             tension: 0.2
                         },
                         {
-                            label: "Lower body + other",
-                            data: weeklyTotals.map((week) => ({ x: week.timestamp, y: week.lowerOther })),
+                            label: "Lower body",
+                            data: weeklyTotals.map((week) => ({ x: week.timestamp, y: week.lower })),
                             borderColor: "#28a745",
                             backgroundColor: "#28a745",
                             tension: 0.2
@@ -2984,8 +2985,10 @@ Object.entries(volumeSections).forEach(([sectionName, exercises]) => {
         tdName.textContent = exerciseName;
 
         const tdInput = document.createElement("td");
+      var val = getVolumeTarg(exerciseName);
+
 	var tdMAV = document.createElement("td");
-	tdMAV.innerHTML = '<div class="leftMAV"></div>';
+	tdMAV.innerHTML = '<div class="leftMAV">' + val + '</div>';
 
         const input = document.createElement("input");
         input.type = "number";
@@ -2994,7 +2997,7 @@ Object.entries(volumeSections).forEach(([sectionName, exercises]) => {
         input.id = exerciseName.replace(/\s+/g, "_");
 
 	//var norm = exerciseName.replaceAll(' ', '_');
-	var val = getVolumeTarg(exerciseName);
+
         input.value = val ?? 0;
 
         input.addEventListener("input", () => {
