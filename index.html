@@ -383,6 +383,7 @@ padding: 0 0 0 20px;
             <option value="Deadlift - Romanian">Deadlift - Romanian</option>
             <option value="Double Dumbbell Row">Double Dumbbell Row</option>
             <option value="Dumbbell PUllover">Dumbbell PUllover</option>
+            <option value="Barbell Pullover">"Barbell Pullover"</option>
             <option value="Dumbbell Upright Row">Dumbbell Upright Row</option>
             <option value="Dumbbell Upright Row - Elbow">Dumbbell Upright Row - Elbow</option>
             <option value="High Row">High Row</option>
@@ -712,6 +713,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
 	    "Tricep Pull-down": "Arms",
             "Bench Press": "Chest",
             "Dumbbell PUllover": "Chest",
+            "Barbell Pullover": "Chest",
             "Bicep Curl": "Arms",
             "Clown Curl": "Arms",
             "Overhead tricep extention": "Arms",
@@ -845,7 +847,9 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { section: "Chest, Arms", label: "Triceps", type: "upper", exercises: ["Skull Crushers", "Bath Dips", "Overhead tricep extention"] },
             { section: "Back", label: "Vertical Pull", type: "upper", exercises: ["Pull Ups", "Chin Ups"] },
             { section: "Back", label: "Horizontal Pull", type: "upper", exercises: ["Rows"] },
-            { section: "Back", label: "Pullovers", type: "upper", exercises: ["Pullovers", "Dumbbell PUllover"] },
+            { section: "Back", label: "Pullovers", type: "upper",
+                exercises: ["Pullovers", "Dumbbell PUllover", "Barbell Pullover"]
+            },
 	    { section: "Back", label: "Shrugs", type: "upper", exercises: ["Shrugs"] },
             { section: "Legs", label: "Deadlifts, RDL", type: "lower", exercises: ["Deadlift", "Deadlift - Romanian"] },
             { section: "Legs", label: "Hip Abd/Add", type: "lower", exercises: ["Standing Leg Side Raise", "Copenhagen Plank - Dynamic", "Side-Lying Hip Adduction"]},
@@ -1029,7 +1033,12 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
                 matches: ["Side Laterals"],
                 progressGroup: "upper",
                 targetReps: 14,
-                targets: [5, [5, 10], [10, 12], [10, 15], [12, 18], [15, 20], [15, 22], [18, 25], [20, 30]]
+                targets: [5, [5, 10], [10, 12], [10, 15],
+                    [12, 18],
+                    [14, 20],
+                    [15, 22],
+                    [18, 25],
+                    [20, 30]]
             }
         ];
 
@@ -2498,6 +2507,12 @@ const contributions = {
     },
 
     "Dumbbell PUllover": {
+        chest: 0.5,
+        back: 0.75,
+        triceps: 0.25
+    },
+
+    "Barbell Pullover": {
         chest: 0.5,
         back: 0.75,
         triceps: 0.25

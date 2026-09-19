@@ -6,6 +6,7 @@ export function buildNextRows(entries, helpers) {
 	"Pull ups", "Chin ups",
         //"Overhead tricep extention", 
 	"Push ups", "Squat - bulgarian",
+        "Barbell Pullover",
         "Lunge - reverse", "Bench Press", "Shoulder Hammer Press",
         "Lying Reverse Fly", "Reverse Dumbbell Fly", "Leg Raises",
         "Bicep Curl", "Barbell Row", 
