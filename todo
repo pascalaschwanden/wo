@@ -1,3 +1,6 @@
+- On the workouts tab, where it calculates the partial set counts, i think there might be some bug.  for example i have 12 sets in the input box but the calcualtion for calves shows 8.
+And "Hip Abd/Add" should represent the average of both excercises so, that should increase Adductors by 0.5 and abductors by 0.5
+
 - Add Good Morning and add it to the volume planner, prone cobra?
 
 - add weekly volumes to the backup, make backup so it doesn't use too much space, very compact but still human readable and recoverable
@@ -7,6 +10,41 @@
 - fix abduction body part fractional count, check all others too.  i think it tries to map multiple excercises onto each category??
 
 ====================================
+Do more: Good Morning and Front Squats.
+Goals:
+It takes years to get to good.  at good, you have the longevity and great health box checked.
+
+                Bench           Squat           DeadLift
+Decent          x1              x1.25           x1.5
+Good            x1.25           x1.5            x2
+Great           x1.5            x2              x2.5
+Competitve lev  x2              x2.5            x3
+
+
+BW=150          Bench 10reps    Squat 10rep     Deadlift 6 rep
+Decent          113             140             188
+Good            140             170             250
+Great           170             225             313
+Competitive     225             280             375
+
+                bench press     Squat           Deadlift    Military Press  Pull ups
+decent          x.75            x1              x1          x.5             3
+good            x1              x1.2            x1.3        x.65            8
+optimal         x1.3            x1.5            x1.65       x.85            12
+Advanced        x1.5            x1.75           x2          x1              15
+athlete         x1.75           x2              x2.5        x1.25           20
+
+Squat: < Decent
+Military Press: Decent
+Bench: Good
+Pull Ups: Good
+Deadlift: Optimal
+
+Advanced - everyone.
+Athlete - maybe.  25 - 45 yrs.
+
+Creatine - after 2 weeks, add 5lbs or 2 reps to every lift.
+
 shoulder:
 - incline dumbbell Y Raise
 - front raise

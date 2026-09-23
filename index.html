@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workout Tracker</title>
     <style>
+
 .leftMAV {
 padding: 0 0 0 30px;
 }
@@ -367,6 +368,7 @@ padding: 0 0 0 20px;
         <select id="exercise" required>
             <option value="" disabled selected>Select exercise</option>
             <option value="Bath dips">Bath dips</option>
+            <option value="Barbell Pullover">Barbell Pullover</option>
             <option value="Barbell Row">Barbell Row</option>
             <option value="Barbell Bicep Curl">Barbell Bicep Curl</option>
             <option value="Bench Press">Bench Press</option>
@@ -383,7 +385,6 @@ padding: 0 0 0 20px;
             <option value="Deadlift - Romanian">Deadlift - Romanian</option>
             <option value="Double Dumbbell Row">Double Dumbbell Row</option>
             <option value="Dumbbell PUllover">Dumbbell PUllover</option>
-            <option value="Barbell Pullover">Barbell Pullover</option>
             <option value="Dumbbell Upright Row">Dumbbell Upright Row</option>
             <option value="Dumbbell Upright Row - Elbow">Dumbbell Upright Row - Elbow</option>
             <option value="High Row">High Row</option>
@@ -402,6 +403,7 @@ padding: 0 0 0 20px;
             <option value="Reverse Dumbbell Fly">Reverse Dumbbell Fly</option>
             <option value="Pull ups">Pull ups</option>
             <option value="Push ups">Push ups</option>
+            <option value="Push ups - deficit, decline">Push ups - deficit, decline</option>
 	    <option value="Seated Hip Abduction">Seated Hip Abduction</option>
 	    <option value="Seated Hip Adduction">Seated Hip Adduction</option>
             <option value="Shoulder Hammer Press">Shoulder Hammer Press</option>
@@ -434,6 +436,7 @@ padding: 0 0 0 20px;
         <button type="button" class="view-tab" data-view="progress">Progress</button>
         <button type="button" class="view-tab" data-view="workout">Workout</button>
         <button type="button" class="view-tab" data-view="volume">Volume</button>
+        <button type="button" class="view-tab" data-view="athlete">Athlete</button>
     </div>
 
     <section id="chartsView" class="chart-view">
@@ -604,6 +607,12 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
 
     </section>
 
+
+    <section id="athleteView" class="athlete-view" hidden>
+        <h2>Athlete</h2>
+        <div class="athlete-view-content"></div>
+    </section>
+
     <section id="progressView" class="progress-view" hidden>
         <h2>Progress</h2>
         <div class="progress-canvas-wrap">
@@ -637,6 +646,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         import { renderNextTable } from "./js/tabs/NextView.js";
         import { buildProgressRows } from "./js/tabs/ProgressModel.js";
         import { renderProgressChart } from "./js/tabs/ProgressView.js";
+        import { renderAthleteView } from "./js/tabs/AthleteView.js";
 
         // Firebase web app configuration. These values are safe to include in a static GitHub Pages site.
         const firebaseConfig = {
@@ -657,6 +667,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         const nextView = document.getElementById("nextView");
         const benchmarksView = document.getElementById("benchmarksView");
         const progressView = document.getElementById("progressView");
+        const athleteView = document.getElementById("athleteView");
         const workoutView = document.getElementById("workoutView");
         const volumeView = document.getElementById("volumeView");
         const chartTabs = document.getElementById("chartTabs");
@@ -723,6 +734,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             "Chin ups": "Back",
 		"Leg Raises": "Back", //  core actually
             "Push ups": "Chest",
+            "Push ups - deficit, decline": "Chest",
             "Shoulder Press": "Shoulder",
             "Military Press": "Shoulder",
             "Shoulder Hammer Press": "Shoulder",
@@ -773,6 +785,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         ]);
 
         const bodyweightExercises = new Set(["Bath dips", "Chin ups", "Pull ups", "Push ups",
+            "Push ups - deficit, decline",
             "Seated Calf Raises, single", "Calf Raises, single"]);
         const squatBodyweightOffset = 144;
         const benchmarkExercises = [
@@ -988,6 +1001,12 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
                 targetReps: [12, 20, 28, 35, 40, 45, 50, 60, 70]
             },
             {
+                label: "Push ups - deficit, decline",
+                matches: ["Push ups - deficit, decline"],
+                progressGroup: "upper",
+                targetReps: [2,8,12,17,20,24,27,33,40]
+            },
+            {
                 label: "Bench Press",
                 matches: ["Bench Press"],
                 progressGroup: "upper",
@@ -1161,6 +1180,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
 		exercise === "Calf Raises, single" ||
 		exercise === "Chin ups" || exercise === "Pull ups" ||
 		exercise === "Push ups" ||
+                exercise === "Push ups - deficit, decline" ||
 		exercise === "Bath dips" ) {
                 var ret = entry.weight + squatBodyweightOffset;
                 return ret;
@@ -2028,6 +2048,7 @@ workouts.forEach((workout, workoutIndex) => {
             nextView.hidden = view !== "next";
             benchmarksView.hidden = view !== "benchmarks";
             progressView.hidden = view !== "progress";
+            athleteView.hidden = view !== "athlete";
             workoutView.hidden = view !== "workout";
             volumeView.hidden = view !== "volume";
 
@@ -2094,7 +2115,10 @@ workouts.forEach((workout, workoutIndex) => {
                         volumeWeeklySetsChart = null;
                     }
                     renderProgress(latestEntries);
-		} else if (view === "workout") {
+		} else if (view === "athlete") {
+                    renderAthleteView();
+                }
+                else if (view === "workout") {
                     if (volumeWeeklySetsChart) {
                         volumeWeeklySetsChart.destroy();
                         volumeWeeklySetsChart = null;
@@ -2489,7 +2513,12 @@ const contributions = {
         triceps: 0.5,
         frontDelts: 0.5
     },
-
+    "Push ups - deficit, decline": {
+        chest: 1.0,
+        triceps: 0.5,
+        frontDelts: 0.5,
+        core: 0.25
+    },
     "Push ups": {
         chest: 1.0,
         triceps: 0.5,
