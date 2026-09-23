@@ -39,23 +39,20 @@ export function renderAthleteView() {
 
     function createTable(title, getValue, formatValue = formatNumber) {
         let table = `
-            <h2>${title}</h2>
+            <h4>${title}</h4>
 
             <table class="strength-table mope">
-                <thead>
-                    <tr>
-                        <th>Exercise</th>
-                        ${levels.map(level => `<th>${level}</th>`).join("")}
-                    </tr>
-                </thead>
-
                 <tbody>
+                    <tr>
+                        <td>Exercise</td>
+                        ${levels.map(level => `<td>${level}</td>`).join("")}
+                    </tr>
         `;
 
         strengthData.forEach(row => {
             table += `
                 <tr>
-                    <th>${row.exercise}</th>
+                    <td>${row.exercise}</td>
             `;
 
             row.values.forEach((value, index) => {
@@ -94,7 +91,7 @@ export function renderAthleteView() {
 
     // 2. Weight based on 150 lb bodyweight
     const bodyweightTable = createTable(
-        "Strength Standards — 150 lb Bodyweight",
+        "Strength Standards 1 RM — 150 lb Bodyweight",
 
         (row, value) => {
             if (row.pullups) {
