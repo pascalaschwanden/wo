@@ -5,15 +5,15 @@ export function renderAthleteView(benchmarkState) {
         { exercise: "Bench Press",           values: [0.75, 1.0, 1.3, 1.5, 1.75] },
         { exercise: "Squat",                 values: [1.0, 1.2, 1.5, 1.75, 2.0] },
         { exercise: "Deadlift",              values: [1.0, 1.3, 1.65, 2.0, 2.5] },
-        { exercise: "Military Press",        values: [0.5, 0.65, 0.85, 1.0, 1.25] },
-        { exercise: "Barbell Row",           values: [0.6, 0.8, 1.0, 1.2, 1.4] },
+        { exercise: "Military Press",        values: [0.41, 0.57, 0.77, 1.01,1.26]},
+        { exercise: "Barbell Row",           values: [0.56,0.80, 1.1, 1.44, 1.82] },
         { exercise: "Good Morning",           values: [0.4, 0.55, 0.7, 0.85, 1.0] },
-        { exercise: "Barbell Bicep Curl",    values: [0.25, 0.35, 0.45, 0.55, 0.65] },
-        { exercise: "Skull Crushers",        values: [0.25, 0.35, 0.45, 0.55, 0.65] },
-        { exercise: "Squat - bulgarian",     values: [0.35, 0.5, 0.65, 0.8, 1.0] },
+        { exercise: "Barbell Bicep Curl",    values: [0.26, 0.41, .59, .82, 1.07] },
+        { exercise: "Skull Crushers",        values: [0.23, 0.36, 0.53, 0.75, 0.98] },
+        { exercise: "Squat - bulgarian",     values: [0.21, 0.46, 0.82, 1.29, 1.84] },
         // { exercise: "Calf Raises, single", values: [0.25, 0.4, 0.55, 0.7, 0.85] },
-        { exercise: "Side Laterals",         values: [0.1, 0.15, 0.2, 0.25, 0.30] },
-        { exercise: "Hip Thrust",            values: [1, 1.5, 2, 2.5, 3] },
+        { exercise: "Side Laterals",         values: [0.067, 0.133, 0.233, 0.353, 0.50] },
+        { exercise: "Hip Thrust",            values: [0.62, 1.13, 1.83, 2.71, 3.69] },
         { exercise: "Pull ups",              values: [3, 8, 12, 15, 20], pullups: true }
     ];
 
