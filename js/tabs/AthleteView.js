@@ -9,12 +9,12 @@ export function renderAthleteView(benchmarkState) {
         { exercise: "Barbell Row",           values: [0.6, 0.8, 1.0, 1.2, 1.4] },
         { exercise: "Good Morning",           values: [0.4, 0.55, 0.7, 0.85, 1.0] },
         { exercise: "Barbell Bicep Curl",    values: [0.25, 0.35, 0.45, 0.55, 0.65] },
-        { exercise: "Skull Crushers",       values: [0.25, 0.35, 0.45, 0.55, 0.65] },
-        { exercise: "Squat - bulgarian",    values: [0.35, 0.5, 0.65, 0.8, 1.0] },
-        { exercise: "Calf Raises, single",  values: [0.25, 0.4, 0.55, 0.7, 0.85] },
-        { exercise: "Side Laterals",        values: [0.1, 0.15, 0.2, 0.25, 0.30]},
-        { exercise: "Hip Thrust",           values: [1,1.5,2,2.5,3]},
-        { exercise: "Pull ups",               values: [3, 8, 12, 15, 20], pullups: true }
+        { exercise: "Skull Crushers",        values: [0.25, 0.35, 0.45, 0.55, 0.65] },
+        { exercise: "Squat - bulgarian",     values: [0.35, 0.5, 0.65, 0.8, 1.0] },
+        // { exercise: "Calf Raises, single", values: [0.25, 0.4, 0.55, 0.7, 0.85] },
+        { exercise: "Side Laterals",         values: [0.1, 0.15, 0.2, 0.25, 0.30] },
+        { exercise: "Hip Thrust",            values: [1, 1.5, 2, 2.5, 3] },
+        { exercise: "Pull ups",              values: [3, 8, 12, 15, 20], pullups: true }
     ];
 
     const levels = [
@@ -59,6 +59,13 @@ export function renderAthleteView(benchmarkState) {
         return Math.round(value).toString();
     }
 
+    function formatMultiple(value) {
+        return `×${value
+            .toFixed(2)
+            .replace(/0+$/, "")
+            .replace(/\.$/, "")}`;
+    }
+
 
     // ---------------------------------------------------------
     // Convert 1RM to equivalent rep max
@@ -75,29 +82,26 @@ export function renderAthleteView(benchmarkState) {
 
     function getCurrentLevel(row) {
 
-        const currentOneRM =
+        const currentValue =
             currentOneRMs[row.exercise];
 
         if (
-            currentOneRM === null ||
-            currentOneRM === undefined
+            currentValue === null ||
+            currentValue === undefined
         ) {
-            return -1;
-        }
-
-        // Pull-ups use repetitions rather than weight.
-        if (row.pullups) {
             return -1;
         }
 
         let currentLevel = -1;
 
-        row.values.forEach((multiple, index) => {
+        row.values.forEach((benchmark, index) => {
 
-            const benchmarkWeight =
-                multiple * bodyweight;
+            const benchmarkValue =
+                row.pullups
+                    ? benchmark
+                    : benchmark * bodyweight;
 
-            if (currentOneRM >= benchmarkWeight) {
+            if (currentValue >= benchmarkValue) {
                 currentLevel = index;
             }
         });
@@ -155,8 +159,7 @@ export function renderAthleteView(benchmarkState) {
                     getValue(row, value, index);
 
                 const isCurrentLevel =
-                    index === currentLevel &&
-                    !row.pullups;
+                    index === currentLevel;
 
 
                 const displayedValue =
@@ -236,7 +239,7 @@ export function renderAthleteView(benchmarkState) {
         (value, row) =>
             row.pullups
                 ? formatNumber(value)
-                : `×${formatNumber(value)}`,
+                : formatMultiple(value),
 
         // Current value as a bodyweight multiple
         (row, currentOneRM) =>
@@ -247,7 +250,7 @@ export function renderAthleteView(benchmarkState) {
         (value, row) =>
             row.pullups
                 ? formatNumber(value)
-                : `×${formatNumber(value)}`
+                : formatMultiple(value)
     );
 
 
