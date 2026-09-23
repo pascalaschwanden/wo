@@ -8,11 +8,13 @@ export function renderAthleteView(benchmarkState) {
         { exercise: "Military Press",        values: [0.5, 0.65, 0.85, 1.0, 1.25] },
         { exercise: "Barbell Row",           values: [0.6, 0.8, 1.0, 1.2, 1.4] },
         { exercise: "Good Morning",           values: [0.4, 0.55, 0.7, 0.85, 1.0] },
-        { exercise: "Bicep Curl",             values: [0.25, 0.35, 0.45, 0.55, 0.65] },
-        { exercise: "Tricep Skull Crusher",  values: [0.25, 0.35, 0.45, 0.55, 0.65] },
-        { exercise: "Bulgarian Split Squat", values: [0.35, 0.5, 0.65, 0.8, 1.0] },
-        { exercise: "Single-Leg Calf Raise", values: [0.25, 0.4, 0.55, 0.7, 0.85] },
-        { exercise: "Pull-ups",               values: [3, 8, 12, 15, 20], pullups: true }
+        { exercise: "Barbell Bicep Curl",    values: [0.25, 0.35, 0.45, 0.55, 0.65] },
+        { exercise: "Skull Crushers",       values: [0.25, 0.35, 0.45, 0.55, 0.65] },
+        { exercise: "Squat - bulgarian",    values: [0.35, 0.5, 0.65, 0.8, 1.0] },
+        { exercise: "Calf Raises, single",  values: [0.25, 0.4, 0.55, 0.7, 0.85] },
+        { exercise: "Side Laterals",        values: [0.1, 0.15, 0.2, 0.25, 0.30]},
+        { exercise: "Hip Thrust",           values: [1,1.5,2,2.5,3]},
+        { exercise: "Pull ups",               values: [3, 8, 12, 15, 20], pullups: true }
     ];
 
     const levels = [
@@ -54,11 +56,7 @@ export function renderAthleteView(benchmarkState) {
     // ---------------------------------------------------------
 
     function formatNumber(value) {
-        if (Number.isInteger(value)) {
-            return value.toString();
-        }
-
-        return value.toFixed(1).replace(/\.0$/, "");
+        return Math.round(value).toString();
     }
 
 
