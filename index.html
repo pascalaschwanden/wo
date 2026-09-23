@@ -1182,8 +1182,9 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         function getBenchmarkLiftWeight(entry) {
             const exercise = getExerciseLabel(entry.exercise);
 
-            //  exercise.indexOf("Squat") > -1 ||
+            //
             if ( //exercise === "Calf Raises, single" ||
+                exercise.indexOf("Squat") > -1 ||
 		//exercise === "Chin ups" || exercise === "Pull ups" ||
 		exercise === "Push ups" ||
                 exercise === "Push ups - deficit, decline" ||
