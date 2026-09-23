@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workout Tracker</title>
     <style>
-
+.current-strength-level {
+    background-color: #c6efce !important;
+}
 .leftMAV {
 padding: 0 0 0 30px;
 }
@@ -1176,8 +1178,8 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         function getBenchmarkLiftWeight(entry) {
             const exercise = getExerciseLabel(entry.exercise);
 
-            if (exercise.indexOf("Squat") > -1 ||
-		exercise === "Calf Raises, single" ||
+            //  exercise.indexOf("Squat") > -1 ||
+            if ( exercise === "Calf Raises, single" ||
 		exercise === "Chin ups" || exercise === "Pull ups" ||
 		exercise === "Push ups" ||
                 exercise === "Push ups - deficit, decline" ||
@@ -1338,6 +1340,8 @@ function renderBenchmarks(entries, startTimestamp) {
         getEstimatedOneRepMax,
         getLinearFit
     });
+
+    window.benchmarkState = benchmarkState;
 
     renderBenchmarksView(benchmarkGrid, benchmarkChartsByKey, benchmarkState, {
         getDateLabel
@@ -2116,7 +2120,7 @@ workouts.forEach((workout, workoutIndex) => {
                     }
                     renderProgress(latestEntries);
 		} else if (view === "athlete") {
-                    renderAthleteView();
+                    renderAthleteView(window.benchmarkState);
                 }
                 else if (view === "workout") {
                     if (volumeWeeklySetsChart) {
