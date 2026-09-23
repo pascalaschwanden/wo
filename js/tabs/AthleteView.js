@@ -1,6 +1,5 @@
 export function renderAthleteView(benchmarkState) {
     const bodyweight = 150;
-    console.dir(benchmarkState);
 
     const strengthData = [
         { exercise: "Bench Press",           values: [0.75, 1.0, 1.3, 1.5, 1.75] },
@@ -116,7 +115,9 @@ export function renderAthleteView(benchmarkState) {
     function createTable(
         title,
         getValue,
-        formatValue = formatNumber
+        formatValue = formatNumber,
+        getCurrentValue = null,
+        formatCurrentValue = formatNumber
     ) {
 
         let table = `
@@ -133,20 +134,22 @@ export function renderAthleteView(benchmarkState) {
                         ).join("")}
 
                     </tr>
-          
-
-                
         `;
+
 
         strengthData.forEach(row => {
 
             const currentLevel =
                 getCurrentLevel(row);
 
+            const currentOneRM =
+                currentOneRMs[row.exercise];
+
             table += `
                 <tr>
                     <td>${row.exercise}</td>
             `;
+
 
             row.values.forEach((value, index) => {
 
@@ -157,24 +160,60 @@ export function renderAthleteView(benchmarkState) {
                     index === currentLevel &&
                     !row.pullups;
 
+
+                const displayedValue =
+                    formatValue(
+                        calculatedValue,
+                        row
+                    );
+
+
+                // Show the user's actual current value
+                // underneath the benchmark value.
+                let currentValueDisplay = "";
+
+                if (
+                    isCurrentLevel &&
+                    currentOneRM !== null &&
+                    currentOneRM !== undefined &&
+                    getCurrentValue
+                ) {
+                    const currentValue =
+                        getCurrentValue(
+                            row,
+                            currentOneRM
+                        );
+
+                    currentValueDisplay = `
+                        <br>
+                        <small>
+                            ${formatCurrentValue(
+                                currentValue,
+                                row
+                            )}
+                        </small>
+                    `;
+                }
+
+
                 table += `
                     <td class="${
                         isCurrentLevel
                             ? "current-strength-level"
                             : ""
                     }">
-                        ${formatValue(
-                            calculatedValue,
-                            row
-                        )}
+                        ${displayedValue}
+                        ${currentValueDisplay}
                     </td>
                 `;
             });
+
 
             table += `
                 </tr>
             `;
         });
+
 
         table += `
                 </tbody>
@@ -190,9 +229,22 @@ export function renderAthleteView(benchmarkState) {
     // ---------------------------------------------------------
 
     const multiplesTable = createTable(
+
         "Strength Standards — Multiples of Bodyweight",
 
-        (row, value) => value,
+        (row, value) =>
+            value,
+
+        (value, row) =>
+            row.pullups
+                ? formatNumber(value)
+                : `×${formatNumber(value)}`,
+
+        // Current value as a bodyweight multiple
+        (row, currentOneRM) =>
+            row.pullups
+                ? currentOneRM
+                : currentOneRM / bodyweight,
 
         (value, row) =>
             row.pullups
@@ -206,12 +258,26 @@ export function renderAthleteView(benchmarkState) {
     // ---------------------------------------------------------
 
     const bodyweightTable = createTable(
+
         "Strength Standards — 150 lb Bodyweight",
 
         (row, value) =>
             row.pullups
                 ? value
-                : value * bodyweight
+                : value * bodyweight,
+
+        formatNumber,
+
+        // Current 1RM
+        (row, currentOneRM) =>
+            row.pullups
+                ? currentOneRM
+                : currentOneRM,
+
+        (value, row) =>
+            row.pullups
+                ? formatNumber(value)
+                : `${formatNumber(value)} lb`
     );
 
 
@@ -220,6 +286,7 @@ export function renderAthleteView(benchmarkState) {
     // ---------------------------------------------------------
 
     const fiveRepTable = createTable(
+
         "5-Rep Max Equivalent",
 
         (row, value) =>
@@ -228,7 +295,20 @@ export function renderAthleteView(benchmarkState) {
                 : repMax(
                     value * bodyweight,
                     5
-                )
+                ),
+
+        formatNumber,
+
+        // Current 5RM calculated from current 1RM
+        (row, currentOneRM) =>
+            row.pullups
+                ? currentOneRM
+                : repMax(currentOneRM, 5),
+
+        (value, row) =>
+            row.pullups
+                ? formatNumber(value)
+                : `${formatNumber(value)} lb`
     );
 
 
@@ -237,6 +317,7 @@ export function renderAthleteView(benchmarkState) {
     // ---------------------------------------------------------
 
     const tenRepTable = createTable(
+
         "10-Rep Max Equivalent",
 
         (row, value) =>
@@ -245,7 +326,20 @@ export function renderAthleteView(benchmarkState) {
                 : repMax(
                     value * bodyweight,
                     10
-                )
+                ),
+
+        formatNumber,
+
+        // Current 10RM calculated from current 1RM
+        (row, currentOneRM) =>
+            row.pullups
+                ? currentOneRM
+                : repMax(currentOneRM, 10),
+
+        (value, row) =>
+            row.pullups
+                ? formatNumber(value)
+                : `${formatNumber(value)} lb`
     );
 
 
@@ -254,6 +348,7 @@ export function renderAthleteView(benchmarkState) {
     // ---------------------------------------------------------
 
     const twentyRepTable = createTable(
+
         "20-Rep Max Equivalent",
 
         (row, value) =>
@@ -262,7 +357,20 @@ export function renderAthleteView(benchmarkState) {
                 : repMax(
                     value * bodyweight,
                     20
-                )
+                ),
+
+        formatNumber,
+
+        // Current 20RM calculated from current 1RM
+        (row, currentOneRM) =>
+            row.pullups
+                ? currentOneRM
+                : repMax(currentOneRM, 20),
+
+        (value, row) =>
+            row.pullups
+                ? formatNumber(value)
+                : `${formatNumber(value)} lb`
     );
 
 
