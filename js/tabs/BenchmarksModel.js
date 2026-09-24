@@ -1,3 +1,27 @@
+function getBenchmarkOneRepMax(entry) {
+    const exercise = getExerciseLabel(entry.exercise);
+
+    const isBodyweightExercise =
+        exercise === "Calf Raises, single" ||
+        exercise.indexOf("Squat") > -1 ||
+        exercise === "Chin ups" ||
+        exercise === "Pull ups" ||
+        exercise === "Push ups" ||
+        exercise === "Push ups - deficit, decline" ||
+        exercise === "Bath dips";
+
+    const liftWeight = getBenchmarkLiftWeight(entry);
+
+    const effectiveWeight = isBodyweightExercise
+        ? liftWeight + window.squatBodyweightOffset
+        : liftWeight;
+
+    return getEstimatedOneRepMax(
+        effectiveWeight,
+        entry.reps
+    );
+}
+
 function computeSlope(points) {
     var test = 0;
     test = 34;
@@ -9,6 +33,9 @@ function computeSlope(points) {
         x: (point.x - t0) / 86400,
         y: point.y
     }));
+
+    console.log("Original points:", points);
+    console.log("Normalized points:", norm);
 
     let sumX = 0;
     let sumY = 0;
@@ -57,39 +84,6 @@ function computeBenchmarkStats(points) {
     };
 }
 
-function getAlpha(exercise) {
-    if (exercise.includes("Deadlift") || exercise.includes("Squat")) return 0.15;
-    if (exercise.includes("Bench") || exercise.includes("Press")) return 0.25;
-    return 0.35;
-}
-
-function exponentialSmooth(points, alpha = 0.25) {
-    if (points.length === 0) return [];
-
-    const sorted = [...points].sort((a, b) => a.x - b.x);
-    const smoothed = [];
-    let prev = sorted[0].y;
-
-    smoothed.push({
-        x: sorted[0].x,
-        y: prev
-    });
-
-    for (let index = 1; index < sorted.length; index += 1) {
-        const current = sorted[index].y;
-        const value = alpha * current + (1 - alpha) * prev;
-
-        smoothed.push({
-            x: sorted[index].x,
-            y: value
-        });
-
-        prev = value;
-    }
-
-    return smoothed;
-}
-
 function bestPointPerDay(points) {
     const byDay = new Map();
 
@@ -129,7 +123,7 @@ function computeWeightedBenchmarkStats(
 
         groups.get(weight).push({
             x: entry.timestamp,
-            y: getEstimatedOneRepMax(weight, entry.reps)
+            y: getBenchmarkOneRepMax(entry)
         });
     });
 
@@ -227,10 +221,7 @@ export function buildBenchmarkState(entries, config, helpers) {
         const rawPoints = exerciseEntries
             .map((entry) => ({
                 x: entry.timestamp,
-                y: getEstimatedOneRepMax(
-                    getBenchmarkLiftWeight(entry),
-                    entry.reps
-                )
+                y: getBenchmarkOneRepMax(entry)
             }))
             .filter(
                 (point) =>

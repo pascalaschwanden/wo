@@ -1,5 +1,14 @@
 export function renderAthleteView(benchmarkState) {
     const bodyweight = 150;
+    console.dir(benchmarkState);
+
+        benchmarkState.charts?.forEach(chart => {
+        if (chart.name.toLowerCase().includes("squat")) {
+            chart.visiblePoints?.forEach(point => {
+                point.y -= window.squatBodyweightOffset;
+            });
+        }
+    });
 
     const strengthData = [
         { exercise: "Bench Press",           values: [0.75, 1.0, 1.3, 1.5, 1.75] },
@@ -12,7 +21,7 @@ export function renderAthleteView(benchmarkState) {
         { exercise: "Skull Crushers",        values: [0.23, 0.36, 0.53, 0.75, 0.98] },
         { exercise: "Squat - bulgarian",     values: [0.21, 0.46, 0.82, 1.29, 1.84] },
         // { exercise: "Calf Raises, single", values: [0.25, 0.4, 0.55, 0.7, 0.85] },
-        { exercise: "Side Laterals",         values: [0.067, 0.133, 0.233, 0.353, 0.50] },
+        { exercise: "Side Laterals",         values: [0.067, 0.13, 0.2, 0.3, 0.40] },
         { exercise: "Hip Thrust",            values: [0.62, 1.13, 1.83, 2.71, 3.69] },
         { exercise: "Pull ups",              values: [3, 8, 12, 15, 20], pullups: true }
     ];
@@ -138,7 +147,6 @@ export function renderAthleteView(benchmarkState) {
                     </tr>
         `;
 
-
         strengthData.forEach(row => {
 
             const currentLevel =
@@ -260,7 +268,7 @@ export function renderAthleteView(benchmarkState) {
 
     const bodyweightTable = createTable(
 
-        "Strength Standards — 150 lb Bodyweight",
+        "1 Rep Max — 150 lb Bodyweight",
 
         (row, value) =>
             row.pullups

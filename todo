@@ -1,9 +1,10 @@
+- bodyweight excercises like pull ups, bath dips and chin ups are all wrong on the benchmarks page.
 
 - add "rear delt row - barbell"
 
 - fix the need to goto benchmarks first before athleteView works.
 
-- fix Squat and Bulgarian Squat on Athlete tab because it's using bodyweight + lift weight (that's wrong)
+- Bulgarian Squat on Athlete tab
     * also, need to fix pull ups.
 
 - fix pull ups on athletes tab.
@@ -20,7 +21,22 @@ And "Hip Abd/Add" should represent the average of both excercises so, that shoul
 - fix abduction body part fractional count, check all others too.  i think it tries to map multiple excercises onto each category??
 
 ====================================
+Quick Guide to the Levels
+
+Decent / Good: You have trained consistently for 1 to 3 years. Moving heavy objects is no longer awkward or risky for you.
+
+Optimal: This is a fantastic target for long-term health, joint integrity, and functional longevity.
+Hitting these marks means you are resilient against everyday injuries.
+
+Advanced: You have spent 3 to 5+ years under the bar with structured programming. You look like you lift and
+possess real, functional power.
+
+Athlete / Elite: Competitive strength athletes or specialized sports standouts who dedicate a massive
+amount of time and recovery to performance.
+
+
 Do more: Good Morning and Front Squats.
+
 Goals:
 It takes years to get to good.  at good, you have the longevity and great health box checked.
 

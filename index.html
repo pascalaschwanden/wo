@@ -793,7 +793,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         const bodyweightExercises = new Set(["Bath dips", "Chin ups", "Pull ups", "Push ups",
             "Push ups - deficit, decline",
             "Seated Calf Raises, single", "Calf Raises, single"]);
-        const squatBodyweightOffset = 144;
+        window.squatBodyweightOffset = 144;
         const benchmarkExercises = [
             { name: "Bench Press", weeklyGain: 1.1 },
             { name: "Barbell Row", weeklyGain: 0.6 },
@@ -1067,7 +1067,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             }
         ];
 
-        function getExerciseLabel(exercise) {
+        window.getExerciseLabel = function(exercise) {
             if (exercise === "Squats") return "Squat";
             if (exercise === "deadlift") return "Deadlift";
             if (exercise === "Double dumbbell rows") return "Double Dumbbell Row";
@@ -1166,9 +1166,10 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             return intercept + (slope * targetX);
         }
 
-        function getEstimatedOneRepMax(weight, reps) {
+        window.getEstimatedOneRepMax = function(weight, reps) {
             return weight * (1 + (reps / 30));
         }
+
 
         function getEquivalentWeightForReps(oneRepMax, reps) {
             return oneRepMax / (1 + (reps / 30));
@@ -1179,7 +1180,11 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             return getEquivalentWeightForReps(oneRepMax, targetReps);
         }
 
-        function getBenchmarkLiftWeight(entry) {
+        window.getBenchmarkLiftWeight = function(entry) {
+            return entry.weight;
+        }
+
+        function getBenchmarkLiftWeightOld(entry) {
             const exercise = getExerciseLabel(entry.exercise);
 
             //
@@ -1189,7 +1194,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
 		        exercise === "Push ups" ||
                 exercise === "Push ups - deficit, decline" ||
 		        exercise === "Bath dips" ) {
-                var ret = entry.weight + squatBodyweightOffset;
+                var ret = entry.weight + window.squatBodyweightOffset;
                 return ret;
             }
             return entry.weight;
