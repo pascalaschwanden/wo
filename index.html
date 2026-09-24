@@ -393,6 +393,7 @@ padding: 0 0 0 20px;
             <option value="Dumbbell PUllover">Dumbbell PUllover</option>
             <option value="Dumbbell Upright Row">Dumbbell Upright Row</option>
             <option value="Dumbbell Upright Row - Elbow">Dumbbell Upright Row - Elbow</option>
+            <option value="Good Morning">Good Morning</option>
             <option value="High Row">High Row</option>
             <option value="Hip Thrust">Hip Thrust</option>
             <option value="Lat Pull-down">Lat Pull-down</option>
@@ -468,6 +469,12 @@ padding: 0 0 0 20px;
                 <option value="4y">4 years</option>
                 <option value="5y">5 years</option>
                 <option value="6y">6 years</option>
+                <option value="8y">8 years</option>
+                <option value="10y">10 years</option>
+                <option value="12y">12 years</option>
+                <option value="14y">14 years</option>
+                <option value="16y">16 years</option>
+                <option value="20y">20 years</option>
             </select>
             <input type="date" id="chartEndDate" aria-label="Chart end date">
         </div>
@@ -750,6 +757,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             "Cable Face Pulls": "Shoulder",
 	    "Lunge - reverse": "Legs",
 	    "Sit ups": "Back",
+            "Good Morning": "Back",
             "Squat": "Legs",
             "Squat - front": "Legs",
 		"Shrugs": "Back",
@@ -826,7 +834,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
                 ["🏋️", "Front Delt", 2, 9],
                 ["↔️", "Side Delt", 4, 19],
                 ["🔄", "Rear Delt", 3, 15],
-                ["🐉", "Core", 3, 9]
+                ["✊", "Forearms", 3, 15]
             ],
             "Chest, Arms": [
                 ["💪", "Biceps", 2, 16],
@@ -849,7 +857,8 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
                 ["🏃", "Lunge", 1, 6],
                 ["🦯", "Nordic", 2, 9],
                 ["🐄", "Calves", 4, 16],
-                ["🦵", "Hip Abd/Add", 2, 6]
+                ["🦵", "Hip Abd/Add", 2, 6],
+                ["🐉", "Core", 3, 9]
             ]
         };
         volumeSections.Other = [
@@ -859,7 +868,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { section: "Delts, Core", label: "Front Delt", type: "upper", exercises: ["Military Press", "Shoulder Press", "Shoulder Hammer Press"] },
             { section: "Delts, Core", label: "Side Delt", type: "upper", exercises: ["Lying Side Raise", "Side Laterals", "Dumbbell Upright Row"] },
             { section: "Delts, Core", label: "Rear Delt", type: "upper", exercises: ["Lying Reverse Fly", "Reverse Fly"] },
-            { section: "Delts, Core", label: "Core", type: "extra", exercises: ["Leg Raises", "Roll Out Wheel"] },
+            { section: "Delts, Core", label: "Forearms", type: "upper", exercises: ["Forearm Barbell Curl", "Reverse Curl", "Wrist Extensions"]},
             { section: "Chest, Arms", label: "Flys", type: "upper", exercises: ["Chest Flys"] },
             { section: "Chest, Arms", label: "Push Type", type: "upper", exercises: ["Bench Press"] },
             { section: "Chest, Arms", label: "Biceps", type: "upper", exercises: ["Bicep Curls", "Barbell Bicep Curls", "Clown Curl"] },
@@ -870,7 +879,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
                 exercises: ["Pullovers", "Dumbbell PUllover", "Barbell Pullover"]
             },
 	    { section: "Back", label: "Shrugs", type: "upper", exercises: ["Shrugs"] },
-            { section: "Legs", label: "Deadlifts, RDL", type: "lower", exercises: ["Deadlift", "Deadlift - Romanian"] },
+            { section: "Legs", label: "Deadlifts, RDL", type: "lower", exercises: ["Deadlift", "Deadlift - Romanian", "Good Morning"] },
             { section: "Legs", label: "Hip Abd/Add", type: "lower", exercises: ["Standing Leg Side Raise", "Copenhagen Plank - Dynamic", "Side-Lying Hip Adduction"]},
             { section: "Legs", label: "Hip Thrust", type: "lower", exercises: ["Hip Thrust"] },
             { section: "Legs", label: "Squats", type: "lower", exercises: ["Squat"] },
@@ -879,6 +888,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { section: "Legs", label: "Lunge", type: "lower", exercises: [ "Lunge - reverse"] },
             { section: "Legs", label: "Nordic", type: "lower", exercises: ["Nordic Curl"] },
             { section: "Legs", label: "Calves", type: "lower", exercises: ["Calf Raises", "Seated Calf Raises"] },
+            { section: "Legs", label: "Core", type: "extra", exercises: ["Leg Raises", "Roll Out Wheel", "Sit ups"] },
             { section: "Other", label: "Cardio 10m", type: "extra", exercises: ["Cardio 10m"] }
         ];
         let volumeCounters = {};
@@ -2816,6 +2826,17 @@ const contributions = {
         abductors: 0.25
     },
 
+    "Good Mornings": {
+    quads: 0.1,
+    hamstrings: 0.7,
+    glutes: 0.6,
+    calves: 0.1,
+    adductors: 0.2,
+    abductors: 0.1,
+    back: 1.0,
+    core: 0.4
+},
+    
     "Calf Raises": {
         quads: 0.0,
         hamstrings: 0.0,
