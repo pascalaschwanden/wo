@@ -1,9 +1,10 @@
 function getBenchmarkOneRepMax(entry) {
     const exercise = getExerciseLabel(entry.exercise);
 
+    const isSquat =
+        exercise.indexOf("Squat") > -1;
+
     const isBodyweightExercise =
-        exercise === "Calf Raises, single" ||
-        exercise.indexOf("Squat") > -1 ||
         exercise === "Chin ups" ||
         exercise === "Pull ups" ||
         exercise === "Push ups" ||
@@ -12,12 +13,32 @@ function getBenchmarkOneRepMax(entry) {
 
     const liftWeight = getBenchmarkLiftWeight(entry);
 
-    const effectiveWeight = isBodyweightExercise
-        ? liftWeight + window.squatBodyweightOffset
-        : liftWeight;
+    // Squats: calculate Epley from barbell weight,
+    // then add bodyweight afterward.
+    if (isSquat) {
+        const oneRepMax = getEstimatedOneRepMax(
+            liftWeight,
+            entry.reps
+        );
 
+        return oneRepMax + window.squatBodyweightOffset;
+    }
+
+    // Bodyweight exercises: add bodyweight BEFORE Epley
+    // so reps affect the effective 1RM.
+    if (isBodyweightExercise) {
+        const effectiveWeight =
+            liftWeight + window.squatBodyweightOffset;
+
+        return getEstimatedOneRepMax(
+            effectiveWeight,
+            entry.reps
+        );
+    }
+
+    // Everything else: normal Epley.
     return getEstimatedOneRepMax(
-        effectiveWeight,
+        liftWeight,
         entry.reps
     );
 }
