@@ -2,14 +2,6 @@ export function renderAthleteView(benchmarkState) {
     const bodyweight = 150;
     console.dir(benchmarkState);
 
-        benchmarkState.charts?.forEach(chart => {
-        if (chart.name.toLowerCase().includes("squat")) {
-            chart.visiblePoints?.forEach(point => {
-                point.y -= window.squatBodyweightOffset;
-            });
-        }
-    });
-
     const strengthData = [
         { exercise: "Bench Press",           values: [0.75, 1.0, 1.3, 1.5, 1.75] },
         { exercise: "Squat",                 values: [1.0, 1.2, 1.5, 1.75, 2.0] },
@@ -54,7 +46,12 @@ export function renderAthleteView(benchmarkState) {
                         chart.visiblePoints.length - 1
                     ];
 
-                currentOneRMs[chart.name] = lastPoint.y;
+                if (chart.name.toLowerCase().includes("squat")) {
+                    currentOneRMs[chart.name] =
+                        lastPoint.y - window.squatBodyweightOffset;
+                } else {
+                    currentOneRMs[chart.name] = lastPoint.y;
+                }
             }
         });
     }
