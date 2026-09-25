@@ -38,28 +38,41 @@ export function renderAthleteView(benchmarkState) {
 
     const currentOneRMs = {};
 
+    // const currentOneRMs = {};
+
     if (benchmarkState?.charts) {
-        benchmarkState.charts.forEach(chart => {
+        benchmarkState.charts.forEach((chart, x) => {
 
-            if (
-                !chart.empty &&
-                chart.visiblePoints &&
-                chart.visiblePoints.length > 0
-            ) {
-                const lastPoint =
-                    chart.visiblePoints[
-                        chart.visiblePoints.length - 1
-                    ];
+        if (
+            !chart.empty &&
+            chart.visiblePoints &&
+            chart.visiblePoints.length > 0
+        ) {
+            const y = chart.visiblePoints.length - 1;
 
-                if (chart.name.toLowerCase().includes("squat")) {
-                    currentOneRMs[chart.name] = lastPoint.y2;
-                } else {
-                    currentOneRMs[chart.name] = lastPoint.y;
-                }
+            const lastPoint =
+                chart.visiblePoints[y];
+
+            const row =
+                strengthData.find(
+                    item => item.exercise === chart.name
+                );
+
+            if (row?.byReps) {
+                currentOneRMs[chart.name] =
+                    benchmarkState.charts[x]
+                        .visiblePoints[y]
+                        .entry.reps;
+            } else if (chart.name.toLowerCase().includes("squat")) {
+                currentOneRMs[chart.name] = lastPoint.y2;
+            } else {
+                currentOneRMs[chart.name] = lastPoint.y;
             }
-        });
+        }
+    });
     }
 
+    console.dir(currentOneRMs);
 
     // ---------------------------------------------------------
     // Formatting
@@ -108,7 +121,7 @@ export function renderAthleteView(benchmarkState) {
 
             const benchmarkValue =
                 row.byReps
-                    ? (bodyweight * (benchmark/30)) + bodyweight
+                    ? benchmark
                     : benchmark * bodyweight;
 
             if (currentValue >= benchmarkValue) {
@@ -118,7 +131,6 @@ export function renderAthleteView(benchmarkState) {
 
         return currentLevel;
     }
-
 
     // ---------------------------------------------------------
     // Create table
@@ -178,33 +190,35 @@ export function renderAthleteView(benchmarkState) {
                     );
 
 
-                // Show the user's actual current value
-                // underneath the benchmark value.
+                // Show the user's actual current value underneath
+                // the benchmark value for the current level.
+                //
+                // For byReps exercises, currentOneRM is actually
+                // the user's real rep count.
                 let currentValueDisplay = "";
 
                 if (
                     isCurrentLevel &&
                     currentOneRM !== null &&
-                    currentOneRM !== undefined &&
-                    getCurrentValue
+                    currentOneRM !== undefined
                 ) {
                     const currentValue =
-                        getCurrentValue(
-                            row,
-                            currentOneRM
-                        );
+                        row.byReps
+                            ? currentOneRM
+                            : getCurrentValue
+                                ? getCurrentValue(row, currentOneRM)
+                                : currentOneRM;
 
                     currentValueDisplay = `
                         <br>
                         <small>
-                            ${formatCurrentValue(
-                                currentValue,
-                                row
-                            )}
+                            ${row.byReps
+                                ? `${formatNumber(currentValue)} reps`
+                                : formatCurrentValue(currentValue, row)
+                            }
                         </small>
                     `;
                 }
-
 
                 table += `
                     <td class="${
