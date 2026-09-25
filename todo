@@ -2,13 +2,6 @@
 
 - add "rear delt row - barbell"
 
-- fix the need to goto benchmarks first before athleteView works.
-
-- Bulgarian Squat on Athlete tab
-    * also, need to fix pull ups.
-
-- fix pull ups on athletes tab.
-
 - On the workouts tab, where it calculates the partial set counts, i think there might be some bug.  for example i have 12 sets in the input box but the calcualtion for calves shows 8.
 And "Hip Abd/Add" should represent the average of both excercises so, that should increase Adductors by 0.5 and abductors by 0.5
 

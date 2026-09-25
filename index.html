@@ -1226,7 +1226,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
                 }
                 benchmarkSettingsLoaded = true;
                 if (activeView === "benchmarks") {
-                    renderBenchmarks(latestEntries);
+                    renderBenchmarks(latestEntries, undefined, true);
                 }
             }, (error) => {
                 console.error("Error loading benchmark settings: ", error);
@@ -1348,7 +1348,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             });
         }
 
-function renderBenchmarks(entries, startTimestamp) {
+function renderBenchmarks(entries, startTimestamp, showMeNow) {
     const benchmarkStart = startTimestamp ?? getBenchmarkStartTimestamp();
     const benchmarkState = buildBenchmarkState(entries, {
         benchmarkExercises,
@@ -1363,9 +1363,12 @@ function renderBenchmarks(entries, startTimestamp) {
 
     window.benchmarkState = benchmarkState;
 
-    renderBenchmarksView(benchmarkGrid, benchmarkChartsByKey, benchmarkState, {
-        getDateLabel
-    });
+    //  undefined allow it to rerender.
+    if( showMeNow !== false ) {
+        renderBenchmarksView(benchmarkGrid, benchmarkChartsByKey, benchmarkState, {
+            getDateLabel
+        });
+    }
 }
 
         function getProgressTargetValue(target) {
@@ -2126,11 +2129,11 @@ workouts.forEach((workout, workoutIndex) => {
                         volumeWeeklySetsChart = null;
                     }
                     if (benchmarkSettingsLoaded) {
-                        renderBenchmarks(latestEntries);
+                        renderBenchmarks(latestEntries, undefined, true);
                     } else {
                         benchmarkGrid.innerHTML = "Loading benchmarks...";
                     }
-//renderBenchmarks(latestEntries, getBenchmarkStartTimestamp());
+
                 } else if (view === "progress") {
                     benchmarkChartsByKey.forEach((chart) => chart.destroy());
                     benchmarkChartsByKey.clear();
@@ -2140,6 +2143,7 @@ workouts.forEach((workout, workoutIndex) => {
                     }
                     renderProgress(latestEntries);
 		} else if (view === "athlete") {
+                    renderBenchmarks(latestEntries, undefined, false);
                     renderAthleteView(window.benchmarkState);
                 }
                 else if (view === "workout") {
@@ -2325,7 +2329,7 @@ workouts.forEach((workout, workoutIndex) => {
 const newTimestamp = Math.floor(
     new Date(e.target.value).getTime() / 1000
 );
-    		renderBenchmarks(latestEntries, newTimestamp);
+    		renderBenchmarks(latestEntries, newTimestamp, true);
             }
         });
 

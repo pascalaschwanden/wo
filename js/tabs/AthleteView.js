@@ -11,7 +11,7 @@ export function renderAthleteView(benchmarkState) {
         //{ exercise: "Good Morning",           values: [0.4, 0.55, 0.7, 0.85, 1.0] },
         { exercise: "Barbell Bicep Curl",    values: [0.26, 0.41, .59, .82, 1.07] },
         { exercise: "Skull Crushers",        values: [0.23, 0.36, 0.53, 0.75, 0.98] },
-        { exercise: "Squat - bulgarian",     values: [0.21, 0.46, 0.82, 1.29, 1.84] },
+        //{ exercise: "Squat - bulgarian",     values: [0.21, 0.46, 0.82, 1.29, 1.84] },
         // { exercise: "Calf Raises, single", values: [0.25, 0.4, 0.55, 0.7, 0.85] },
         { exercise: "Side Laterals",         values: [0.067, 0.13, 0.2, 0.3, 0.40] },
         { exercise: "Hip Thrust",            values: [0.62, 1.13, 1.83, 2.71, 3.69] },
