@@ -1,4 +1,4 @@
-function getBenchmarkOneRepMax(entry) {
+function getBenchmarkOneRepMax(entry, noBodyWeight) {
     const exercise = getExerciseLabel(entry.exercise);
 
     const isSquat =
@@ -13,15 +13,23 @@ function getBenchmarkOneRepMax(entry) {
 
     const liftWeight = getBenchmarkLiftWeight(entry);
 
-    // Squats: calculate Epley from barbell weight,
-    // then add bodyweight afterward.
+    // Squats: add bodyweight to the barbell weight BEFORE Epley
+    // because bodyweight is also being lifted.
     if (isSquat) {
-        const oneRepMax = getEstimatedOneRepMax(
-            liftWeight,
+
+        if(noBodyWeight) {
+            const oneRepMax = getEstimatedOneRepMax(
+            liftWeight, entry.reps );
+            return oneRepMax + window.squatBodyweightOffset;
+        }
+
+        const effectiveWeight =
+            liftWeight + window.squatBodyweightOffset;
+
+        return getEstimatedOneRepMax(
+            effectiveWeight,
             entry.reps
         );
-
-        return oneRepMax + window.squatBodyweightOffset;
     }
 
     // Bodyweight exercises: add bodyweight BEFORE Epley
@@ -54,9 +62,6 @@ function computeSlope(points) {
         x: (point.x - t0) / 86400,
         y: point.y
     }));
-
-    console.log("Original points:", points);
-    console.log("Normalized points:", norm);
 
     let sumX = 0;
     let sumY = 0;
@@ -144,7 +149,9 @@ function computeWeightedBenchmarkStats(
 
         groups.get(weight).push({
             x: entry.timestamp,
-            y: getBenchmarkOneRepMax(entry)
+            y: getBenchmarkOneRepMax(entry),
+            y2: getBenchmarkOneRepMax(entry, true) - window.squatBodyweightOffset,
+            entry: entry
         });
     });
 
@@ -242,7 +249,9 @@ export function buildBenchmarkState(entries, config, helpers) {
         const rawPoints = exerciseEntries
             .map((entry) => ({
                 x: entry.timestamp,
-                y: getBenchmarkOneRepMax(entry)
+                y: getBenchmarkOneRepMax(entry),
+                y2: getBenchmarkOneRepMax(entry, true) - window.squatBodyweightOffset,
+                entry: entry
             }))
             .filter(
                 (point) =>
