@@ -1,11 +1,6 @@
-- bodyweight excercises like pull ups, bath dips and chin ups are all wrong on the benchmarks page.
-
-- add "rear delt row - barbell"
 
 - On the workouts tab, where it calculates the partial set counts, i think there might be some bug.  for example i have 12 sets in the input box but the calcualtion for calves shows 8.
 And "Hip Abd/Add" should represent the average of both excercises so, that should increase Adductors by 0.5 and abductors by 0.5
-
-- Add Good Morning and add it to the volume planner, prone cobra?
 
 - add weekly volumes to the backup, make backup so it doesn't use too much space, very compact but still human readable and recoverable
 
