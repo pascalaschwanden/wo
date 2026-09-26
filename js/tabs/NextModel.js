@@ -7,14 +7,18 @@ export function buildNextRows(entries, helpers) {
         //"Overhead tricep extention", 
 	"Push ups", "Squat - bulgarian",
         "Barbell Pullover",
+        "Good Morning",
         "Lunge - reverse", "Bench Press", "Shoulder Hammer Press",
         "Lying Reverse Fly", "Reverse Dumbbell Fly", "Leg Raises",
-        "Bicep Curl", "Barbell Row", 
+        //"Bicep Curl",
+        "Barbell Row",
 	//"Chest Fly Bench", 
 	"Lying Side Raise",
         "Deadlif - Romanian", "Barbell Bicep Curl", "Side Laterals",
         "Bath dips", "Hip Thrust", "Calf Raises, single", "Military Press",
-        "Skull Crushers", "Step Up", "Squat", "Deadlift"
+        "Skull Crushers",
+        //"Step Up",
+        "Squat", "Deadlift"
     ]);
 
     const exerciseHistory = entries.reduce((history, entry) => {
