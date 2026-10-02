@@ -393,6 +393,7 @@ padding: 0 0 0 20px;
             <option value="Dumbbell PUllover">Dumbbell PUllover</option>
             <option value="Dumbbell Upright Row">Dumbbell Upright Row</option>
             <option value="Dumbbell Upright Row - Elbow">Dumbbell Upright Row - Elbow</option>
+            <option value="Finger Curl - barbell">Finger Curl - barbell</option>
             <option value="Good Morning">Good Morning</option>
             <option value="High Row">High Row</option>
             <option value="Hip Thrust">Hip Thrust</option>
@@ -408,6 +409,8 @@ padding: 0 0 0 20px;
             <option value="Military Press">Military Press</option>
             <option value="Overhead tricep extention">Overhead tricep extention</option>
             <option value="Reverse Dumbbell Fly">Reverse Dumbbell Fly</option>
+            <option value="Palm-up Wrist Curl">Palm-up Wrist Curl</option>
+            <option value="Palm-down Wrist Curl">Palm-down Wrist Curl</option>
             <option value="Pull ups">Pull ups</option>
             <option value="Push ups">Push ups</option>
             <option value="Push ups - deficit, decline">Push ups - deficit, decline</option>
@@ -757,7 +760,10 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             "Cable Face Pulls": "Shoulder",
 	    "Lunge - reverse": "Legs",
 	    "Sit ups": "Back",
+            "Finger Curl - barbell": "Arms",
             "Good Morning": "Back",
+            "Palm-up Wrist Curl": "Arms",
+            "Palm-down Wrist Curl": "Arms",
             "Squat": "Legs",
             "Squat - front": "Legs",
 		"Shrugs": "Back",
@@ -868,7 +874,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { section: "Delts, Core", label: "Front Delt", type: "upper", exercises: ["Military Press", "Shoulder Press", "Shoulder Hammer Press"] },
             { section: "Delts, Core", label: "Side Delt", type: "upper", exercises: ["Lying Side Raise", "Side Laterals", "Dumbbell Upright Row"] },
             { section: "Delts, Core", label: "Rear Delt", type: "upper", exercises: ["Lying Reverse Fly", "Reverse Fly", "Rear Delt Row - Barbell"] },
-            { section: "Delts, Core", label: "Forearms", type: "upper", exercises: ["Forearm Barbell Curl", "Palm-up Wrist Curl", "Palm-down Wrist Curl"]},
+            { section: "Delts, Core", label: "Forearms", type: "upper", exercises: ["Finger Curl - barbell", "Palm-up Wrist Curl", "Palm-down Wrist Curl"]},
             { section: "Chest, Arms", label: "Flys", type: "upper", exercises: ["Chest Flys"] },
             { section: "Chest, Arms", label: "Push Type", type: "upper", exercises: ["Bench Press"] },
             { section: "Chest, Arms", label: "Biceps", type: "upper", exercises: ["Bicep Curls", "Barbell Bicep Curls", "Clown Curl"] },
@@ -1068,12 +1074,12 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
                 matches: ["Side Laterals"],
                 progressGroup: "upper",
                 targetReps: 14,
-                targets: [5, [5, 10], [10, 12], [10, 15],
-                    [12, 18],
-                    [14, 20],
-                    [15, 22],
-                    [18, 25],
-                    [20, 30]]
+                targets: [[5, 10], [10, 12], [12, 15],
+                    [15, 18],
+                    [17, 19],
+                    [17, 20],
+                    [20, 22],
+                    [22, 25]]
             }
         ];
 
@@ -2403,20 +2409,34 @@ const newTimestamp = Math.floor(
             return `workout-backup-${timestamp}.json`;
         }
 
-        function downloadBackup(entries) {
+       function downloadBackup(entries) {
             if (entries.length === 0) {
                 alert("No entries found to back up.");
                 return;
             }
 
-            const backup = {
-                exportedAt: new Date().toISOString(),
-                count: entries.length,
-                entries: entries
-                    .slice()
-                    .sort((a, b) => b.timestamp - a.timestamp)
-            };
-            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+            const backup = entries
+                .slice()
+                .sort((a, b) => b.timestamp - a.timestamp)
+                .map(e => [
+                    e.exercise,
+                    e.weight,
+                    e.reps,
+                    e.timestamp
+                ]);
+
+            var vol = {};
+
+            var back = {
+                vol: vol,
+                entries: [JSON.stringify(backup)]
+            }
+
+            const blob = new Blob(
+                back,
+                { type: "application/json" }
+            );
+
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
