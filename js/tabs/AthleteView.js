@@ -17,7 +17,7 @@ export function renderAthleteView(benchmarkState) {
         { exercise: "Hip Thrust",            values: [0.62, 1.13, 1.83, 2.71, 3.69] },
         { exercise: "Pull ups",              values: [3, 8, 12, 15, 20], byReps: true },
         { exercise: "Push ups",                 values: [13, 15, 23, 29, 35], byReps: true },
-        { exercise: "Chin ups",                 values: [7, 13, 21, 30, 35], byReps: true },
+        { exercise: "Chin ups",                 values: [7, 12, 17, 21, 27], byReps: true },
         //{ exercise: "Leg Raises",               values: [8, 17, 28, 39, 45], byReps: true },
         //{ exercise: "Vertical Dips",            values: [8, 15, 20, 25, 30], byReps: true },
         //{ exercise: "Calf Raises, single",      values: [13, 25, 35, 45, 50], byReps: true }

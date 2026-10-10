@@ -411,9 +411,11 @@ padding: 0 0 0 20px;
             <option value="Reverse Dumbbell Fly">Reverse Dumbbell Fly</option>
             <option value="Palm-up Wrist Curl">Palm-up Wrist Curl</option>
             <option value="Palm-down Wrist Curl">Palm-down Wrist Curl</option>
+            <option value="Preacher Curls">Preacher Curls</option>
             <option value="Pull ups">Pull ups</option>
             <option value="Push ups">Push ups</option>
             <option value="Push ups - deficit, decline">Push ups - deficit, decline</option>
+            <option value="Reverse Grip Barbell Curl">Reverse Grip Barbell Curl</option>
 	    <option value="Seated Hip Abduction">Seated Hip Abduction</option>
 	    <option value="Seated Hip Adduction">Seated Hip Adduction</option>
             <option value="Shoulder Hammer Press">Shoulder Hammer Press</option>
@@ -729,6 +731,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
 	console.dir(targetVolume);
 
         const exerciseCategories = {
+            "Preacher Curls": "Arms",
             "Bath dips": "Arms",
             "Skull Crushers": "Arms",
 	    "Barbell Row": "Back",
@@ -758,6 +761,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             "Dumbbell Upright Row": "Shoulder",
             "Upright Row - barbell": "Shoulder",
             "Cable Face Pulls": "Shoulder",
+            "Reverse Grip Barbell Curl": "Arms",
 	    "Lunge - reverse": "Legs",
 	    "Sit ups": "Back",
             "Finger Curl - barbell": "Arms",
@@ -874,10 +878,10 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { section: "Delts, Core", label: "Front Delt", type: "upper", exercises: ["Military Press", "Shoulder Press", "Shoulder Hammer Press"] },
             { section: "Delts, Core", label: "Side Delt", type: "upper", exercises: ["Lying Side Raise", "Side Laterals", "Dumbbell Upright Row"] },
             { section: "Delts, Core", label: "Rear Delt", type: "upper", exercises: ["Lying Reverse Fly", "Reverse Fly", "Rear Delt Row - Barbell"] },
-            { section: "Delts, Core", label: "Forearms", type: "upper", exercises: ["Finger Curl - barbell", "Palm-up Wrist Curl", "Palm-down Wrist Curl"]},
+            { section: "Delts, Core", label: "Forearms", type: "upper", exercises: ["Reverse Grip Barbell Curl", "Finger Curl - barbell", "Palm-up Wrist Curl", "Palm-down Wrist Curl"]},
             { section: "Chest, Arms", label: "Flys", type: "upper", exercises: ["Chest Flys"] },
             { section: "Chest, Arms", label: "Push Type", type: "upper", exercises: ["Bench Press"] },
-            { section: "Chest, Arms", label: "Biceps", type: "upper", exercises: ["Bicep Curls", "Barbell Bicep Curls", "Clown Curl"] },
+            { section: "Chest, Arms", label: "Biceps", type: "upper", exercises: ["Preacher Curls",  "Bicep Curls", "Barbell Bicep Curls", "Clown Curl"] },
             { section: "Chest, Arms", label: "Triceps", type: "upper", exercises: ["Skull Crushers", "Bath Dips", "Overhead tricep extention"] },
             { section: "Back", label: "Vertical Pull", type: "upper", exercises: ["Pull Ups", "Chin Ups"] },
             { section: "Back", label: "Horizontal Pull", type: "upper", exercises: ["Rows"] },
@@ -2418,33 +2422,34 @@ const newTimestamp = Math.floor(
             const backup = entries
                 .slice()
                 .sort((a, b) => b.timestamp - a.timestamp)
-                .map(e => [
-                    e.exercise,
-                    e.weight,
-                    e.reps,
-                    e.timestamp
-                ]);
+                .map(e => [e.exercise, e.weight, e.reps, e.timestamp]);
 
-            var vol = {};
-
-            var back = {
-                vol: vol,
+            const back = {
+                vol: {},
                 entries: [JSON.stringify(backup)]
-            }
+            };
 
-            const blob = new Blob(
-                back,
-                { type: "application/json" }
-            );
+            const blob = new Blob([JSON.stringify(back, null, 2)], {
+                type: "application/json"
+            });
 
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.download = getBackupFilename();
+            link.download = getBackupFilename() || "backup.json";  // fallback just in case
+            link.style.display = "none";
+
             document.body.appendChild(link);
+
+            // Force the download
             link.click();
-            link.remove();
-            setTimeout(() => URL.revokeObjectURL(url), 0);
+
+            // Clean up a bit later so the browser has time to start the download
+            setTimeout(() => {
+                document.body.removeChild(link);
+                console.log('url: ' + url);
+                URL.revokeObjectURL(url);
+            }, 200);
         }
 
         historyLog.addEventListener("click", async (event) => {
