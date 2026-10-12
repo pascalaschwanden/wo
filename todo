@@ -1,13 +1,17 @@
-- add weekly volumes to the backup, make entire backup so it doesn't use too much space, very compact but still human readable and recoverable
-
-- add preacher curl biceps curl to volume planner AND to INDEX!!
+- add all weekly volumes to the backup, make entire backup so it doesn't use too much space,
+very compact but still human readable and recoverable
 
 - On the workouts tab, where it calculates the partial set counts, i think there might be some bug.  for example i have 12 sets in the input box but the calcualtion for calves shows 8.
 And "Hip Abd/Add" should represent the average of both excercises so, that should increase Adductors by 0.5 and abductors by 0.5
 
-- add chart for fatigue weekly calculation.
-
 - for charts, on the legend, do not show colors for weights that don't show up in the chart.  i don't want each legend to get too crowded with weights that are not shown in each individual chart.
+
+- Fatigue Tab: have 2 charts and 1 table.
+    * put weekly set count on fatigue tab
+    * add chart for fatigue weekly calculation.
+    * table of weekly averages: first column has movement type, 2nd has last weeks count, 3rd column has last 4 weeks weekly avg, 4th col has last 8 weeks avg, 5th col has last 4 months weekly avg
+    * table of excercises and show +1, for every one that had rep increases, in the last week, 2 weeks ago, 3 weeks ago, 4 weeks ago, 5 weeks ago, etc
+
 
 
 
@@ -131,6 +135,11 @@ Some excercise/weight combinations only have 1 data point.  if that's the case t
 
 
 Tips:
+- for rows make sure your pinching the shoulder blades together to engage the back muscles, not just the arms (avoid rolling shoulder forward)
+- for pull ups:
+- do: face pulls and prone arm circles
+- don't just do fixed grip excercises, add in excercises that allow your arms and wrist to freely rotate.
+
 Rest periods: for strength 4 or 5 min or whenever your fully recovered non negotiable
 for hypertrophy: can take shorter rests and more sets.  time under tension is the stimulus, even if your not completely rested.
 
