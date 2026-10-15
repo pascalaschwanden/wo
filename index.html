@@ -2074,10 +2074,12 @@ workouts.forEach((workout, workoutIndex) => {
                     const data = snapshotDoc.data();
                     volumeWeekHistory.push({
                         id: snapshotDoc.id,
-                        counters: data.counters || {}
+                        counters: data.counters || {},
+                        plannerSettings: data.plannerSettings || {}
                     });
                 });
                 volumeWeekHistoryLoaded = true;
+                backupButton.disabled = latestEntries.length === 0 && volumeWeekHistory.length === 0;
                 if (activeView === "volume") {
                     renderVolumeWhenReady();
                 }
@@ -2425,23 +2427,42 @@ const newTimestamp = Math.floor(
             return `workout-backup-${timestamp}.json`;
         }
 
+        function compactVolumeWeeks(weeks) {
+            return weeks
+                .slice()
+                .sort((a, b) => a.id.localeCompare(b.id))
+                .map((week) => [
+                    week.id,
+                    week.counters || {},
+                    week.plannerSettings || {}
+                ]);
+        }
+
        function downloadBackup(entries) {
-            if (entries.length === 0) {
-                alert("No entries found to back up.");
+            if (!volumeWeekHistoryLoaded) {
+                alert("Weekly volumes are still loading. Please try again in a moment.");
                 return;
             }
 
-            const backup = entries
+            if (entries.length === 0 && volumeWeekHistory.length === 0) {
+                alert("No workout entries or weekly volumes found to back up.");
+                return;
+            }
+
+            const workouts = entries
                 .slice()
                 .sort((a, b) => b.timestamp - a.timestamp)
                 .map(e => [e.exercise, e.weight, e.reps, e.timestamp]);
 
-            const back = {
-                vol: {},
-                entries: [JSON.stringify(backup)]
+            const backup = {
+                format: "workout-backup-v2",
+                workouts,
+                volumeWeeks: compactVolumeWeeks(volumeWeekHistory),
+                targets: targetVolumeData,
+                benchmarkStart: benchmarkStartDate.value || null
             };
 
-            const blob = new Blob([JSON.stringify(back, null, 2)], {
+            const blob = new Blob([JSON.stringify(backup)], {
                 type: "application/json"
             });
 
@@ -2522,7 +2543,7 @@ const newTimestamp = Math.floor(
             const entries = [];
             if (snapshot.empty) {
                 latestEntries = entries;
-                backupButton.disabled = true;
+                backupButton.disabled = volumeWeekHistory.length === 0;
                 setActiveView(activeView);
                 if (historyDetails.open) {
                     renderHistory(entries);
@@ -2541,7 +2562,7 @@ const newTimestamp = Math.floor(
             });
 
             latestEntries = entries;
-            backupButton.disabled = entries.length === 0;
+            backupButton.disabled = entries.length === 0 && volumeWeekHistory.length === 0;
             setActiveView(activeView);
             if (historyDetails.open) {
                 renderHistory(entries);
@@ -2887,6 +2908,15 @@ const contributions = {
         abductors: 0.0
     },
 
+    "Seated Calf Raises": {
+        quads: 0.0,
+        hamstrings: 0.0,
+        glutes: 0.0,
+        calves: 1.0,
+        adductors: 0.0,
+        abductors: 0.0
+    },
+
     "Lunge - reverse": {
         quads: 1.0,
         hamstrings: 0.5,
@@ -3195,9 +3225,11 @@ function calculate() {
 
         const sets = Number(exercise.sets);
 
-	if( contributions[exercise.exercise] ) {
-	 
-          var exc_cont = contributions[exercise.exercise];
+	const exc_cont = exercise.bodyPart === "Hip Abd/Add"
+	    ? { adductors: 0.5, abductors: 0.5 }
+	    : contributions[exercise.exercise];
+
+	if (exc_cont) {
 
           bodyPartTotals.forEach((bodyPart) => {
               totals[bodyPart.key] += sets * (exc_cont[bodyPart.key] || 0);
