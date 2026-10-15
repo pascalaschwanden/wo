@@ -1,7 +1,4 @@
 
-
-- for charts, on the legend, do not show colors for weights that don't show up in the chart.  i don't want each legend to get too crowded with weights that are not shown in each individual chart.
-
 - Fatigue Tab: have 2 charts and 1 table.
     * put weekly set count on fatigue tab
     * add chart for fatigue weekly calculation.

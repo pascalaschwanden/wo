@@ -2238,7 +2238,29 @@ workouts.forEach((workout, workoutIndex) => {
                 .forEach(([key, group]) => {
                     const { start, end } = getChartRange();
                     const weightEntries = Array.from(group.weights.entries())
+                        .map(([weight, points]) => {
+                            const sortedPoints = points
+                                .slice()
+                                .sort((a, b) => a.timestamp - b.timestamp);
+                            const pointsInRange = sortedPoints
+                                .filter((point) => point.timestamp >= start && point.timestamp <= end);
+                            const pointBeforeRange = sortedPoints
+                                .filter((point) => point.timestamp < start)
+                                .at(-1);
+                            const pointAfterRange = sortedPoints
+                                .find((point) => point.timestamp > end);
+
+                            // Keep boundary points so any line segment crossing the selected range remains visible.
+                            const visiblePoints = pointsInRange.length > 0 || (pointBeforeRange && pointAfterRange)
+                                ? [pointBeforeRange, ...pointsInRange, pointAfterRange].filter(Boolean)
+                                : [];
+
+                            return [weight, visiblePoints];
+                        })
+                        .filter(([, points]) => points.length > 0)
                         .sort(([a], [b]) => Number(a) - Number(b));
+
+                    if (weightEntries.length === 0) return;
 
                     const panel = document.createElement("div");
                     panel.className = "chart-panel";
@@ -2321,6 +2343,10 @@ workouts.forEach((workout, workoutIndex) => {
 
                     chartsByKey.set(key, chart);
                 });
+
+            if (chartGrid.childElementCount === 0) {
+                chartGrid.innerHTML = `<p>No ${activeChartCategory.toLowerCase()} exercise entries found in the selected range.</p>`;
+            }
         }
 
         setDefaultChartEndDate();
