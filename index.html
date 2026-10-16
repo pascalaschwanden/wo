@@ -93,7 +93,7 @@ table.mope .badge {
         .view-tabs, .chart-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
         .view-tab, .chart-tab { background-color: #e9ecef; color: #222; border: 1px solid #ccc; }
         .view-tab.active, .chart-tab.active { background-color: #007bff; color: white; border-color: #007bff; }
-        .chart-view[hidden], .analysis-view[hidden], .next-view[hidden], .benchmarks-view[hidden], .progress-view[hidden] { display: none; }
+        .chart-view[hidden], .analysis-view[hidden], .next-view[hidden], .benchmarks-view[hidden], .progress-view[hidden], .fatigue-view[hidden] { display: none; }
         .chart-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
         .chart-heading-row h2 { margin: 0; }
         .chart-gym-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; white-space: nowrap; cursor: pointer; }
@@ -448,6 +448,7 @@ padding: 0 0 0 20px;
         <button type="button" class="view-tab" data-view="progress">Progress</button>
         <button type="button" class="view-tab" data-view="workout">Workout</button>
         <button type="button" class="view-tab" data-view="volume">Volume</button>
+        <button type="button" class="view-tab" data-view="fatigue">Fatigue</button>
         <button type="button" class="view-tab" data-view="athlete">Athlete</button>
     </div>
 
@@ -534,6 +535,11 @@ padding: 0 0 0 20px;
 	-->
 
 
+    </section>
+
+    <section id="fatigueView" class="fatigue-view" hidden>
+        <h2>Fatigue</h2>
+        <div id="fatigueContent" class="chart-grid">Loading weekly volume counts...</div>
     </section>
 
     <section id="workoutView" class="workout-view" hidden>
@@ -665,6 +671,8 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         import { buildProgressRows } from "./js/tabs/ProgressModel.js";
         import { renderProgressChart } from "./js/tabs/ProgressView.js";
         import { renderAthleteView } from "./js/tabs/AthleteView.js";
+        import { buildFatigueState } from "./js/tabs/FatigueModel.js";
+        import { renderFatigueView } from "./js/tabs/FatigueView.js";
 
         // Firebase web app configuration. These values are safe to include in a static GitHub Pages site.
         const firebaseConfig = {
@@ -688,6 +696,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         const athleteView = document.getElementById("athleteView");
         const workoutView = document.getElementById("workoutView");
         const volumeView = document.getElementById("volumeView");
+        const fatigueView = document.getElementById("fatigueView");
         const chartTabs = document.getElementById("chartTabs");
         const chartRange = document.getElementById("chartRange");
         const chartEndDate = document.getElementById("chartEndDate");
@@ -698,6 +707,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         const benchmarkStartDate = document.getElementById("benchmarkStartDate");
         const benchmarkGrid = document.getElementById("benchmarkGrid");
         const progressChartCanvas = document.getElementById("progressChart");
+        const fatigueContent = document.getElementById("fatigueContent");
         const backupButton = document.getElementById("backupButton");
         const historyDetails = document.getElementById("historyDetails");
         const historyLog = document.getElementById("historyLog");
@@ -705,6 +715,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         const benchmarkChartsByKey = new Map();
         let progressChart = null;
         let volumeWeeklySetsChart = null;
+        let fatigueCharts = { weeklySets: null, weeklyFatigue: null };
         let latestEntries = [];
         let activeView = "charts";
         let activeChartCategory = "Chest";
@@ -1454,6 +1465,28 @@ function renderBenchmarks(entries, startTimestamp, showMeNow) {
             progressChart = renderProgressChart(progressChartCanvas, progressState, progressChart);
         }
 
+        function destroyFatigueCharts() {
+            Object.values(fatigueCharts).forEach((chart) => chart?.destroy());
+            fatigueCharts = { weeklySets: null, weeklyFatigue: null };
+        }
+
+        function renderFatigue() {
+            if (!volumeWeekHistoryLoaded) {
+                destroyFatigueCharts();
+                fatigueContent.innerHTML = "<p>Loading weekly volume counts...</p>";
+                return;
+            }
+
+            const fatigueState = buildFatigueState(volumeWeekHistory, {
+                volumeSections,
+                volumePlannerItems,
+                getVolumeCounterKey
+            });
+            fatigueCharts = renderFatigueView(fatigueContent, fatigueCharts, fatigueState, {
+                getDateLabel
+            });
+        }
+
         function renderAnalysis(entries) {
             const periods = [
                 { key: "twoWeeks", label: "2 weeks", days: 14 },
@@ -2034,7 +2067,6 @@ workouts.forEach((workout, workoutIndex) => {
                 app.appendChild(section);
             }
             renderVolumePlanner(app);
-            renderWeeklySetsChart(app);
 	}
 
         function listenToCurrentVolumeWeek() {
@@ -2082,12 +2114,16 @@ workouts.forEach((workout, workoutIndex) => {
                 backupButton.disabled = latestEntries.length === 0 && volumeWeekHistory.length === 0;
                 if (activeView === "volume") {
                     renderVolumeWhenReady();
+                } else if (activeView === "fatigue") {
+                    renderFatigue();
                 }
             }, (error) => {
                 console.error("Error loading weekly set history: ", error);
                 volumeWeekHistoryLoaded = true;
                 if (activeView === "volume") {
                     renderVolumeWhenReady();
+                } else if (activeView === "fatigue") {
+                    renderFatigue();
                 }
             });
         }
@@ -2102,10 +2138,15 @@ workouts.forEach((workout, workoutIndex) => {
             athleteView.hidden = view !== "athlete";
             workoutView.hidden = view !== "workout";
             volumeView.hidden = view !== "volume";
+            fatigueView.hidden = view !== "fatigue";
 
             viewTabs.querySelectorAll(".view-tab").forEach((button) => {
                 button.classList.toggle("active", button.dataset.view === view);
             });
+
+            if (view !== "fatigue") {
+                destroyFatigueCharts();
+            }
 
             if (view === "charts") {
                 benchmarkChartsByKey.forEach((chart) => chart.destroy());
@@ -2166,6 +2207,18 @@ workouts.forEach((workout, workoutIndex) => {
                         volumeWeeklySetsChart = null;
                     }
                     renderProgress(latestEntries);
+		} else if (view === "fatigue") {
+                    benchmarkChartsByKey.forEach((chart) => chart.destroy());
+                    benchmarkChartsByKey.clear();
+                    if (progressChart) {
+                        progressChart.destroy();
+                        progressChart = null;
+                    }
+                    if (volumeWeeklySetsChart) {
+                        volumeWeeklySetsChart.destroy();
+                        volumeWeeklySetsChart = null;
+                    }
+                    renderFatigue();
 		} else if (view === "athlete") {
                     renderBenchmarks(latestEntries, undefined, false);
                     renderAthleteView(window.benchmarkState);

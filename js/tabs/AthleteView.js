@@ -3,21 +3,21 @@ export function renderAthleteView(benchmarkState) {
     console.dir(benchmarkState);
 
     const strengthData = [
-        { exercise: "Bench Press",           values: [0.75, 1.0, 1.3, 1.5, 1.75] },
-        { exercise: "Squat",                 values: [1.0, 1.2, 1.5, 1.75, 2.0] },
-        { exercise: "Deadlift",              values: [1.0, 1.3, 1.65, 2.0, 2.5] },
-        { exercise: "Military Press",        values: [0.41, 0.57, 0.77, 1.01,1.26]},
-        { exercise: "Barbell Row",           values: [0.56,0.80, 1.1, 1.44, 1.82] },
-        //{ exercise: "Good Morning",           values: [0.4, 0.55, 0.7, 0.85, 1.0] },
-        { exercise: "Barbell Bicep Curl",    values: [0.26, 0.41, .59, .82, 1.07] },
-        { exercise: "Skull Crushers",        values: [0.23, 0.36, 0.53, 0.75, 0.98] },
-        //{ exercise: "Squat - bulgarian",     values: [0.21, 0.46, 0.82, 1.29, 1.84] },
-        // { exercise: "Calf Raises, single", values: [0.25, 0.4, 0.55, 0.7, 0.85] },
-        { exercise: "Side Laterals",         values: [0.067, 0.13, 0.2, 0.3, 0.40] },
-        { exercise: "Hip Thrust",            values: [0.62, 1.13, 1.83, 2.71, 3.69] },
-        { exercise: "Pull ups",              values: [3, 8, 12, 15, 20], byReps: true },
-        { exercise: "Push ups",                 values: [13, 15, 23, 29, 35], byReps: true },
-        { exercise: "Chin ups",                 values: [7, 12, 17, 21, 27], byReps: true },
+        { exercise: "Bench Press",           values: [0.75, 1.0, 1.3, 1.5, 1.75, 2, 2.25] },
+        { exercise: "Squat",                 values: [1.0, 1.2, 1.5, 1.75, 2.0, 2.5, 3] },
+        { exercise: "Deadlift",              values: [1.0, 1.3, 1.65, 2.0, 2.5, 3, 3.5] },
+        { exercise: "Military Press",     values: [0.41, 0.57, 0.77, 1.01, 1.26, 1.50, 1.75] },
+        { exercise: "Barbell Row",        values: [0.56, 0.80, 1.10, 1.44, 1.82, 2.20, 2.60] },
+        // { exercise: "Good Morning",    values: [0.40, 0.55, 0.70, 0.85, 1.00] },
+        { exercise: "Barbell Bicep Curl", values: [0.26, 0.41, 0.59, 0.82, 1.07, 1.30, 1.55] },
+        { exercise: "Skull Crushers",    values: [0.23, 0.36, 0.53, 0.75, 0.98, 1.22, 1.47] },
+        // { exercise: "Squat - bulgarian", values: [0.21, 0.46, 0.82, 1.29, 1.84] },
+        // { exercise: "Calf Raises, single", values: [0.25, 0.40, 0.55, 0.70, 0.85] },
+        { exercise: "Side Laterals",     values: [0.067, 0.13, 0.20, 0.30, 0.40, 0.50, 0.60] },
+        { exercise: "Hip Thrust",        values: [0.62, 1.13, 1.83, 2.71, 3.69, 4.40, 5.20] },
+        { exercise: "Pull ups",          values: [3, 8, 12, 15, 20, 25, 30], byReps: true },
+        { exercise: "Push ups",          values: [13, 15, 23, 29, 35, 40, 50], byReps: true },
+        { exercise: "Chin ups",          values: [7, 12, 17, 21, 27, 33, 40], byReps: true }
         //{ exercise: "Leg Raises",               values: [8, 17, 28, 39, 45], byReps: true },
         //{ exercise: "Vertical Dips",            values: [8, 15, 20, 25, 30], byReps: true },
         //{ exercise: "Calf Raises, single",      values: [13, 25, 35, 45, 50], byReps: true }
@@ -28,7 +28,9 @@ export function renderAthleteView(benchmarkState) {
         "Good",
         "Optimal",
         "Advanced",
-        "Athlete"
+        "Athlete",
+        "Elite",
+        "Freak"
     ];
 
 
