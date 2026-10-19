@@ -105,6 +105,9 @@ table.mope .badge {
         .chart-panel h3 { font-size: 16px; margin: 0 0 10px; }
         .chart-canvas-wrap { height: 240px; position: relative; }
         .chart-canvas-wrap canvas { display: block; }
+        .fatigue-test-form { display: flex; gap: 8px; margin-bottom: 12px; }
+        .fatigue-test-form input { flex: 1 1 auto; min-width: 0; }
+        .fatigue-test-form button { flex: 0 0 auto; }
         .benchmarks-view .chart-canvas-wrap { height: 280px; }
         .benchmarks-controls { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
         .benchmarks-controls label { font-size: 14px; font-weight: bold; }
@@ -718,7 +721,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         const benchmarkChartsByKey = new Map();
         let progressChart = null;
         let volumeWeeklySetsChart = null;
-        let fatigueCharts = { weeklySets: null, weeklyFatigue: null };
+        let fatigueCharts = { weeklySets: null, weeklyFatigue: null, carbonDioxide: null, gripStrength: null };
         let latestEntries = [];
         let activeView = "charts";
         let activeChartCategory = "Chest";
@@ -922,12 +925,14 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         ];
         let volumeCounters = {};
         let volumeWeekHistory = [];
+        let fatigueTestResults = [];
         let volumePlannerSettings = { upper: 3, lower: 3, other: 2 };
         let unsubscribeVolumeWeek = null;
 	let unsubscribeLoadTarget = null;
         let activeVolumeWeekKey = null;
         let volumeWeekLoaded = false;
         let volumeWeekHistoryLoaded = false;
+        let fatigueTestsLoaded = false;
         let targetVolumeLoaded = false;
 
         const progressReferenceMonths = [0, 2, 4, 6, 8, 10, 12, 18, 24];
@@ -1475,13 +1480,13 @@ function renderBenchmarks(entries, startTimestamp, showMeNow) {
 
         function destroyFatigueCharts() {
             Object.values(fatigueCharts).forEach((chart) => chart?.destroy());
-            fatigueCharts = { weeklySets: null, weeklyFatigue: null };
+            fatigueCharts = { weeklySets: null, weeklyFatigue: null, carbonDioxide: null, gripStrength: null };
         }
 
         function renderFatigue() {
-            if (!volumeWeekHistoryLoaded) {
+            if (!volumeWeekHistoryLoaded || !fatigueTestsLoaded) {
                 destroyFatigueCharts();
-                fatigueContent.innerHTML = "<p>Loading weekly volume counts...</p>";
+                fatigueContent.innerHTML = "<p>Loading fatigue data...</p>";
                 return;
             }
 
@@ -1491,7 +1496,9 @@ function renderBenchmarks(entries, startTimestamp, showMeNow) {
                 getVolumeCounterKey
             });
             fatigueCharts = renderFatigueView(fatigueContent, fatigueCharts, fatigueState, {
-                getDateLabel
+                getDateLabel,
+                testResults: fatigueTestResults,
+                onSubmitTest: saveFatigueTest
             });
         }
 
@@ -2107,6 +2114,62 @@ workouts.forEach((workout, workoutIndex) => {
             });
         }
 
+        function updateBackupAvailability() {
+            backupButton.disabled = latestEntries.length === 0
+                && volumeWeekHistory.length === 0
+                && fatigueTestResults.length === 0;
+        }
+
+        async function saveFatigueTest(type, value) {
+            if (!Number.isInteger(value) || value < 0) {
+                throw new Error("Enter a whole number that is zero or greater.");
+            }
+
+            await setDoc(benchmarkSettingsDoc, {
+                fatigueTests: [
+                    ...fatigueTestResults.map(({ type: savedType, value: savedValue, timestamp }) => ({
+                        type: savedType,
+                        value: savedValue,
+                        timestamp
+                    })),
+                    { type, value, timestamp: Math.floor(Date.now() / 1000) }
+                ],
+                updatedAt: Date.now()
+            }, { merge: true });
+        }
+
+        function listenToFatigueTests() {
+            onSnapshot(benchmarkSettingsDoc, (snapshot) => {
+                fatigueTestResults = [];
+                const results = snapshot.exists() ? snapshot.data().fatigueTests : [];
+                (Array.isArray(results) ? results : []).forEach((data, index) => {
+                    const value = Number(data.value);
+                    const timestamp = Number(data.timestamp);
+                    if (
+                        (data.type === "carbonDioxide" || data.type === "gripStrength")
+                        && Number.isInteger(value)
+                        && value >= 0
+                        && timestamp > 0
+                    ) {
+                        fatigueTestResults.push({
+                            id: String(index),
+                            type: data.type,
+                            value,
+                            timestamp
+                        });
+                    }
+                });
+                fatigueTestsLoaded = true;
+                updateBackupAvailability();
+                if (activeView === "fatigue") renderFatigue();
+            }, (error) => {
+                console.error("Error loading fatigue tests: ", error);
+                fatigueTestsLoaded = true;
+                updateBackupAvailability();
+                if (activeView === "fatigue") renderFatigue();
+            });
+        }
+
         function listenToVolumeWeekHistory() {
             onSnapshot(volumeWeeksCollection, (snapshot) => {
                 volumeWeekHistory = [];
@@ -2119,7 +2182,7 @@ workouts.forEach((workout, workoutIndex) => {
                     });
                 });
                 volumeWeekHistoryLoaded = true;
-                backupButton.disabled = latestEntries.length === 0 && volumeWeekHistory.length === 0;
+                updateBackupAvailability();
                 if (activeView === "volume") {
                     renderVolumeWhenReady();
                 } else if (activeView === "fatigue") {
@@ -2128,6 +2191,7 @@ workouts.forEach((workout, workoutIndex) => {
             }, (error) => {
                 console.error("Error loading weekly set history: ", error);
                 volumeWeekHistoryLoaded = true;
+                updateBackupAvailability();
                 if (activeView === "volume") {
                     renderVolumeWhenReady();
                 } else if (activeView === "fatigue") {
@@ -2525,14 +2589,21 @@ const newTimestamp = Math.floor(
                 ]);
         }
 
+        function compactFatigueTests(results) {
+            return results
+                .slice()
+                .sort((a, b) => a.timestamp - b.timestamp)
+                .map((result) => [result.type, result.value, result.timestamp]);
+        }
+
        function downloadBackup(entries) {
-            if (!volumeWeekHistoryLoaded) {
-                alert("Weekly volumes are still loading. Please try again in a moment.");
+            if (!volumeWeekHistoryLoaded || !fatigueTestsLoaded) {
+                alert("Weekly volumes or fatigue tests are still loading. Please try again in a moment.");
                 return;
             }
 
-            if (entries.length === 0 && volumeWeekHistory.length === 0) {
-                alert("No workout entries or weekly volumes found to back up.");
+            if (entries.length === 0 && volumeWeekHistory.length === 0 && fatigueTestResults.length === 0) {
+                alert("No workout entries, weekly volumes, or fatigue tests found to back up.");
                 return;
             }
 
@@ -2542,9 +2613,10 @@ const newTimestamp = Math.floor(
                 .map(e => [e.exercise, e.weight, e.reps, e.timestamp]);
 
             const backup = {
-                format: "workout-backup-v2",
+                format: "workout-backup-v3",
                 workouts,
                 volumeWeeks: compactVolumeWeeks(volumeWeekHistory),
+                fatigueTests: compactFatigueTests(fatigueTestResults),
                 targets: targetVolumeData,
                 benchmarkStart: benchmarkStartDate.value || null
             };
@@ -2624,13 +2696,14 @@ const newTimestamp = Math.floor(
 
         // Real-time listener to fetch and display data
         listenToVolumeWeekHistory();
+        listenToFatigueTests();
 
         const q = query(workoutCollection, orderBy("timestamp", "desc"));
         onSnapshot(q, (snapshot) => {
             const entries = [];
             if (snapshot.empty) {
                 latestEntries = entries;
-                backupButton.disabled = volumeWeekHistory.length === 0;
+                updateBackupAvailability();
                 setActiveView(activeView);
                 if (historyDetails.open) {
                     renderHistory(entries);
@@ -2649,7 +2722,7 @@ const newTimestamp = Math.floor(
             });
 
             latestEntries = entries;
-            backupButton.disabled = entries.length === 0 && volumeWeekHistory.length === 0;
+            updateBackupAvailability();
             setActiveView(activeView);
             if (historyDetails.open) {
                 renderHistory(entries);
