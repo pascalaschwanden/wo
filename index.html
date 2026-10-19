@@ -587,7 +587,9 @@ padding: 0 0 0 20px;
 <tr><td>Front Delts</td><td id="frontDeltsWorkout">0</td></tr>
 <tr><td>Side Delts</td><td id="sideDeltsWorkout">0</td></tr>
 <tr><td>Rear Delts</td><td id="rearDeltsWorkout">0</td></tr>
+<tr><td>Forearms</td><td id="forearmsWorkout">0</td></tr>
 <tr><td>Core</td><td id="coreWorkout">0</td></tr>
+<tr><td>Neck</td><td id="neckWorkout">0</td></tr>
     </table>
 
 </div>
@@ -880,12 +882,12 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
                 ["🐄", "Calves", 4, 16],
                 ["🧎", "Leg Ext, Sissy", 4,8],
                 ["🦵", "Hip Abd/Add", 2, 6],
-                ["🐉", "Core", 3, 9],
-                ["🦒", "Neck", 3, 9]
+                ["🐉", "Core", 3, 9]
             ]
         };
         volumeSections.Other = [
-            ["♥", "Cardio 10m", 0, 0]
+            ["♥", "Cardio 10m", 0, 0],
+            ["🦒", "Neck", 3, 9]
         ];
         const volumePlannerItems = [
             { section: "Delts, Core", label: "Front Delt", type: "upper", exercises: ["Military Press", "Shoulder Press", "Shoulder Hammer Press"] },
@@ -911,8 +913,10 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { section: "Legs", label: "Lunge", type: "lower", exercises: [ "Lunge - reverse"] },
             { section: "Legs", label: "Nordic", type: "lower", exercises: ["Nordic Curl"] },
             { section: "Legs", label: "Calves", type: "lower", exercises: ["Calf Raises", "Seated Calf Raises"] },
+            { section: "Legs", label: "Leg Ext, Sissy", type: "lower", exercises: ["Leg extension", "Sissy Squat"] },
             { section: "Legs", label: "Core", type: "extra", exercises: ["Leg Raises", "Roll Out Wheel", "Sit ups"] },
-            { section: "Other", label: "Cardio 10m", type: "extra", exercises: ["Cardio 10m"] }
+            { section: "Other", label: "Cardio 10m", type: "extra", exercises: ["Cardio 10m"] },
+            { section: "Other", label: "Neck", type: "extra", exercises: ["Neck Flexion", "Neck Extension", "Neck Side Flexion"] }
         ];
         let volumeCounters = {};
         let volumeWeekHistory = [];
@@ -2793,6 +2797,10 @@ const contributions = {
         biceps: 1.0
     },
 
+    "Preacher Curls": {
+        biceps: 1.0
+    },
+
     "Bicep Curl": {
         biceps: 1.0
     },
@@ -2807,6 +2815,23 @@ const contributions = {
 
     "Clown Curl": {
         biceps: 1.0
+    },
+
+    "Reverse Grip Barbell Curl": {
+        biceps: 0.5,
+        forearms: 0.75
+    },
+
+    "Finger Curl - barbell": {
+        forearms: 1.0
+    },
+
+    "Palm-up Wrist Curl": {
+        forearms: 1.0
+    },
+
+    "Palm-down Wrist Curl": {
+        forearms: 1.0
     },
 
     "Skull Crushers": {
@@ -2902,6 +2927,11 @@ const contributions = {
         back: 0.25
     },
 
+    "Rear Delt Row - Barbell": {
+        rearDelts: 1.0,
+        back: 0.5
+    },
+
     "Leg Raises": {
         core: 1.0
     },
@@ -2980,6 +3010,17 @@ const contributions = {
     core: 0.4
 },
 
+    "Good Morning": {
+        quads: 0.1,
+        hamstrings: 0.7,
+        glutes: 0.6,
+        calves: 0.1,
+        adductors: 0.2,
+        abductors: 0.1,
+        back: 1.0,
+        core: 0.4
+    },
+
     "Calf Raises": {
         quads: 0.0,
         hamstrings: 0.0,
@@ -2996,6 +3037,10 @@ const contributions = {
         calves: 1.0,
         adductors: 0.0,
         abductors: 0.0
+    },
+
+    "Leg extension": {
+        quads: 1.0
     },
 
     "Lunge - reverse": {
@@ -3040,6 +3085,17 @@ const contributions = {
     adductors: 1.0,
     abductors: 0.0
 },
+    "Neck Flexion": {
+        neck: 1.0
+    },
+
+    "Neck Extension": {
+        neck: 1.0
+    },
+
+    "Neck Side Flexion": {
+        neck: 1.0
+    },
     "Nordic Curl": {
         quads: 0.0,
         hamstrings: 1.0,
@@ -3271,7 +3327,9 @@ const bodyPartTotals = [
     { key: "frontDelts", elementId: "frontDeltsWorkout" },
     { key: "sideDelts", elementId: "sideDeltsWorkout" },
     { key: "rearDelts", elementId: "rearDeltsWorkout" },
-    { key: "core", elementId: "coreWorkout" }
+    { key: "forearms", elementId: "forearmsWorkout" },
+    { key: "core", elementId: "coreWorkout" },
+    { key: "neck", elementId: "neckWorkout" }
 ];
 
 function calculate() {
