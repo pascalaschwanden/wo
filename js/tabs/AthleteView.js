@@ -6,6 +6,7 @@ export function renderAthleteView(benchmarkState) {
         { exercise: "Bench Press",           values: [0.75, 1.0, 1.3, 1.5, 1.75, 2, 2.25] },
         { exercise: "Squat",                 values: [1.0, 1.2, 1.5, 1.75, 2.0, 2.5, 3] },
         { exercise: "Deadlift",              values: [1.0, 1.3, 1.65, 2.0, 2.5, 3, 3.5] },
+        { exercise: "Deadlift - Romanian",     values: [0.9, 1.25, 1.5, 1.9, 2.2, 2.5, 2.9]},
         { exercise: "Military Press",     values: [0.41, 0.57, 0.77, 1.01, 1.26, 1.50, 1.75] },
         { exercise: "Barbell Row",        values: [0.56, 0.80, 1.10, 1.44, 1.82, 2.20, 2.60] },
         // { exercise: "Good Morning",    values: [0.40, 0.55, 0.70, 0.85, 1.00] },
