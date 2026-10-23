@@ -383,6 +383,7 @@ padding: 0 0 0 20px;
             <option value="Bench Press">Bench Press</option>
             <option value="Bench Press - Incline 35">Bench Press - Incline 35</option>
             <option value="Bicep Curl">Bicep Curl</option>
+            <option value="Bicep curl - incline">Bicep curl - incline</option>
             <option value="Clown Curl">Clown Curl</option>
             <option value="Copenhagen Plank - Dynamic">Copenhagen Plank - Dynamic</option>
             <option value="Cable Face Pulls">Cable Face Pulls</option>
@@ -403,7 +404,7 @@ padding: 0 0 0 20px;
             <option value="High Row">High Row</option>
             <option value="Hip Thrust">Hip Thrust</option>
             <option value="Lat Pull-down">Lat Pull-down</option>
-            <option value="Leg Curl">Leg Curl</option>
+            <option value="Leg Curl - Cable DIY">Leg Curl - Cable DIY</option>
             <option value="Leg extension">Leg extension</option>
 	    <option value="Leg Raises">Leg Raises</option>
             <option value="Low horizontal Row">Low horizontal Row</option>
@@ -414,6 +415,7 @@ padding: 0 0 0 20px;
             <option value="Military Press">Military Press</option>
             <option value="Overhead tricep extention">Overhead tricep extention</option>
             <option value="Overhead tricep extension - single">Overhead tricep extension - single</option>
+            <option value="Overhead tricep extension - rope, two hand">Overhead tricep extension - rope, two hand</option>
             <option value="Reverse Dumbbell Fly">Reverse Dumbbell Fly</option>
             <option value="Palm-up Wrist Curl">Palm-up Wrist Curl</option>
             <option value="Palm-down Wrist Curl">Palm-down Wrist Curl</option>
@@ -753,6 +755,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         const exerciseCategories = {
             "Preacher Curls": "Arms",
             "Overhead tricep extension - single": "Arms",
+            "Overhead tricep extension - rope, two hand": "Arms",
             "Bath dips": "Arms",
             "Skull Crushers": "Arms",
 	    "Barbell Row": "Back",
@@ -768,6 +771,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             "Dumbbell PUllover": "Chest",
             "Barbell Pullover": "Chest",
             "Bicep Curl": "Arms",
+            "Bicep curl - incline": "Arms",
             "Clown Curl": "Arms",
             "Overhead tricep extention": "Arms",
             "Low horizontal Row": "Back",
@@ -807,7 +811,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             "Seated Calf Raises, single": "Legs",
             "Calf Extension": "Legs",
             "Leg extension": "Legs",
-            "Leg Curl": "Legs",
+            "Leg Curl - Cable DIY": "Legs",
             "Hip Thrust": "Legs",
 	    "Lying Reverse Fly": "Shoulder",
 	    "Lying Side Raise": "Shoulder",
@@ -823,7 +827,6 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             "calf extension",
             "high row",
             "lat pull-down",
-            "leg curl",
             "leg extension",
             "low horizontal row",
             "seated hip abduction",
@@ -893,6 +896,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
                 ["🦯", "Nordic", 2, 9],
                 ["🐄", "Calves", 4, 16],
                 ["🧎", "Leg Ext, Sissy", 4,8],
+                ["🦵", "Leg Curls", 4, 8],
                 ["🦵", "Hip Abd/Add", 2, 6],
                 ["🐉", "Core", 3, 9]
             ]
@@ -908,7 +912,8 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { section: "Delts, Core", label: "Forearms", type: "upper", exercises: ["Reverse Grip Barbell Curl", "Finger Curl - barbell", "Palm-up Wrist Curl", "Palm-down Wrist Curl"]},
             { section: "Chest, Arms", label: "Flys", type: "upper", exercises: ["Chest Flys"] },
             { section: "Chest, Arms", label: "Push Type", type: "upper", exercises: ["Bench Press"] },
-            { section: "Chest, Arms", label: "Biceps", type: "upper", exercises: ["Preacher Curls",  "Bicep Curls", "Barbell Bicep Curls", "Clown Curl"] },
+            { section: "Chest, Arms", label: "Biceps", type: "upper",
+                exercises: ["Preacher Curls",  "Bicep Curls", "Barbell Bicep Curls", "Clown Curl"] },
             { section: "Chest, Arms", label: "Triceps", type: "upper", exercises: ["Skull Crushers", "Bath Dips", "Overhead tricep extention"] },
             { section: "Back", label: "Vertical Pull", type: "upper", exercises: ["Pull Ups", "Chin Ups"] },
             { section: "Back", label: "Horizontal Pull", type: "upper", exercises: ["Rows"] },
@@ -923,6 +928,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { section: "Legs", label: "Bulgarian", type: "lower", exercises: ["Bulgarian Split Squat"] },
             { section: "Legs", label: "Step Up", type: "lower", exercises: ["Step Up"] },
             { section: "Legs", label: "Lunge", type: "lower", exercises: [ "Lunge - reverse"] },
+            { section: "Legs", label: "Leg Curls", type: "lower", exercises: ["Leg Curl - Cable DIY"]},
             { section: "Legs", label: "Nordic", type: "lower", exercises: ["Nordic Curl"] },
             { section: "Legs", label: "Calves", type: "lower", exercises: ["Calf Raises", "Seated Calf Raises"] },
             { section: "Legs", label: "Leg Ext, Sissy", type: "lower", exercises: ["Leg extension", "Sissy Squat"] },
@@ -942,7 +948,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         let fatigueTestsLoaded = false;
         let targetVolumeLoaded = false;
 
-        const progressReferenceMonths = [0, 2, 4, 6, 8, 10, 12, 18, 24];
+        const progressReferenceMonths = [0, 2, 4, 6, 8, 10, 12, 18, 24, 36];
         const progressExercises = [
             {
                 label: "Squat",
@@ -1012,7 +1018,8 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
                 matches: ["Squat - bulgarian"],
                 progressGroup: "lower",
                 targetReps: 8,
-                targets: [0, [22,36], [36,50], [50,65], [65,79], [79,94], [94,108], [108, 122], [122, 144]]
+                //targets: [0, [22,36], [36,50], [50,65], [65,79], [79,94], [94,108], [108, 122], [122, 144]]
+                targets: [15, 25, 35, 50, 65, 75, 85, 105, 120, 140]
             },
             {
                 label: "Calves",
@@ -3053,6 +3060,15 @@ const contributions = {
         adductors: 0.25,
         abductors: 0.25
     },
+
+    "Leg Curl - Cable DIY": {
+    quads: 0.0,
+    hamstrings: 1.0,
+    glutes: 0.0,
+    calves: 0.25,
+    adductors: 0.0,
+    abductors: 0.0
+},
 
     "Glute Bridge": {
         quads: 0.0,
