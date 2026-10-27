@@ -36,7 +36,7 @@ function getCounterMetadata(volumeSections, volumePlannerItems, getVolumeCounter
             const plannerItem = volumePlannerItems.find((item) =>
                 item.section === sectionName && item.label === label
             );
-            const group = sectionName === "Other" && label === "Cardio 10m"
+            const group = sectionName === "Other" && label === "Cardio 2m"
                 ? "cardio"
                 : plannerItem?.type;
 

@@ -401,6 +401,7 @@ padding: 0 0 0 20px;
             <option value="Dumbbell Upright Row - Elbow">Dumbbell Upright Row - Elbow</option>
             <option value="Finger Curl - barbell">Finger Curl - barbell</option>
             <option value="Good Morning">Good Morning</option>
+            <option value="Hammer Curl">Hammer Curl</option>
             <option value="High Row">High Row</option>
             <option value="Hip Thrust">Hip Thrust</option>
             <option value="Lat Pull-down">Lat Pull-down</option>
@@ -771,6 +772,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             "Dumbbell PUllover": "Chest",
             "Barbell Pullover": "Chest",
             "Bicep Curl": "Arms",
+            "Hammer Curl": "Arms",
             "Bicep curl - incline 60": "Arms",
             "Clown Curl": "Arms",
             "Overhead tricep extention": "Arms",
@@ -895,14 +897,14 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
                 ["🏃", "Lunge", 1, 6],
                 ["🦯", "Nordic", 2, 9],
                 ["🐄", "Calves", 4, 16],
-                ["🧎", "Leg Ext, Sissy", 4,8],
+                ["🧎", "LegExt, Sissy", 4,8],
                 ["🦵", "Leg Curls", 4, 8],
                 ["🦵", "Hip Abd/Add", 2, 6],
                 ["🐉", "Core", 3, 9]
             ]
         };
         volumeSections.Other = [
-            ["♥", "Cardio 10m", 0, 0],
+            ["♥", "Cardio 2m", 0, 0],
             ["🦒", "Neck", 3, 9]
         ];
         const volumePlannerItems = [
@@ -933,7 +935,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
             { section: "Legs", label: "Calves", type: "lower", exercises: ["Calf Raises", "Seated Calf Raises"] },
             { section: "Legs", label: "Leg Ext, Sissy", type: "lower", exercises: ["Leg extension", "Sissy Squat"] },
             { section: "Legs", label: "Core", type: "extra", exercises: ["Leg Raises", "Roll Out Wheel", "Sit ups"] },
-            { section: "Other", label: "Cardio 10m", type: "extra", exercises: ["Cardio 10m"] },
+            { section: "Other", label: "Cardio 2m", type: "extra", exercises: ["Cardio 2m"] },
             { section: "Other", label: "Neck", type: "extra", exercises: ["Neck Flexion", "Neck Extension", "Neck Side Flexion"] }
         ];
         let volumeCounters = {};
@@ -1871,7 +1873,7 @@ workouts.forEach((workout, workoutIndex) => {
         }
 
         function getVolumeCounterType(sectionName, label) {
-            if (sectionName === "Other" && label === "Cardio 10m") return "cardio";
+            if (sectionName === "Other" && label === "Cardio 2m") return "cardio";
             const plannerItem = volumePlannerItems.find((item) => item.section === sectionName && item.label === label);
             if (plannerItem?.type === "upper") return "upper";
             if (plannerItem?.type === "lower") return "lower";
@@ -1988,7 +1990,7 @@ workouts.forEach((workout, workoutIndex) => {
                             tension: 0.2
                         },
                         {
-                            label: "Cardio 10m",
+                            label: "Cardio 2m",
                             data: weeklyTotals.map((week) => ({ x: week.timestamp, y: week.cardio })),
                             borderColor: "#fd7e14",
                             backgroundColor: "#fd7e14",

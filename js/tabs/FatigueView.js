@@ -143,7 +143,7 @@ export function renderFatigueView(container, currentCharts, state, helpers) {
             [
                 { ...baseDatasetOptions, label: "Upper body", data: state.weeks.map((week) => ({ x: week.timestamp, y: week.upperSets })), borderColor: "#007bff", backgroundColor: "#007bff" },
                 { ...baseDatasetOptions, label: "Lower body", data: state.weeks.map((week) => ({ x: week.timestamp, y: week.lowerSets })), borderColor: "#28a745", backgroundColor: "#28a745" },
-                { ...baseDatasetOptions, label: "Cardio 10m", data: state.weeks.map((week) => ({ x: week.timestamp, y: week.cardioSets })), borderColor: "#fd7e14", backgroundColor: "#fd7e14" }
+                { ...baseDatasetOptions, label: "Cardio 2m", data: state.weeks.map((week) => ({ x: week.timestamp, y: week.cardioSets })), borderColor: "#fd7e14", backgroundColor: "#fd7e14" }
             ],
             "Sets", getDateLabel
         );
