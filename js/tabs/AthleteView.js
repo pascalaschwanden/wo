@@ -16,6 +16,11 @@ In athletic strength and conditioning, it is widely accepted that a balanced lif
 To make sure the targets match what lifters actually achieve under the bar, the values are cross-referenced with user repositories like the Strength Level Exercise Standards Database.
 • Intermediate ("Optimal"): For a 150 lbs male, the database tracks the 50th percentile (Intermediate) around a 110–120 lbs 1-rep max. Scaling this down slightly to accommodate a safe 8-rep working set aligns perfectly with the 75 lbs (0.50x) working mark.
 • Elite / Freak: The database places top-tier male lifters (95th percentile and above) at an estimated 1RM of 1.45x–1.50x bodyweight or higher. For a 150 lbs individual, a 1.50x bodyweight working set (225 lbs) matches the absolute peak of realistic human unilateral leg strength.
+   Jeff Nippard: 2.6/2.1/2.9.   Beginner =    ben: 1, squat 1.25, dead: 1.5
+   * Intermediate (Good) (2-5 years) Ben: 1-1.5, squat: 1.25-1.75, deadlift: 1.5 - 2.25
+   * Advanced (5+ years of lifting) Ben: 1.5-2  squat: 1.75-2.5, Dead: 2.25-3
+   * Elite (5-10+ years, requires specialization) Ben: 2-2.25  squat: 2.5-3x  Dead: 3-3.35    = not everyone can get to this level, highest level natural lifters can get here (can perhaps do only 2 categories)
+   * Freak - need really good genetics. most people can't get there.
      */
     const strengthData = [
         { exercise: "Bench Press",           values: [0.75, 1.0, 1.3, 1.5, 1.75, 2, 2.25] },
