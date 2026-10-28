@@ -14,7 +14,7 @@ export function buildNextRows(entries, helpers) {
         //"Shoulder Hammer Press",
         "Lying Reverse Fly",
         "Reverse Dumbbell Fly",
-        "Leg Curl - Cable DIY",
+        "Leg Curl - Single DIY",
         "Preacher Curls",
         "Bicep curl - incline 60",
         //"JM Press",
