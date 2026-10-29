@@ -34,7 +34,7 @@ To make sure the targets match what lifters actually achieve under the bar, the 
         { exercise: "Barbell Bicep Curl", values: [0.30, 0.45, 0.60, 0.75, 0.85, 1.00, 1.15] },
         { exercise: "Skull Crushers",    values: [0.25, 0.40, 0.55, 0.70, 0.80, 0.95, 1.10] },
         // { exercise: "Calf Raises, single", values: [0.25, 0.40, 0.55, 0.70, 0.85] },
-        { exercise: "Side Laterals",     values: [0.067, 0.13, 0.20, 0.30, 0.40, 0.50, 0.60] },
+        { exercise: "Side Laterals",     values: [0.067, 0.13, 0.20, 0.30, 0.39, 0.47, 0.60] },
         { exercise: "Hip Thrust",        values: [0.62, 1.13, 1.83, 2.71, 3.69, 4.40, 5.20] },
         { exercise: "Pull ups",          values: [3, 8, 12, 15, 20, 25, 30], byReps: true },
         { exercise: "Push ups",          values: [13, 15, 23, 29, 35, 40, 50], byReps: true },
@@ -117,8 +117,15 @@ To make sure the targets match what lifters actually achieve under the bar, the 
     // Convert 1RM to equivalent rep max
     // ---------------------------------------------------------
 
-    function repMax(oneRM, reps) {
-        return oneRM / (1 + reps / 30);
+    function getRepMaxDivisor(row) {
+        if (row.exercise === "Side Laterals") return 15;
+        if (row.exercise === "Barbell Bicep Curl" || row.exercise === "Bicep Curl" || row.exercise === "Skull Crushers") return 20;
+        return 30;
+    }
+
+    function repMax(row, oneRM, reps) {
+        var rmd = getRepMaxDivisor(row);
+        return oneRM / (1 + reps / rmd);
     }
 
 
@@ -340,6 +347,7 @@ To make sure the targets match what lifters actually achieve under the bar, the 
             row.byReps
                 ? value
                 : repMax(
+                    row,
                     value * bodyweight,
                     5
                 ),
@@ -350,7 +358,7 @@ To make sure the targets match what lifters actually achieve under the bar, the 
         (row, currentOneRM) =>
             row.byReps
                 ? currentOneRM
-                : repMax(currentOneRM, 5),
+                : repMax(row, currentOneRM, 5),
 
         (value, row) =>
             row.byReps
@@ -371,6 +379,7 @@ To make sure the targets match what lifters actually achieve under the bar, the 
             row.byReps
                 ? value
                 : repMax(
+                    row,
                     value * bodyweight,
                     10
                 ),
@@ -381,7 +390,7 @@ To make sure the targets match what lifters actually achieve under the bar, the 
         (row, currentOneRM) =>
             row.byReps
                 ? currentOneRM
-                : repMax(currentOneRM, 10),
+                : repMax(row, currentOneRM, 10),
 
         (value, row) =>
             row.byReps
@@ -402,6 +411,7 @@ To make sure the targets match what lifters actually achieve under the bar, the 
             row.byReps
                 ? value
                 : repMax(
+                    row,
                     value * bodyweight,
                     20
                 ),
@@ -412,7 +422,7 @@ To make sure the targets match what lifters actually achieve under the bar, the 
         (row, currentOneRM) =>
             row.byReps
                 ? currentOneRM
-                : repMax(currentOneRM, 20),
+                : repMax(row, currentOneRM, 20),
 
         (value, row) =>
             row.byReps
