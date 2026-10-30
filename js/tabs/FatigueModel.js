@@ -28,6 +28,37 @@ function parseWeekDate(weekKey) {
     return new Date(year, month - 1, day);
 }
 
+function getWeekKey(date) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function getMovementPatterns(volumeSections, getVolumeCounterKey) {
+    const patterns = [];
+
+    Object.entries(volumeSections).forEach(([sectionName, exercises]) => {
+        exercises.forEach(([, label]) => {
+            patterns.push({
+                label,
+                counterKey: getVolumeCounterKey(sectionName, label)
+            });
+        });
+    });
+
+    return patterns;
+}
+
+function getWeeklyAverage(countersByWeek, currentWeekDate, counterKey, weekCount) {
+    let total = 0;
+
+    for (let offset = 1; offset <= weekCount; offset += 1) {
+        const weekDate = new Date(currentWeekDate);
+        weekDate.setDate(weekDate.getDate() - (offset * 7));
+        total += Number(countersByWeek.get(getWeekKey(weekDate))?.[counterKey]) || 0;
+    }
+
+    return total / weekCount;
+}
+
 function getCounterMetadata(volumeSections, volumePlannerItems, getVolumeCounterKey) {
     const metadata = new Map();
 
@@ -53,13 +84,24 @@ function getCounterMetadata(volumeSections, volumePlannerItems, getVolumeCounter
 }
 
 export function buildFatigueState(weekHistory, config) {
-    const { volumeSections, volumePlannerItems, getVolumeCounterKey } = config;
+    const { volumeSections, volumePlannerItems, getVolumeCounterKey, currentWeekKey } = config;
     const validWeeks = weekHistory
         .map((week) => ({ ...week, date: parseWeekDate(week.id) }))
         .filter((week) => week.date)
         .sort((a, b) => a.date - b.date);
 
-    if (validWeeks.length === 0) return { weeks: [] };
+    const currentWeekDate = parseWeekDate(currentWeekKey);
+    const countersByWeek = new Map(validWeeks.map((week) => [getWeekKey(week.date), week.counters || {}]));
+    const volumeAverages = currentWeekDate
+        ? getMovementPatterns(volumeSections, getVolumeCounterKey).map((pattern) => ({
+            label: pattern.label,
+            fourWeekAverage: getWeeklyAverage(countersByWeek, currentWeekDate, pattern.counterKey, 4),
+            twelveWeekAverage: getWeeklyAverage(countersByWeek, currentWeekDate, pattern.counterKey, 12),
+            twentyFourWeekAverage: getWeeklyAverage(countersByWeek, currentWeekDate, pattern.counterKey, 24)
+        }))
+        : [];
+
+    if (validWeeks.length === 0) return { weeks: [], volumeAverages };
 
     const counterMetadata = getCounterMetadata(volumeSections, volumePlannerItems, getVolumeCounterKey);
     const totalsByWeek = new Map();
@@ -101,5 +143,5 @@ export function buildFatigueState(weekHistory, config) {
         });
     });
 
-    return { weeks: Array.from(totalsByWeek.values()) };
+    return { weeks: Array.from(totalsByWeek.values()), volumeAverages };
 }

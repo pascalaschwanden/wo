@@ -46,6 +46,35 @@ function createChartPanel(title) {
     return panel;
 }
 
+function createVolumeAveragesTable(rows) {
+    const section = document.createElement("section");
+    section.className = "analysis-table-wrap fatigue-volume-averages";
+    section.innerHTML = `
+        <h3>Average Weekly Movement Count</h3>
+        <table class="analysis-table">
+            <thead>
+                <tr>
+                    <th>Movement Pattern</th>
+                    <th>Last 4 Weeks</th>
+                    <th>Last 12 Weeks</th>
+                    <th>Last 24 Weeks</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rows.map((row) => `
+                    <tr>
+                        <td>${row.label}</td>
+                        <td>${row.fourWeekAverage.toFixed(1)}</td>
+                        <td>${row.twelveWeekAverage.toFixed(1)}</td>
+                        <td>${row.twentyFourWeekAverage.toFixed(1)}</td>
+                    </tr>
+                `).join("")}
+            </tbody>
+        </table>
+    `;
+    return section;
+}
+
 function createTestPanel(title, type, results, getDateLabel, onSubmitTest) {
     const panel = document.createElement("section");
     panel.className = "chart-panel";
@@ -121,6 +150,10 @@ export function renderFatigueView(container, currentCharts, state, helpers) {
     const { getDateLabel, testResults, onSubmitTest } = helpers;
     destroyCharts(currentCharts);
     container.innerHTML = "";
+
+    if (state.volumeAverages.length > 0) {
+        container.appendChild(createVolumeAveragesTable(state.volumeAverages));
+    }
 
     let weeklySets = null;
     let weeklyFatigue = null;
