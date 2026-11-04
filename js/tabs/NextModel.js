@@ -1,6 +1,8 @@
 export function buildNextRows(entries, helpers) {
     const { getAllExerciseLabels, getExerciseLabel } = helpers;
     const trackingSet = new Set([
+        "Front Raise - Incline 45 DB",
+        "Hammer Curl",
         "Upright Row - barbell", 
 	//"Shrugs", 
 	    "Pull ups", "Chin ups",
