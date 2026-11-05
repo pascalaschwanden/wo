@@ -511,6 +511,7 @@ padding: 0 0 0 20px;
         <button type="button" class="view-tab" data-view="volume">Volume</button>
         <button type="button" class="view-tab" data-view="fatigue">Fatigue</button>
         <button type="button" class="view-tab" data-view="athlete">Athlete</button>
+        <button type="button" class="view-tab" data-view="tips">Tips</button>
     </div>
 
     <section id="chartsView" class="chart-view">
@@ -601,6 +602,11 @@ padding: 0 0 0 20px;
     <section id="fatigueView" class="fatigue-view" hidden>
         <h2>Fatigue</h2>
         <div id="fatigueContent" class="chart-grid">Loading weekly volume counts...</div>
+    </section>
+
+    <section id="tipsView" class="tips-view" hidden>
+        <h2>Tips</h2>
+        <div id="tipsContent" class="chart-grid">Loading tips...</div>
     </section>
 
     <section id="workoutView" class="workout-view" hidden>
@@ -760,6 +766,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         const workoutView = document.getElementById("workoutView");
         const volumeView = document.getElementById("volumeView");
         const fatigueView = document.getElementById("fatigueView");
+        const tipsView = document.getElementById("tipsView");
         const chartTabs = document.getElementById("chartTabs");
         const chartRange = document.getElementById("chartRange");
         const chartEndDate = document.getElementById("chartEndDate");
@@ -771,6 +778,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         const benchmarkGrid = document.getElementById("benchmarkGrid");
         const progressChartCanvas = document.getElementById("progressChart");
         const fatigueContent = document.getElementById("fatigueContent");
+        const tipsContent = document.getElementById("tipsContent");
         const backupButton = document.getElementById("backupButton");
         const historyDetails = document.getElementById("historyDetails");
         const historyLog = document.getElementById("historyLog");
@@ -1552,6 +1560,11 @@ function renderBenchmarks(entries, startTimestamp, showMeNow) {
             fatigueCharts = { weeklySets: null, weeklyFatigue: null, carbonDioxide: null, gripStrength: null };
         }
 
+        function renderTips() {
+            var tc = document.getElementById("tipsContent");
+            tc.innerHTML = "test";
+        }
+
         function renderFatigue() {
             if (!volumeWeekHistoryLoaded || !fatigueTestsLoaded) {
                 destroyFatigueCharts();
@@ -2257,6 +2270,8 @@ workouts.forEach((workout, workoutIndex) => {
                     renderVolumeWhenReady();
                 } else if (activeView === "fatigue") {
                     renderFatigue();
+                } else if (activeView === "tips") {
+                    renderTips();
                 }
             }, (error) => {
                 console.error("Error loading weekly set history: ", error);
