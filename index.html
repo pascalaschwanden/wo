@@ -88,11 +88,59 @@ table.mope .badge {
 }
         form { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
         input, select, button { padding: 10px; font-size: 16px; }
-        button { background-color: #007bff; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        .view-tabs, .chart-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-        .view-tab, .chart-tab { background-color: #e9ecef; color: #222; border: 1px solid #ccc; }
-        .view-tab.active, .chart-tab.active { background-color: #007bff; color: white; border-color: #007bff; }
+
+ button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.view-tabs, .chart-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    margin-bottom: 20px;
+}
+
+.view-tab, .chart-tab {
+    background-color: #e9ecef;
+    color: #222;
+    border: 1px solid #ccc;
+    position: relative;
+    max-width: 55px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: clip;
+    margin-right: -15px;
+    padding: 6px 12px;
+    z-index: 1;
+    transition: max-width 0.2s ease;
+}
+
+.view-tab:hover, .chart-tab:hover {
+    z-index: 2;
+    max-width: 150px;
+}
+
+.view-tab.active, .chart-tab.active {
+    background-color: white;
+    color: black;
+    border-color: #007bff;
+    border-bottom: 0;
+    max-width: none;
+    z-index: 10;
+    margin-right: 0;
+}
+
+
+
+
+
         .chart-view[hidden], .analysis-view[hidden], .next-view[hidden], .benchmarks-view[hidden], .progress-view[hidden], .fatigue-view[hidden] { display: none; }
         .chart-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
         .chart-heading-row h2 { margin: 0; }
