@@ -1,22 +1,8 @@
 - Tips tab
     * tips capability
     * weight tracker with chart.
-- Reminder to do hammer curls.
-- Add Leg curl volume to the body part calculation.
-- Fatigue table:
-    * for each movement pattern show how much we did each month
-    * show total sets per month for each movement pattern
-- Fatigue Tab: have 2 charts and 1 table.
-    * put weekly set count on fatigue tab
-    * add chart for fatigue weekly calculation.
-    * table of weekly averages: first column has movement type, 2nd has last weeks count, 3rd column has last 4 weeks weekly avg, 4th col has last 8 weeks avg, 5th col has last 4 months weekly avg
-    * table of excercises and show +1, for every one that had rep increases, in the last week, 2 weeks ago, 3 weeks ago, 4 weeks ago, 5 weeks ago, etc
+    * weight csv import weights.
 
-On the fatigue tab, add a table that contains the following:
-The first column will be the name of the excercise, for these excercises: Deadlift, Deadlift - Romanian, Hip Thrust, Calf Raises, single, Squat,
-Squat - bulgarian,
-
-Should we do neck excercises?
 
 Tips:
 - anterior delts isolation: dumbbell front raise
