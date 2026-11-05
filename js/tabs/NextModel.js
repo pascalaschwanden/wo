@@ -3,6 +3,7 @@ export function buildNextRows(entries, helpers) {
     const trackingSet = new Set([
         "Front Raise - Incline 45 DB",
         "Hammer Curl",
+        "Deadlift - Romanian",
         "Upright Row - barbell", 
 	//"Shrugs", 
 	    "Pull ups", "Chin ups",
