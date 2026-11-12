@@ -3,8 +3,27 @@
     * weight tracker with chart.
     * weight csv import weights.
 
+On the tips tab, put an input box long enough for me to enter tips sentences and add a button to submit.  when the button is pushed, it should persist that tip in the DB and display all tips below that input box.
+next to each tip should be an X button that allows me to remove that tip.
+
+Below that, start a new section that allows the user to enter their weight.  the weight should be persisted along with the date.
+Then have a chart below that, which shows the weight over time.
+
+Next, i have a csv that I'm uploading my previous weights, that I want you to import into our database.
+
+now add a table, with first column featuring months, 2nd column is the amount of weight gained over those two months.
+to figure out how much weight gained, look at the trend data for the 2 weeks before and after the end of the month and calculate the trend line to figure out how much i weighed at the end of the month.
+one row should be 2 months.  for example, first row 2026 may,jun,  2nd row 2026 july,aug  3rd row 2026 sept,oct  4th row nov, dec.
 
 Tips:
+- dumbbell pullovers: essential to do a bridge arch formation
+    * use the bench and go across it with the head dangling down and the waste also dangling down.
+    * hip should be lower than the bench and your chest
+    * arms are straight (use lower weight) dumbbell is the best.
+    * suck in the stomach
+    * breath in as you lower the umbbell and exhale on the way up.
+    * for lats and chest.
+    https://www.youtube.com/watch?v=izkzPBCTL6A
 - anterior delts isolation: dumbbell front raise
 - consistent squat reading: metronome and box below with a soft tip.
 - Do Hammer curls!  Front Raise - Incline 45 DB
