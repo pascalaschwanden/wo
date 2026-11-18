@@ -141,7 +141,7 @@ button:hover {
 
 
 
-        .chart-view[hidden], .analysis-view[hidden], .next-view[hidden], .benchmarks-view[hidden], .progress-view[hidden], .fatigue-view[hidden] { display: none; }
+        .chart-view[hidden], .analysis-view[hidden], .next-view[hidden], .benchmarks-view[hidden], .progress-view[hidden], .fatigue-view[hidden], .tips-view[hidden] { display: none; }
         .chart-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
         .chart-heading-row h2 { margin: 0; }
         .chart-gym-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; white-space: nowrap; cursor: pointer; }
@@ -156,6 +156,14 @@ button:hover {
         .fatigue-test-form { display: flex; gap: 8px; margin-bottom: 12px; }
         .fatigue-test-form input { flex: 1 1 auto; min-width: 0; }
         .fatigue-test-form button { flex: 0 0 auto; }
+        .tips-form { display: flex; gap: 8px; margin-bottom: 16px; }
+        .tips-form input { flex: 1 1 auto; min-width: 0; }
+        .tips-form button { flex: 0 0 auto; }
+        .tips-list { display: flex; flex-direction: column; gap: 8px; }
+        .tip-item { display: flex; align-items: flex-start; gap: 10px; border-bottom: 1px solid #ccc; padding: 10px 0; }
+        .tip-text { flex: 1 1 auto; line-height: 1.4; white-space: pre-wrap; }
+        .delete-tip-button { flex: 0 0 auto; width: 28px; height: 28px; padding: 0; line-height: 1; background: #dc3545; border-radius: 4px; }
+        .delete-tip-button:hover { background: #b02a37; }
         .benchmarks-view .chart-canvas-wrap { height: 280px; }
         .benchmarks-controls { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
         .benchmarks-controls label { font-size: 14px; font-weight: bold; }
@@ -790,6 +798,8 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         let volumeWeeklySetsChart = null;
         let fatigueCharts = { weeklySets: null, weeklyFatigue: null, carbonDioxide: null, gripStrength: null };
         let latestEntries = [];
+        let tips = [];
+        let tipsLoaded = false;
         let activeView = "charts";
         let activeChartCategory = "Chest";
         let benchmarkSettingsLoaded = false;
@@ -810,6 +820,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         const db = getFirestore(app);
         const workoutCollection = collection(db, "workouts");
         const volumeWeeksCollection = collection(db, "volumeWeeks");
+        const tipsCollection = collection(db, "tips");
         const benchmarkSettingsDoc = doc(db, "uiSettings", "benchmarks");
 	const targetVolume = collection(db, "targetVolumeJSON");
 	console.dir(targetVolume);
@@ -1564,8 +1575,105 @@ function renderBenchmarks(entries, startTimestamp, showMeNow) {
         }
 
         function renderTips() {
-            var tc = document.getElementById("tipsContent");
-            tc.innerHTML = "test";
+            if (!tipsLoaded) {
+                tipsContent.innerHTML = "<p>Loading tips...</p>";
+                return;
+            }
+
+            tipsContent.innerHTML = "";
+
+            const form = document.createElement("form");
+            form.className = "tips-form";
+
+            const input = document.createElement("input");
+            input.type = "text";
+            input.name = "tip";
+            input.required = true;
+            input.maxLength = 1000;
+            input.placeholder = "Write a training tip...";
+            input.setAttribute("aria-label", "New tip");
+
+            const submitButton = document.createElement("button");
+            submitButton.type = "submit";
+            submitButton.textContent = "Add Tip";
+
+            form.append(input, submitButton);
+            form.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const text = input.value.trim();
+                if (!text) return;
+
+                submitButton.disabled = true;
+                try {
+                    await addDoc(tipsCollection, {
+                        text,
+                        timestamp: Date.now()
+                    });
+                    form.reset();
+                } catch (error) {
+                    console.error("Error saving tip: ", error);
+                    alert("Failed to save tip. Check database rules.");
+                } finally {
+                    submitButton.disabled = false;
+                }
+            });
+            tipsContent.appendChild(form);
+
+            if (tips.length === 0) {
+                tipsContent.insertAdjacentHTML("beforeend", "<p>No saved tips yet.</p>");
+                return;
+            }
+
+            const list = document.createElement("div");
+            list.className = "tips-list";
+            tips.forEach((tip) => {
+                const item = document.createElement("div");
+                item.className = "tip-item";
+
+                const text = document.createElement("div");
+                text.className = "tip-text";
+                text.textContent = tip.text;
+
+                const deleteButton = document.createElement("button");
+                deleteButton.type = "button";
+                deleteButton.className = "delete-tip-button";
+                deleteButton.textContent = "X";
+                deleteButton.title = "Delete tip";
+                deleteButton.setAttribute("aria-label", "Delete tip");
+                deleteButton.addEventListener("click", async () => {
+                    deleteButton.disabled = true;
+                    try {
+                        await deleteDoc(doc(tipsCollection, tip.id));
+                    } catch (error) {
+                        console.error("Error deleting tip: ", error);
+                        deleteButton.disabled = false;
+                        alert("Failed to delete tip. Check database rules.");
+                    }
+                });
+
+                item.append(text, deleteButton);
+                list.appendChild(item);
+            });
+            tipsContent.appendChild(list);
+        }
+
+        function listenToTips() {
+            const tipsQuery = query(tipsCollection, orderBy("timestamp", "desc"));
+            onSnapshot(tipsQuery, (snapshot) => {
+                tips = snapshot.docs.map((snapshotDoc) => ({
+                    id: snapshotDoc.id,
+                    text: String(snapshotDoc.data().text || ""),
+                    timestamp: Number(snapshotDoc.data().timestamp) || 0
+                }));
+                tipsLoaded = true;
+                if (activeView === "tips") renderTips();
+            }, (error) => {
+                console.error("Error loading tips: ", error);
+                tipsLoaded = true;
+                if (activeView === "tips") {
+                    tipsContent.innerHTML = "<p>Failed to load tips. Check database rules.</p>";
+                }
+            });
         }
 
         function renderFatigue() {
@@ -2299,6 +2407,7 @@ workouts.forEach((workout, workoutIndex) => {
             workoutView.hidden = view !== "workout";
             volumeView.hidden = view !== "volume";
             fatigueView.hidden = view !== "fatigue";
+            tipsView.hidden = view !== "tips";
 
             viewTabs.querySelectorAll(".view-tab").forEach((button) => {
                 button.classList.toggle("active", button.dataset.view === view);
@@ -2379,6 +2488,18 @@ workouts.forEach((workout, workoutIndex) => {
                         volumeWeeklySetsChart = null;
                     }
                     renderFatigue();
+		} else if (view === "tips") {
+                    benchmarkChartsByKey.forEach((chart) => chart.destroy());
+                    benchmarkChartsByKey.clear();
+                    if (progressChart) {
+                        progressChart.destroy();
+                        progressChart = null;
+                    }
+                    if (volumeWeeklySetsChart) {
+                        volumeWeeklySetsChart.destroy();
+                        volumeWeeklySetsChart = null;
+                    }
+                    renderTips();
 		} else if (view === "athlete") {
                     renderBenchmarks(latestEntries, undefined, false);
                     renderAthleteView(window.benchmarkState);
@@ -2785,6 +2906,7 @@ const newTimestamp = Math.floor(
         // Real-time listener to fetch and display data
         listenToVolumeWeekHistory();
         listenToFatigueTests();
+        listenToTips();
 
         const q = query(workoutCollection, orderBy("timestamp", "desc"));
         onSnapshot(q, (snapshot) => {
