@@ -1781,148 +1781,370 @@ function renderBenchmarks(entries, startTimestamp, showMeNow) {
             return { panel, chart };
         }
 
-        function renderMeasurements() {
-            if (!bodyMeasurementsLoaded || !bodyWeightsLoaded) {
-                measurementsContent.innerHTML = "<p>Loading measurements...</p>";
-                return;
-            }
 
-            destroyMeasurementsCharts();
-            measurementsContent.innerHTML = "";
+function renderMeasurements() {
+    if (!bodyMeasurementsLoaded || !bodyWeightsLoaded) {
+        measurementsContent.innerHTML = "<p>Loading measurements...</p>";
+        return;
+    }
 
-            const circumferenceSection = document.createElement("section");
-            circumferenceSection.className = "chart-panel";
-            circumferenceSection.innerHTML = "<h3>Circumference Measurements</h3>";
+    destroyMeasurementsCharts();
+    measurementsContent.innerHTML = "";
 
-            const circumferenceForm = document.createElement("form");
-            circumferenceForm.className = "measurements-form";
-            const fieldGrid = document.createElement("div");
-            fieldGrid.className = "measurements-field-grid";
-            const fieldInputs = new Map();
-            bodyMeasurementFields.forEach((field) => {
-                const label = document.createElement("label");
-                label.className = "measurements-field";
-                label.textContent = field.label;
+    const circumferenceSection = document.createElement("section");
+    circumferenceSection.className = "chart-panel";
+    circumferenceSection.innerHTML = "<h3>Circumference Measurements</h3>";
 
-                const input = document.createElement("input");
-                input.type = "number";
-                input.min = "0";
-                input.step = "0.1";
-                input.required = true;
-                input.inputMode = "decimal";
-                input.setAttribute("aria-label", `${field.label} in inches`);
-                label.appendChild(input);
-                fieldInputs.set(field.key, input);
-                fieldGrid.appendChild(label);
+    const circumferenceForm = document.createElement("form");
+    circumferenceForm.className = "measurements-form";
+
+    const fieldGrid = document.createElement("div");
+    fieldGrid.className = "measurements-field-grid";
+
+    const fieldInputs = new Map();
+
+    bodyMeasurementFields.forEach((field) => {
+        const label = document.createElement("label");
+        label.className = "measurements-field";
+        label.textContent = field.label;
+
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = "0";
+        input.step = "0.1";
+        input.required = true;
+        input.inputMode = "decimal";
+        input.setAttribute("aria-label", `${field.label} in inches`);
+
+        label.appendChild(input);
+        fieldInputs.set(field.key, input);
+        fieldGrid.appendChild(label);
+    });
+
+    const saveMeasurementsButton = document.createElement("button");
+    saveMeasurementsButton.type = "submit";
+    saveMeasurementsButton.textContent = "Save Measurements";
+
+    circumferenceForm.append(fieldGrid, saveMeasurementsButton);
+
+    circumferenceForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const values = Object.fromEntries(
+            bodyMeasurementFields.map((field) => [
+                field.key,
+                Number(fieldInputs.get(field.key).value)
+            ])
+        );
+
+        if (Object.values(values).some(
+            value => !Number.isFinite(value) || value < 0
+        )) return;
+
+        saveMeasurementsButton.disabled = true;
+
+        try {
+            const now = new Date();
+
+            await addDoc(bodyMeasurementsCollection, {
+                ...values,
+                date: getDateInputValue(now),
+                timestamp: Math.floor(now.getTime() / 1000)
             });
 
-            const saveMeasurementsButton = document.createElement("button");
-            saveMeasurementsButton.type = "submit";
-            saveMeasurementsButton.textContent = "Save Measurements";
-            circumferenceForm.append(fieldGrid, saveMeasurementsButton);
-            circumferenceForm.addEventListener("submit", async (event) => {
-                event.preventDefault();
-                const values = Object.fromEntries(
-                    bodyMeasurementFields.map((field) => [field.key, Number(fieldInputs.get(field.key).value)])
-                );
-                if (Object.values(values).some((value) => !Number.isFinite(value) || value < 0)) return;
-
-                saveMeasurementsButton.disabled = true;
-                try {
-                    const now = new Date();
-                    await addDoc(bodyMeasurementsCollection, {
-                        ...values,
-                        date: getDateInputValue(now),
-                        timestamp: Math.floor(now.getTime() / 1000)
-                    });
-                    circumferenceForm.reset();
-                } catch (error) {
-                    console.error("Error saving measurements: ", error);
-                    alert("Failed to save measurements. Check database rules.");
-                } finally {
-                    saveMeasurementsButton.disabled = false;
-                }
-            });
-            circumferenceSection.appendChild(circumferenceForm);
-            measurementsContent.appendChild(circumferenceSection);
-
-            const circumferenceDatasets = bodyMeasurementFields.map((field, index) => ({
-                label: field.label,
-                data: bodyMeasurements
-                    .filter((entry) => Number.isFinite(entry[field.key]))
-                    .map((entry) => ({ x: entry.timestamp, y: entry[field.key] })),
-                borderColor: measurementColors[index],
-                backgroundColor: measurementColors[index],
-                tension: 0.15,
-                pointRadius: 3
-            }));
-            const circumferenceChart = createMeasurementsChart(
-                "Measurements Over Time", bodyMeasurements, circumferenceDatasets, "Inches"
-            );
-            measurementsContent.appendChild(circumferenceChart.panel);
-            measurementsCharts.circumferences = circumferenceChart.chart;
-
-            const weightSection = document.createElement("section");
-            weightSection.className = "chart-panel";
-            weightSection.innerHTML = "<h3>Weight</h3>";
-
-            const weightForm = document.createElement("form");
-            weightForm.className = "measurements-form";
-            const weightLabel = document.createElement("label");
-            weightLabel.className = "measurements-field";
-            weightLabel.textContent = "Weight";
-            const weightInput = document.createElement("input");
-            weightInput.type = "number";
-            weightInput.min = "0";
-            weightInput.step = "0.1";
-            weightInput.required = true;
-            weightInput.inputMode = "decimal";
-            weightInput.setAttribute("aria-label", "Weight");
-            weightLabel.appendChild(weightInput);
-            const saveWeightButton = document.createElement("button");
-            saveWeightButton.type = "submit";
-            saveWeightButton.textContent = "Save Weight";
-            weightForm.append(weightLabel, saveWeightButton);
-            weightForm.addEventListener("submit", async (event) => {
-                event.preventDefault();
-                const weight = Number(weightInput.value);
-                if (!Number.isFinite(weight) || weight < 0) return;
-
-                saveWeightButton.disabled = true;
-                try {
-                    const now = new Date();
-                    await addDoc(bodyWeightsCollection, {
-                        weight,
-                        date: getDateInputValue(now),
-                        timestamp: Math.floor(now.getTime() / 1000)
-                    });
-                    weightForm.reset();
-                } catch (error) {
-                    console.error("Error saving weight: ", error);
-                    alert("Failed to save weight. Check database rules.");
-                } finally {
-                    saveWeightButton.disabled = false;
-                }
-            });
-            weightSection.appendChild(weightForm);
-            measurementsContent.appendChild(weightSection);
-
-            const weightChart = createMeasurementsChart(
-                "Weight Over Time",
-                bodyWeights,
-                [{
-                    label: "Weight",
-                    data: bodyWeights.map((entry) => ({ x: entry.timestamp, y: entry.weight })),
-                    borderColor: "#007bff",
-                    backgroundColor: "#007bff",
-                    tension: 0.15,
-                    pointRadius: 4
-                }],
-                "Weight"
-            );
-            measurementsContent.appendChild(weightChart.panel);
-            measurementsCharts.weight = weightChart.chart;
+            circumferenceForm.reset();
+        } catch (error) {
+            console.error("Error saving measurements: ", error);
+            alert("Failed to save measurements. Check database rules.");
+        } finally {
+            saveMeasurementsButton.disabled = false;
         }
+    });
+
+    circumferenceSection.appendChild(circumferenceForm);
+    measurementsContent.appendChild(circumferenceSection);
+
+    const circumferenceDatasets = bodyMeasurementFields.map((field, index) => ({
+        label: field.label,
+        data: bodyMeasurements
+            .filter((entry) => Number.isFinite(entry[field.key]))
+            .map((entry) => ({
+                x: entry.timestamp,
+                y: entry[field.key]
+            })),
+        borderColor: measurementColors[index],
+        backgroundColor: measurementColors[index],
+        tension: 0.15,
+        pointRadius: 3
+    }));
+
+    const circumferenceChart = createMeasurementsChart(
+        "Measurements Over Time",
+        bodyMeasurements,
+        circumferenceDatasets,
+        "Inches"
+    );
+
+    measurementsContent.appendChild(circumferenceChart.panel);
+    measurementsCharts.circumferences = circumferenceChart.chart;
+
+    // --------------------------------------------------
+    // WEIGHT SECTION
+    // --------------------------------------------------
+
+    const weightSection = document.createElement("section");
+    weightSection.className = "chart-panel";
+    weightSection.innerHTML = "<h3>Weight</h3>";
+
+    const weightForm = document.createElement("form");
+    weightForm.className = "measurements-form";
+
+    const weightLabel = document.createElement("label");
+    weightLabel.className = "measurements-field";
+    weightLabel.textContent = "Weight";
+
+    const weightInput = document.createElement("input");
+    weightInput.type = "number";
+    weightInput.min = "0";
+    weightInput.step = "0.1";
+    weightInput.required = true;
+    weightInput.inputMode = "decimal";
+    weightInput.setAttribute("aria-label", "Weight");
+
+    weightLabel.appendChild(weightInput);
+
+    const saveWeightButton = document.createElement("button");
+    saveWeightButton.type = "submit";
+    saveWeightButton.textContent = "Save Weight";
+
+    weightForm.append(weightLabel, saveWeightButton);
+
+    weightForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const weight = Number(weightInput.value);
+        if (!Number.isFinite(weight) || weight < 0) return;
+
+        saveWeightButton.disabled = true;
+
+        try {
+            const now = new Date();
+
+            await addDoc(bodyWeightsCollection, {
+                weight,
+                date: getDateInputValue(now),
+                timestamp: Math.floor(now.getTime() / 1000)
+            });
+
+            weightForm.reset();
+        } catch (error) {
+            console.error("Error saving weight: ", error);
+            alert("Failed to save weight. Check database rules.");
+        } finally {
+            saveWeightButton.disabled = false;
+        }
+    });
+
+    weightSection.appendChild(weightForm);
+    measurementsContent.appendChild(weightSection);
+
+    // --------------------------------------------------
+    // WEIGHT CHART
+    // --------------------------------------------------
+
+    const weightChart = createMeasurementsChart(
+        "Weight Over Time",
+        bodyWeights,
+        [{
+            label: "Weight",
+            data: bodyWeights.map((entry) => ({
+                x: entry.timestamp,
+                y: entry.weight
+            })),
+            borderColor: "#007bff",
+            backgroundColor: "#007bff",
+            tension: 0.15,
+            pointRadius: 4
+        }],
+        "Weight"
+    );
+
+    measurementsContent.appendChild(weightChart.panel);
+    measurementsCharts.weight = weightChart.chart;
+
+    // --------------------------------------------------
+    // WEIGHT TREND CALCULATIONS
+    // --------------------------------------------------
+
+
+function calculateWeightTrends(weights) {
+    const DAY = 86400000;
+    const SMOOTHING_DAYS = 14;
+
+    const periods = [
+        { label: "1 month", months: 1 },
+        { label: "2 months", months: 2 },
+        { label: "3 months", months: 3 },
+        { label: "6 months", months: 6 },
+        { label: "9 months", months: 9 },
+        { label: "12 months", months: 12 }
+    ];
+
+    const entries = weights
+        .filter(e =>
+            Number.isFinite(e.weight) &&
+            Number.isFinite(e.timestamp)
+        )
+        .map(e => ({
+            time: e.timestamp * 1000,
+            weight: e.weight
+        }))
+        .sort((a, b) => a.time - b.time);
+
+    if (entries.length < 2) return [];
+
+    const latestTime = entries[entries.length - 1].time;
+
+    // Calculate centered moving averages.
+    // Each average uses all weigh-ins within +/- 7 days.
+    const smoothed = entries.map(entry => {
+        const nearby = entries.filter(other =>
+            Math.abs(other.time - entry.time) <=
+            (SMOOTHING_DAYS / 2) * DAY
+        );
+
+        return {
+            time: entry.time,
+            weight: nearby.reduce(
+                (sum, e) => sum + e.weight, 0
+            ) / nearby.length
+        };
+    });
+
+    // Linear regression using centered timestamps
+    // to avoid numerical precision problems.
+    function calculateRegression(data) {
+        if (data.length < 3) return null;
+
+        const origin = data[0].time;
+
+        const points = data.map(p => ({
+            x: (p.time - origin) / DAY,
+            y: p.weight
+        }));
+
+        const meanX =
+            points.reduce((sum, p) => sum + p.x, 0) /
+            points.length;
+
+        const meanY =
+            points.reduce((sum, p) => sum + p.y, 0) /
+            points.length;
+
+        let numerator = 0;
+        let denominator = 0;
+
+        for (const p of points) {
+            const dx = p.x - meanX;
+            numerator += dx * (p.y - meanY);
+            denominator += dx * dx;
+        }
+
+        if (denominator === 0) return null;
+
+        return numerator / denominator;
+    }
+
+    return periods.map(period => {
+        const durationDays = period.months * 30.4375;
+        const startTime = latestTime - durationDays * DAY;
+
+        const data = smoothed.filter(p =>
+            p.time >= startTime &&
+            p.time <= latestTime
+        );
+
+        // Require enough observations and adequate time coverage.
+        if (
+            data.length < 3 ||
+            data[data.length - 1].time - data[0].time <
+                durationDays * DAY * 0.7
+        ) {
+            return {
+                label: period.label,
+                change: null,
+                monthlyRate: null
+            };
+        }
+
+        const slope = calculateRegression(data);
+
+        if (slope === null) {
+            return {
+                label: period.label,
+                change: null,
+                monthlyRate: null
+            };
+        }
+
+        const change = slope * durationDays;
+
+        return {
+            label: period.label,
+            change,
+            monthlyRate: change / period.months
+        };
+    });
+}
+
+    // --------------------------------------------------
+    // WEIGHT TREND TABLE
+    // --------------------------------------------------
+
+    const trends = calculateWeightTrends(bodyWeights);
+
+    const trendSection = document.createElement("section");
+    trendSection.className = "chart-panel";
+    trendSection.innerHTML = "<h3>Weight Gain Trends</h3>";
+
+    const trendTable = document.createElement("table");
+    trendTable.className = "measurements-trend-table";
+
+    trendTable.innerHTML = `
+        <thead>
+            <tr>
+                <th>Period</th>
+                <th>Weight Change</th>
+                <th>Rate (lb/month)</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${trends.map(t => {
+                if (t.change === null) {
+                    return `
+                        <tr>
+                            <td>${t.label}</td>
+                            <td colspan="2">Insufficient data</td>
+                        </tr>
+                    `;
+                }
+
+                const sign = t.change > 0 ? "+" : "";
+
+                return `
+                    <tr>
+                        <td>${t.label}</td>
+                        <td>${sign}${t.change.toFixed(2)} lb</td>
+                        <td>${t.monthlyRate >= 0 ? "+" : ""}${t.monthlyRate.toFixed(2)}</td>
+                    </tr>
+                `;
+            }).join("")}
+        </tbody>
+    `;
+
+    trendSection.appendChild(trendTable);
+    measurementsContent.appendChild(trendSection);
+}
 
         function listenToMeasurements() {
             onSnapshot(query(bodyMeasurementsCollection, orderBy("timestamp", "asc")), (snapshot) => {
