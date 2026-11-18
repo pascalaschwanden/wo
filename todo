@@ -6,8 +6,18 @@
 On the tips tab, put an input box long enough for me to enter tips sentences and add a button to submit.  when the button is pushed, it should persist that tip in the DB and display all tips below that input box.
 next to each tip should be an X button that allows me to remove that tip.
 
-Start a new tab called measurements, start a new section that allows the user to enter their weight.  the weight should be persisted along with the date.
+Start a new tab called measurements,
+provide input boxes for the person to enter the following:
+forearm left, forearm right, bicep left unflex, bicep right unflex, bellybutton circ., thigh left, thigh right, calf left, calf right
+do one graph with all of the above on it, inches on the y axis and date on the x axis.
+
+under that chart.
+start a new section that allows the user to enter their weight.
 Then have a chart below that, which shows the weight over time.
+
+all measurements and weights should be persisted with the current date, so i can track stuff overtime.
+tell me what firebase rule i need to add
+
 
 Next, i have a csv that I'm uploading my previous weights, that I want you to import into our database.
 

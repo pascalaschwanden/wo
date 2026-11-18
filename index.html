@@ -107,6 +107,12 @@ button:hover {
     margin-bottom: 20px;
 }
 
+.view-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 4px 16px 4px 0;
+}
+
 .view-tab, .chart-tab {
     background-color: #e9ecef;
     color: #222;
@@ -141,7 +147,7 @@ button:hover {
 
 
 
-        .chart-view[hidden], .analysis-view[hidden], .next-view[hidden], .benchmarks-view[hidden], .progress-view[hidden], .fatigue-view[hidden], .tips-view[hidden] { display: none; }
+        .chart-view[hidden], .analysis-view[hidden], .next-view[hidden], .benchmarks-view[hidden], .progress-view[hidden], .fatigue-view[hidden], .tips-view[hidden], .measurements-view[hidden] { display: none; }
         .chart-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
         .chart-heading-row h2 { margin: 0; }
         .chart-gym-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; white-space: nowrap; cursor: pointer; }
@@ -164,6 +170,10 @@ button:hover {
         .tip-text { flex: 1 1 auto; line-height: 1.4; white-space: pre-wrap; }
         .delete-tip-button { flex: 0 0 auto; width: 28px; height: 28px; padding: 0; line-height: 1; background: #dc3545; border-radius: 4px; }
         .delete-tip-button:hover { background: #b02a37; }
+        .measurements-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .measurements-field { display: flex; flex-direction: column; gap: 4px; font-size: 14px; font-weight: 600; }
+        .measurements-field input { min-width: 0; }
+        .measurements-form button { align-self: flex-start; }
         .benchmarks-view .chart-canvas-wrap { height: 280px; }
         .benchmarks-controls { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
         .benchmarks-controls label { font-size: 14px; font-weight: bold; }
@@ -521,6 +531,7 @@ padding: 0 0 0 20px;
         <button type="button" class="view-tab" data-view="fatigue">Fatigue</button>
         <button type="button" class="view-tab" data-view="athlete">Athlete</button>
         <button type="button" class="view-tab" data-view="tips">Tips</button>
+        <button type="button" class="view-tab" data-view="measurements">Measurements</button>
     </div>
 
     <section id="chartsView" class="chart-view">
@@ -617,6 +628,11 @@ padding: 0 0 0 20px;
     <section id="tipsView" class="tips-view" hidden>
         <h2>Tips</h2>
         <div id="tipsContent" class="chart-grid">Loading tips...</div>
+    </section>
+
+    <section id="measurementsView" class="measurements-view" hidden>
+        <h2>Measurements</h2>
+        <div id="measurementsContent" class="chart-grid">Loading measurements...</div>
     </section>
 
     <section id="workoutView" class="workout-view" hidden>
@@ -777,6 +793,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         const volumeView = document.getElementById("volumeView");
         const fatigueView = document.getElementById("fatigueView");
         const tipsView = document.getElementById("tipsView");
+        const measurementsView = document.getElementById("measurementsView");
         const chartTabs = document.getElementById("chartTabs");
         const chartRange = document.getElementById("chartRange");
         const chartEndDate = document.getElementById("chartEndDate");
@@ -789,6 +806,7 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         const progressChartCanvas = document.getElementById("progressChart");
         const fatigueContent = document.getElementById("fatigueContent");
         const tipsContent = document.getElementById("tipsContent");
+        const measurementsContent = document.getElementById("measurementsContent");
         const backupButton = document.getElementById("backupButton");
         const historyDetails = document.getElementById("historyDetails");
         const historyLog = document.getElementById("historyLog");
@@ -800,6 +818,11 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         let latestEntries = [];
         let tips = [];
         let tipsLoaded = false;
+        let bodyMeasurements = [];
+        let bodyWeights = [];
+        let bodyMeasurementsLoaded = false;
+        let bodyWeightsLoaded = false;
+        let measurementsCharts = { circumferences: null, weight: null };
         let activeView = "charts";
         let activeChartCategory = "Chest";
         let benchmarkSettingsLoaded = false;
@@ -821,6 +844,8 @@ The Law of Diminishing ReturnsSports science landmark meta-analyses—such as th
         const workoutCollection = collection(db, "workouts");
         const volumeWeeksCollection = collection(db, "volumeWeeks");
         const tipsCollection = collection(db, "tips");
+        const bodyMeasurementsCollection = collection(db, "bodyMeasurements");
+        const bodyWeightsCollection = collection(db, "bodyWeights");
         const benchmarkSettingsDoc = doc(db, "uiSettings", "benchmarks");
 	const targetVolume = collection(db, "targetVolumeJSON");
 	console.dir(targetVolume);
@@ -1676,6 +1701,265 @@ function renderBenchmarks(entries, startTimestamp, showMeNow) {
             });
         }
 
+        const bodyMeasurementFields = [
+            { key: "forearmLeft", label: "Forearm left" },
+            { key: "forearmRight", label: "Forearm right" },
+            { key: "bicepLeftUnflex", label: "Bicep left unflex" },
+            { key: "bicepRightUnflex", label: "Bicep right unflex" },
+            { key: "bellybuttonCircumference", label: "Bellybutton circ." },
+            { key: "thighLeft", label: "Thigh left" },
+            { key: "thighRight", label: "Thigh right" },
+            { key: "calfLeft", label: "Calf left" },
+            { key: "calfRight", label: "Calf right" }
+        ];
+
+        const measurementColors = [
+            "#007bff", "#28a745", "#dc3545", "#fd7e14", "#6f42c1",
+            "#20c997", "#e83e8c", "#795548", "#17a2b8"
+        ];
+
+        function destroyMeasurementsCharts() {
+            Object.values(measurementsCharts).forEach((chart) => chart?.destroy());
+            measurementsCharts = { circumferences: null, weight: null };
+        }
+
+        function createMeasurementsChart(title, entries, datasets, yAxisTitle) {
+            const panel = document.createElement("section");
+            panel.className = "chart-panel";
+            panel.innerHTML = `<h3>${title}</h3>`;
+
+            if (entries.length === 0) {
+                panel.insertAdjacentHTML("beforeend", "<p>No entries yet.</p>");
+                return { panel, chart: null };
+            }
+
+            const chartWrap = document.createElement("div");
+            chartWrap.className = "chart-canvas-wrap";
+            const canvas = document.createElement("canvas");
+            chartWrap.appendChild(canvas);
+            panel.appendChild(chartWrap);
+
+            const chartStart = entries[0].timestamp;
+            const chartEnd = entries.length > 1
+                ? entries[entries.length - 1].timestamp
+                : chartStart + (24 * 60 * 60);
+            const chart = new Chart(canvas, {
+                type: "line",
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => getDateLabel(items[0].parsed.x),
+                                label: (item) => `${item.dataset.label}: ${item.parsed.y.toFixed(1)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: "linear",
+                            min: chartStart,
+                            max: chartEnd,
+                            ticks: { callback: (value) => getDateLabel(value), maxTicksLimit: 8 },
+                            title: { display: true, text: "Date" }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            title: { display: true, text: yAxisTitle }
+                        }
+                    }
+                }
+            });
+
+            return { panel, chart };
+        }
+
+        function renderMeasurements() {
+            if (!bodyMeasurementsLoaded || !bodyWeightsLoaded) {
+                measurementsContent.innerHTML = "<p>Loading measurements...</p>";
+                return;
+            }
+
+            destroyMeasurementsCharts();
+            measurementsContent.innerHTML = "";
+
+            const circumferenceSection = document.createElement("section");
+            circumferenceSection.className = "chart-panel";
+            circumferenceSection.innerHTML = "<h3>Circumference Measurements</h3>";
+
+            const circumferenceForm = document.createElement("form");
+            circumferenceForm.className = "measurements-form";
+            const fieldGrid = document.createElement("div");
+            fieldGrid.className = "measurements-field-grid";
+            const fieldInputs = new Map();
+            bodyMeasurementFields.forEach((field) => {
+                const label = document.createElement("label");
+                label.className = "measurements-field";
+                label.textContent = field.label;
+
+                const input = document.createElement("input");
+                input.type = "number";
+                input.min = "0";
+                input.step = "0.1";
+                input.required = true;
+                input.inputMode = "decimal";
+                input.setAttribute("aria-label", `${field.label} in inches`);
+                label.appendChild(input);
+                fieldInputs.set(field.key, input);
+                fieldGrid.appendChild(label);
+            });
+
+            const saveMeasurementsButton = document.createElement("button");
+            saveMeasurementsButton.type = "submit";
+            saveMeasurementsButton.textContent = "Save Measurements";
+            circumferenceForm.append(fieldGrid, saveMeasurementsButton);
+            circumferenceForm.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const values = Object.fromEntries(
+                    bodyMeasurementFields.map((field) => [field.key, Number(fieldInputs.get(field.key).value)])
+                );
+                if (Object.values(values).some((value) => !Number.isFinite(value) || value < 0)) return;
+
+                saveMeasurementsButton.disabled = true;
+                try {
+                    const now = new Date();
+                    await addDoc(bodyMeasurementsCollection, {
+                        ...values,
+                        date: getDateInputValue(now),
+                        timestamp: Math.floor(now.getTime() / 1000)
+                    });
+                    circumferenceForm.reset();
+                } catch (error) {
+                    console.error("Error saving measurements: ", error);
+                    alert("Failed to save measurements. Check database rules.");
+                } finally {
+                    saveMeasurementsButton.disabled = false;
+                }
+            });
+            circumferenceSection.appendChild(circumferenceForm);
+            measurementsContent.appendChild(circumferenceSection);
+
+            const circumferenceDatasets = bodyMeasurementFields.map((field, index) => ({
+                label: field.label,
+                data: bodyMeasurements
+                    .filter((entry) => Number.isFinite(entry[field.key]))
+                    .map((entry) => ({ x: entry.timestamp, y: entry[field.key] })),
+                borderColor: measurementColors[index],
+                backgroundColor: measurementColors[index],
+                tension: 0.15,
+                pointRadius: 3
+            }));
+            const circumferenceChart = createMeasurementsChart(
+                "Measurements Over Time", bodyMeasurements, circumferenceDatasets, "Inches"
+            );
+            measurementsContent.appendChild(circumferenceChart.panel);
+            measurementsCharts.circumferences = circumferenceChart.chart;
+
+            const weightSection = document.createElement("section");
+            weightSection.className = "chart-panel";
+            weightSection.innerHTML = "<h3>Weight</h3>";
+
+            const weightForm = document.createElement("form");
+            weightForm.className = "measurements-form";
+            const weightLabel = document.createElement("label");
+            weightLabel.className = "measurements-field";
+            weightLabel.textContent = "Weight";
+            const weightInput = document.createElement("input");
+            weightInput.type = "number";
+            weightInput.min = "0";
+            weightInput.step = "0.1";
+            weightInput.required = true;
+            weightInput.inputMode = "decimal";
+            weightInput.setAttribute("aria-label", "Weight");
+            weightLabel.appendChild(weightInput);
+            const saveWeightButton = document.createElement("button");
+            saveWeightButton.type = "submit";
+            saveWeightButton.textContent = "Save Weight";
+            weightForm.append(weightLabel, saveWeightButton);
+            weightForm.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const weight = Number(weightInput.value);
+                if (!Number.isFinite(weight) || weight < 0) return;
+
+                saveWeightButton.disabled = true;
+                try {
+                    const now = new Date();
+                    await addDoc(bodyWeightsCollection, {
+                        weight,
+                        date: getDateInputValue(now),
+                        timestamp: Math.floor(now.getTime() / 1000)
+                    });
+                    weightForm.reset();
+                } catch (error) {
+                    console.error("Error saving weight: ", error);
+                    alert("Failed to save weight. Check database rules.");
+                } finally {
+                    saveWeightButton.disabled = false;
+                }
+            });
+            weightSection.appendChild(weightForm);
+            measurementsContent.appendChild(weightSection);
+
+            const weightChart = createMeasurementsChart(
+                "Weight Over Time",
+                bodyWeights,
+                [{
+                    label: "Weight",
+                    data: bodyWeights.map((entry) => ({ x: entry.timestamp, y: entry.weight })),
+                    borderColor: "#007bff",
+                    backgroundColor: "#007bff",
+                    tension: 0.15,
+                    pointRadius: 4
+                }],
+                "Weight"
+            );
+            measurementsContent.appendChild(weightChart.panel);
+            measurementsCharts.weight = weightChart.chart;
+        }
+
+        function listenToMeasurements() {
+            onSnapshot(query(bodyMeasurementsCollection, orderBy("timestamp", "asc")), (snapshot) => {
+                bodyMeasurements = snapshot.docs.map((snapshotDoc) => {
+                    const data = snapshotDoc.data();
+                    return {
+                        id: snapshotDoc.id,
+                        timestamp: Number(data.timestamp),
+                        ...Object.fromEntries(bodyMeasurementFields.map((field) => [field.key, Number(data[field.key])]))
+                    };
+                }).filter((entry) => Number.isFinite(entry.timestamp));
+                bodyMeasurementsLoaded = true;
+                if (activeView === "measurements") renderMeasurements();
+            }, (error) => {
+                console.error("Error loading measurements: ", error);
+                bodyMeasurementsLoaded = true;
+                if (activeView === "measurements") {
+                    measurementsContent.innerHTML = "<p>Failed to load measurements. Check database rules.</p>";
+                }
+            });
+
+            onSnapshot(query(bodyWeightsCollection, orderBy("timestamp", "asc")), (snapshot) => {
+                bodyWeights = snapshot.docs.map((snapshotDoc) => {
+                    const data = snapshotDoc.data();
+                    return {
+                        id: snapshotDoc.id,
+                        timestamp: Number(data.timestamp),
+                        weight: Number(data.weight)
+                    };
+                }).filter((entry) => Number.isFinite(entry.timestamp) && Number.isFinite(entry.weight));
+                bodyWeightsLoaded = true;
+                if (activeView === "measurements") renderMeasurements();
+            }, (error) => {
+                console.error("Error loading weights: ", error);
+                bodyWeightsLoaded = true;
+                if (activeView === "measurements") {
+                    measurementsContent.innerHTML = "<p>Failed to load weights. Check database rules.</p>";
+                }
+            });
+        }
+
         function renderFatigue() {
             if (!volumeWeekHistoryLoaded || !fatigueTestsLoaded) {
                 destroyFatigueCharts();
@@ -2408,6 +2692,7 @@ workouts.forEach((workout, workoutIndex) => {
             volumeView.hidden = view !== "volume";
             fatigueView.hidden = view !== "fatigue";
             tipsView.hidden = view !== "tips";
+            measurementsView.hidden = view !== "measurements";
 
             viewTabs.querySelectorAll(".view-tab").forEach((button) => {
                 button.classList.toggle("active", button.dataset.view === view);
@@ -2415,6 +2700,9 @@ workouts.forEach((workout, workoutIndex) => {
 
             if (view !== "fatigue") {
                 destroyFatigueCharts();
+            }
+            if (view !== "measurements") {
+                destroyMeasurementsCharts();
             }
 
             if (view === "charts") {
@@ -2500,6 +2788,18 @@ workouts.forEach((workout, workoutIndex) => {
                         volumeWeeklySetsChart = null;
                     }
                     renderTips();
+		} else if (view === "measurements") {
+                    benchmarkChartsByKey.forEach((chart) => chart.destroy());
+                    benchmarkChartsByKey.clear();
+                    if (progressChart) {
+                        progressChart.destroy();
+                        progressChart = null;
+                    }
+                    if (volumeWeeklySetsChart) {
+                        volumeWeeklySetsChart.destroy();
+                        volumeWeeklySetsChart = null;
+                    }
+                    renderMeasurements();
 		} else if (view === "athlete") {
                     renderBenchmarks(latestEntries, undefined, false);
                     renderAthleteView(window.benchmarkState);
@@ -2907,6 +3207,7 @@ const newTimestamp = Math.floor(
         listenToVolumeWeekHistory();
         listenToFatigueTests();
         listenToTips();
+        listenToMeasurements();
 
         const q = query(workoutCollection, orderBy("timestamp", "desc"));
         onSnapshot(q, (snapshot) => {
