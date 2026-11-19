@@ -1980,6 +1980,11 @@ function renderMeasurements() {
     // WEIGHT CHART
     // --------------------------------------------------
 
+
+    // --------------------------------------------------
+    // WEIGHT CHART WITH DATE-RANGE DROPDOWN
+    // --------------------------------------------------
+
     const weightChart = createMeasurementsChart(
         "Weight Over Time",
         bodyWeights,
@@ -1996,6 +2001,104 @@ function renderMeasurements() {
         }],
         "Weight"
     );
+
+    // Create date-range selector.
+    const weightRangeContainer = document.createElement("div");
+    weightRangeContainer.style.display = "flex";
+    weightRangeContainer.style.alignItems = "center";
+    weightRangeContainer.style.gap = "10px";
+    weightRangeContainer.style.marginBottom = "15px";
+    weightRangeContainer.style.flexWrap = "wrap";
+
+    const weightRangeLabel = document.createElement("label");
+    weightRangeLabel.textContent = "Show:";
+    weightRangeLabel.style.fontWeight = "600";
+    weightRangeLabel.htmlFor = "weight-chart-range";
+
+    const weightRangeSelect = document.createElement("select");
+    weightRangeSelect.id = "weight-chart-range";
+
+    weightRangeSelect.style.padding = "7px 10px";
+    weightRangeSelect.style.borderRadius = "5px";
+    weightRangeSelect.style.fontSize = "14px";
+    weightRangeSelect.style.cursor = "pointer";
+
+    const weightRanges = [
+        { label: "Last 2 weeks", days: 14 },
+        { label: "Last 1 month", days: 30.4375 },
+        { label: "Last 2 months", days: 2 * 30.4375 },
+        { label: "Last 3 months", days: 3 * 30.4375 },
+        { label: "Last 6 months", days: 6 * 30.4375 },
+        { label: "Last 12 months", days: 12 * 30.4375 },
+        { label: "Last 2 years", days: 2 * 365.25 },
+        { label: "Last 3 years", days: 3 * 365.25 },
+        { label: "Last 5 years", days: 5 * 365.25 },
+        { label: "All time", days: null }
+    ];
+
+    weightRanges.forEach((range, index) => {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = range.label;
+        weightRangeSelect.appendChild(option);
+    });
+
+    // Default to all time.
+    weightRangeSelect.value = String(weightRanges.length - 1);
+
+    weightRangeContainer.append(weightRangeLabel, weightRangeSelect);
+
+    // Put dropdown above the chart.
+    weightChart.panel.prepend(weightRangeContainer);
+
+    // Update chart when range changes.
+    weightRangeSelect.addEventListener("change", () => {
+        const selectedRange = weightRanges[
+            Number(weightRangeSelect.value)
+        ];
+
+        const validWeights = bodyWeights.filter(entry =>
+            Number.isFinite(entry.timestamp) &&
+            Number.isFinite(entry.weight)
+        );
+
+        if (!validWeights.length) return;
+
+        const latestTime = Math.max(
+            ...validWeights.map(entry => entry.timestamp)
+        );
+
+        let filteredWeights = validWeights;
+
+        if (selectedRange.days !== null) {
+            const startTime =
+                latestTime - selectedRange.days * 86400;
+
+            filteredWeights = validWeights.filter(entry =>
+                entry.timestamp >= startTime
+            );
+        }
+
+                weightChart.chart.data.datasets[0].data =
+            filteredWeights.map(entry => ({
+                x: entry.timestamp,
+                y: entry.weight
+            }));
+
+        // Explicitly update the X-axis boundaries.
+        if (selectedRange.days !== null && filteredWeights.length > 0) {
+            weightChart.chart.options.scales.x.min =
+                latestTime - selectedRange.days * 86400;
+
+            weightChart.chart.options.scales.x.max = latestTime;
+        } else {
+            // All time: let Chart.js determine the boundaries.
+            delete weightChart.chart.options.scales.x.min;
+            delete weightChart.chart.options.scales.x.max;
+        }
+
+        weightChart.chart.update();
+    });
 
     measurementsContent.appendChild(weightChart.panel);
     measurementsCharts.weight = weightChart.chart;
