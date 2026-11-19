@@ -5,6 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workout Tracker</title>
     <style>
+
+.measurements-trend-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+}
+
+.measurements-trend-table th,
+.measurements-trend-table td {
+    padding: 10px 12px;
+    text-align: right;
+    border-bottom: 1px solid var(--border-color, #ddd);
+}
+
+.measurements-trend-table th:first-child,
+.measurements-trend-table td:first-child {
+    text-align: left;
+}
+
+.measurements-trend-table th {
+    font-weight: 600;
+}
+
 .current-strength-level {
     background-color: #c6efce !important;
     padding-bottom: 3px;
